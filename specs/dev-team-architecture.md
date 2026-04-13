@@ -66,7 +66,6 @@ dev-team/
 ---
 description: Координирует работу специализированных агентов для разработки
 argument-hint: Описание задачи или фичи
-allowed-tools: Bash(git status), Bash(git diff:*), Bash(git log:*), Read, Glob, Grep
 ---
 ```
 

@@ -1,7 +1,6 @@
 ---
 description: Координирует Python разработку (Django, Flask, FastAPI)
 argument-hint: Описание задачи для Python проекта
-allowed-tools: Bash(git status), Bash(git diff:*), Bash(git log:*), Read, Glob, Grep
 ---
 
 # Python Development Team Coordinator

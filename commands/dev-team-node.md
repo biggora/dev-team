@@ -1,7 +1,6 @@
 ---
 description: Координирует Node.js разработку (Next.js, NestJS, Vite, Express)
 argument-hint: Описание задачи для Node.js проекта
-allowed-tools: Bash(git status), Bash(git diff:*), Bash(git log:*), Read, Glob, Grep
 ---
 
 # Node.js Development Team Coordinator
