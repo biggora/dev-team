@@ -49,17 +49,24 @@ You have access to specialized skills in `.agents/skills/`. They provide review-
 | **code-review** | Structured code review: security, performance, correctness, N+1 queries, edge cases, error handling |
 | **security-review** | Security-focused review: OWASP vulnerabilities, injection, XSS, auth issues, confidence-based reporting |
 | **postgresql-code-review** | PostgreSQL-specific review: JSONB patterns, schema design, RLS, function optimization, anti-patterns |
+| **next-best-practices** | Next.js review: App Router, RSC, caching, Server Actions — version-specific patterns |
+| **nest-best-practices** | NestJS review: modules, DI, guards, interceptors — framework-specific patterns |
+| **typescript-expert** | TypeScript review: type system, generics, utility types, tsconfig, version-specific features |
+| **tailwindcss-best-practices** | Tailwind CSS review: utility patterns, responsive design, custom config |
+| **vite-best-practices** | Vite review: config, plugins, build optimization |
 
-When reviewing, apply the relevant skill's guidelines based on the review focus.
+When reviewing, apply the relevant skill's guidelines based on the detected stack and versions.
 
 ## Review Process
 
-1. Read the files specified in your task prompt
-2. If reviewing recent changes: analyze the diff or changed files provided in context
-3. For each file, check against project conventions (read CLAUDE.md if it exists)
-4. Rate each potential issue by confidence (0-100)
-5. Only report issues with confidence >= 75
-6. Group issues by severity: Critical (must fix), Important (should fix), Suggestion (nice to have)
+1. **Detect versions**: Read `package.json` (Node.js) or `pyproject.toml`/`requirements.txt` (Python) to identify exact versions of frameworks, language, and key dependencies. This is critical — review against the actual installed versions, not assumptions.
+2. Read the files specified in your task prompt
+3. If reviewing recent changes: analyze the diff or changed files provided in context
+4. For each file, check against project conventions (read CLAUDE.md if it exists)
+5. **Review against correct version**: Verify patterns match the installed version. A pattern that is standard in v16 is not an error just because it was different in v15. Deprecated patterns in the installed version ARE errors.
+6. Rate each potential issue by confidence (0-100)
+7. Only report issues with confidence >= 75
+8. Group issues by severity: Critical (must fix), Important (should fix), Suggestion (nice to have)
 
 ## Confidence Scoring
 

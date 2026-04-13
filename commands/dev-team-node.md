@@ -82,6 +82,7 @@ Initial request: $ARGUMENTS
    - **For ui-ux-designer**: Include design context:
      - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
      - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc.
+     - "Include a color palette with hex values and ASCII wireframes for each screen so the design can be reviewed before implementation."
    - **For architect on greenfield**: Include all of the above PLUS:
      - "Read references/architecture-patterns.md for Node.js/TypeScript architecture patterns"
      - Specify the target framework: "Design using NestJS module architecture" or "Design using Next.js App Router"
@@ -136,8 +137,9 @@ Initial request: $ARGUMENTS
 2. Dispatch code-reviewer with:
    - Summary of all changes and files from agent reports
    - Original task requirements
-   - Stack context: "Review this TypeScript/Node.js code for correctness and project patterns"
-   - Focus: type safety, async/await patterns, error handling, import structure
+   - Stack context with **exact versions** from package.json: "Review this TypeScript [version] / Next.js [version] / NestJS [version] code for correctness and modern patterns"
+   - Include stack-specific phrases to trigger skill injection: "next.js", "nestjs", "typescript", "tailwindcss", "vite" — matching the actual detected stack
+   - Focus: type safety, async/await patterns, error handling, import structure, version-appropriate patterns
 3. Handle review findings:
    - DONE: proceed
    - DONE_WITH_CONCERNS: present to user, ask if fixes needed

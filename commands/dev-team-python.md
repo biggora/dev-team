@@ -79,6 +79,7 @@ Initial request: $ARGUMENTS
    - **For ui-ux-designer**: Include design context:
      - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
      - Specify the aesthetic: "premium SaaS", "minimalist editorial", "admin dashboard", etc.
+     - "Include a color palette with hex values and ASCII wireframes for each screen so the design can be reviewed before implementation."
    - **For architect on greenfield**: Include all of the above PLUS:
      - "Read references/architecture-patterns.md for Python architecture patterns"
      - Specify the target framework: "Design using Django app architecture" or "Design using FastAPI routers"
@@ -133,8 +134,9 @@ Initial request: $ARGUMENTS
 2. Dispatch code-reviewer with:
    - Summary of all changes and files from agent reports
    - Original task requirements
-   - Stack context: "Review this Python code for correctness and project patterns"
-   - Focus: type hints, exception handling, security (SQL injection, CSRF), import structure
+   - Stack context with **exact versions** from pyproject.toml/requirements.txt: "Review this Python [version] / Django [version] / FastAPI [version] code for correctness and modern patterns"
+   - Include stack-specific phrases to trigger skill injection: "django", "fastapi", "flask", "postgresql" — matching the actual detected stack
+   - Focus: type hints, exception handling, security (SQL injection, CSRF), import structure, version-appropriate patterns
 3. Handle review findings:
    - DONE: proceed
    - DONE_WITH_CONCERNS: present to user, ask if fixes needed
