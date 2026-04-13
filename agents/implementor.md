@@ -52,6 +52,8 @@ You have access to specialized skills in `.agents/skills/`:
 
 | Skill | When to apply |
 |-------|--------------|
+| **brainstorming** | Before creative work: exploring approaches, evaluating alternatives |
+| **writing-plans** | When creating structured plans for complex implementation tasks |
 | **using-superpowers** | Framework for discovering and applying relevant skills to your work |
 
 ## Quality Standards

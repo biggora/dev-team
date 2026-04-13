@@ -9,6 +9,8 @@ Claude Code plugin with a "coordinator + specialists" architecture. The coordina
 ```bash
 # Step 1: Add marketplace
 /plugin marketplace add biggora/dev-team
+# or
+/plugin marketplace add https://github.com/biggora/dev-team
 
 # Step 2: Install (globally by default)
 /plugin install dev-team@dev-team
@@ -85,6 +87,7 @@ Coordinators
 ```
 dev-team/
 ├── .claude-plugin/
+│   ├── marketplace.json         # Marketplace metadata
 │   └── plugin.json              # Plugin manifest
 ├── commands/
 │   ├── dev-team.md              # Universal coordinator (auto-detect)
@@ -155,9 +158,9 @@ Questions: [if NEEDS_CONTEXT]
 
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
-| architect | System design, blueprints | Read, Grep, Glob | opus | blue |
-| planner | Task decomposition, execution plans | Read, Grep, Glob | opus | cyan |
-| ui-ux-designer | UI/UX: user flows, layouts, specs | Read, Grep, Glob | sonnet | magenta |
+| architect | System design, blueprints | Read, Write, Grep, Glob | opus | blue |
+| planner | Task decomposition, execution plans | Read, Write, Grep, Glob | opus | cyan |
+| ui-ux-designer | UI/UX: user flows, layouts, specs | Read, Write, Grep, Glob | sonnet | magenta |
 | frontend-dev | UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
 | backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utils | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |

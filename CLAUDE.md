@@ -15,9 +15,9 @@ This plugin implements a "coordinator + specialists" architecture:
 
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
-| architect | Designs system architecture and blueprints | Read, Grep, Glob | opus | blue |
-| planner | Decomposes tasks, creates execution plans | Read, Grep, Glob | sonnet | cyan |
-| ui-ux-designer | Designs UI/UX: flows, layouts, specs | Read, Grep, Glob | sonnet | magenta |
+| architect | Designs system architecture and blueprints | Read, Write, Grep, Glob | opus | blue |
+| planner | Decomposes tasks, creates execution plans | Read, Write, Grep, Glob | opus | cyan |
+| ui-ux-designer | Designs UI/UX: flows, layouts, specs | Read, Write, Grep, Glob | sonnet | magenta |
 | frontend-dev | Builds UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
 | backend-dev | Builds API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utilities | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |

@@ -35,21 +35,34 @@ Initial request: $ARGUMENTS
    - Type of work (implementation, refactoring, bug fix, testing, research, review)
    - Which areas of the codebase are likely involved
    - Whether subtasks are independent (can parallel) or dependent (must sequence)
-2. Use `git status` and `Glob` to identify relevant project structure (do NOT read source files)
-3. Determine which specialist agents to dispatch based on the task type:
+2. **Detect project stack and versions**:
+   - `Glob("**/package.json")` → Node.js stack, dependencies, exact version numbers
+   - `Glob("**/pyproject.toml")` or `Glob("**/requirements*.txt")` → Python stack, versions
+   - `Glob("**/tsconfig*.json")` → TypeScript version
+   - Identify framework: Next.js, NestJS, Vite, Django, Flask, FastAPI, etc.
+   - **Store detected versions** — they will be passed to code-reviewer and tester
+3. Use `git status` and `Glob` to identify relevant project structure (do NOT read source files)
+4. Determine which specialist agents to dispatch based on the task type:
    - Architecture/design → architect agent (read-only, model: opus)
-   - Planning/decomposition → planner agent (read-only)
+   - Planning/decomposition → planner agent (read-only, model: opus)
    - UI/UX design → ui-ux-designer agent (read-only, produces specs)
    - Frontend UI work → frontend-dev agent (full tools)
    - Backend API/DB work → backend-dev agent (full tools)
    - Scripts/config/other → implementor agent (full tools, general fallback)
    - Testing → tester agent (full tools)
    - Code review → code-reviewer agent (read-only)
-4. Decompose into concrete subtasks with clear scope boundaries
-5. Present the decomposition plan to the user:
+5. Decompose into concrete subtasks with clear scope boundaries
+6. Present the decomposition plan to the user:
    - List of subtasks with assigned agents
    - Execution order (parallel vs sequential)
    - Ask for confirmation before dispatching
+
+**Greenfield detection**: If Glob finds no source files and no package manifest (package.json, pyproject.toml), this is a new project. In this case:
+   - Start with architect agent for system design (saves blueprint to `docs/architecture.md`)
+   - Then ui-ux-designer for interface design if UI is involved (saves spec to `docs/design.md`)
+   - Then planner agent for implementation decomposition (saves plan to `docs/plan.md`)
+   - Then implementor for scaffolding
+   - Then specialist agents (frontend-dev, backend-dev) for implementation
 
 ---
 
@@ -63,10 +76,22 @@ Initial request: $ARGUMENTS
    - **Scope boundaries**: Exactly which files and directories the agent may read and modify
    - **Context from other agents**: What has already been done (file changes, decisions made)
    - **Constraints**: Coding standards, patterns to follow, things to avoid
+   - **Stack-specific phrases**: Include framework names to trigger skill injection (e.g., "next.js", "nestjs", "django", "typescript", "tailwindcss") — matching the actual detected stack
+   - **Version context**: Include exact dependency versions from package manifest in prompts for code-reviewer, tester, and implementation agents
    - **Process skill instructions** (for agents with process skills):
      - For architect: "Apply brainstorming to explore design alternatives. Use writing-plans for structured implementation blueprints."
      - For planner: "Apply brainstorming before decomposition. Use writing-plans for structured execution plans."
      - For all agents with using-superpowers (architect, planner, implementor, backend-dev, frontend-dev): "Use the superpowers skill framework to discover and apply relevant skills."
+   - **For ui-ux-designer**: Include design context:
+     - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
+     - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc.
+     - "Include a color palette with hex values and ASCII wireframes for each screen so the design can be reviewed before implementation."
+     - "Save your design specification to docs/design.md"
+   - **For tester**: Include full implementation context:
+     - List of all files created/modified (from agent reports)
+     - User flows from ui-ux-designer (if design phase was performed) — tester validates that implementation matches design
+     - Test framework detected from package manifest
+     - Stack-specific phrases matching detected stack
    - **Report requirement**: Include this template in EVERY agent prompt:
 
    ```
@@ -84,6 +109,16 @@ Initial request: $ARGUMENTS
 
 2. **Parallel dispatch**: If subtasks are independent (no shared files, no data dependencies), launch ALL agents in a single message using multiple Agent tool calls
 3. **Sequential dispatch**: If subtask B depends on subtask A's output, wait for A to complete, read its report, then dispatch B with A's results included in the prompt
+4. **Shared file isolation**: Before parallel dispatch, identify shared files (types, utils, config, schemas). Either dispatch implementor FIRST to create shared files then dispatch specialists in parallel, OR assign shared file ownership to ONE agent explicitly in scope boundaries. Never allow two parallel agents to have overlapping file scopes.
+
+### Inter-agent context passing
+
+When dispatching an agent that depends on a previous agent's output:
+- **After architect**: Pass "Read docs/architecture.md for the architecture blueprint" to planner and implementation agents
+- **After ui-ux-designer**: Pass "Read docs/design.md for the design specification (color palette, wireframes, user flows)" to frontend-dev AND to tester
+- **After planner**: Use the planner's subtask list (from docs/plan.md) to determine dispatch order and agent assignments
+- **After backend-dev**: Pass API endpoints and response formats to frontend-dev (if dispatched sequentially)
+- **After all implementors**: Pass complete list of changed files and summaries to tester and code-reviewer
 
 ---
 
@@ -103,7 +138,8 @@ Initial request: $ARGUMENTS
    | NEEDS_CONTEXT | Read the questions. If you can answer from project structure — re-dispatch with answers. If not — ask the user |
 
 3. If any agent was re-dispatched, return to this phase after it completes
-4. Once all subtasks are DONE or DONE_WITH_CONCERNS, proceed to Phase 4
+4. **Maximum 2 re-dispatches per agent**. If still BLOCKED after 2 attempts — escalate to user with full context of what was tried and what failed
+5. Once all subtasks are DONE or DONE_WITH_CONCERNS, proceed to Phase 4
 
 ---
 
@@ -119,7 +155,9 @@ Initial request: $ARGUMENTS
    - Summary of all changes made (from agent reports)
    - List of all files changed
    - The original task requirements
-   - Focus areas: correctness, consistency with project patterns, potential bugs
+   - Stack context with **exact versions** from package manifest: "Review this [language] [version] / [framework] [version] code for correctness and modern patterns"
+   - Include stack-specific phrases to trigger skill injection — matching the actual detected stack
+   - Focus areas: correctness, consistency with project patterns, version-appropriate patterns, potential bugs
 3. Process the code-reviewer's report:
    - DONE: No significant issues — proceed to Phase 5
    - DONE_WITH_CONCERNS: Present concerns to user, ask if they want fixes applied

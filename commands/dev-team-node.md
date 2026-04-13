@@ -55,9 +55,11 @@ Initial request: $ARGUMENTS
 5. Present plan to user and ask for confirmation
 
 **Greenfield detection**: If Glob finds no `.ts`/`.js` files or no `package.json`, this is a new project. In this case:
-   - Start with architect agent for system design
-   - Then planner agent for implementation decomposition
+   - Start with architect agent for system design (saves blueprint to `docs/architecture.md`)
+   - Then ui-ux-designer for interface design if UI is involved (saves spec to `docs/design.md`)
+   - Then planner agent for implementation decomposition (saves plan to `docs/plan.md`)
    - Then implementor for scaffolding
+   - Then specialist agents (frontend-dev, backend-dev) for implementation
 
 ---
 
@@ -86,6 +88,13 @@ Initial request: $ARGUMENTS
    - **For architect on greenfield**: Include all of the above PLUS:
      - "Read references/architecture-patterns.md for Node.js/TypeScript architecture patterns"
      - Specify the target framework: "Design using NestJS module architecture" or "Design using Next.js App Router"
+     - "Save your architecture blueprint to docs/architecture.md"
+   - **For tester**: Include full implementation context:
+     - List of all files created/modified (from agent reports)
+     - User flows from ui-ux-designer (if design phase was performed): "Read docs/design.md for user flows to use as test scenarios"
+     - Test framework detected from package.json (Jest, Vitest, Playwright)
+     - Stack-specific phrases: "typescript", "next.js", "nestjs" — matching detected stack
+     - "Write and run tests for this TypeScript/Node.js project using [test framework]"
    - **Report requirement**:
 
    ```
@@ -103,6 +112,16 @@ Initial request: $ARGUMENTS
 
 2. **Parallel dispatch** for independent subtasks (e.g., frontend component + backend API endpoint)
 3. **Sequential dispatch** when subtask B depends on A (e.g., types first → implementation second)
+4. **Shared file isolation**: Before parallel dispatch, identify shared files (types, utils, config, schemas). Either dispatch implementor FIRST to create shared files then dispatch specialists in parallel, OR assign shared file ownership to ONE agent explicitly in scope boundaries. Never allow two parallel agents to have overlapping file scopes.
+
+### Inter-agent context passing
+
+When dispatching an agent that depends on a previous agent's output:
+- **After architect**: Pass "Read docs/architecture.md for the architecture blueprint" to planner and implementation agents
+- **After ui-ux-designer**: Pass "Read docs/design.md for the design specification (color palette, wireframes, user flows)" to frontend-dev AND to tester
+- **After planner**: Use the planner's subtask list (from docs/plan.md) to determine dispatch order and agent assignments
+- **After backend-dev**: Pass API endpoints and response formats to frontend-dev (if dispatched sequentially)
+- **After all implementors**: Pass complete list of changed files and summaries to tester and code-reviewer
 
 ---
 
@@ -122,7 +141,8 @@ Initial request: $ARGUMENTS
    | NEEDS_CONTEXT | Answer questions about project structure, re-dispatch |
 
 3. If any agent was re-dispatched, return to this phase after completion
-4. Once all subtasks are DONE or DONE_WITH_CONCERNS, proceed to Phase 4
+4. **Maximum 2 re-dispatches per agent**. If still BLOCKED after 2 attempts — escalate to user with full context of what was tried and what failed
+5. Once all subtasks are DONE or DONE_WITH_CONCERNS, proceed to Phase 4
 
 ---
 
