@@ -44,6 +44,7 @@ Coordinators
     |
     +-- architect          Designs architecture (blue, opus, read-only)
     +-- planner            Decomposes tasks (cyan, read-only)
+    +-- ui-ux-designer     Designs UI/UX (magenta, read-only)
     +-- frontend-dev       Builds UI (magenta, full tools)
     +-- backend-dev        Builds API (green, full tools)
     +-- implementor        General fallback (green, full tools)
@@ -69,6 +70,7 @@ dev-team/
 │   ├── _template.md             # Template for creating new agents
 │   ├── architect.md             # System designer (blue, opus, read-only)
 │   ├── planner.md               # Task decomposer (cyan, read-only)
+│   ├── ui-ux-designer.md        # UI/UX designer (magenta, read-only)
 │   ├── frontend-dev.md          # UI developer (magenta, full tools)
 │   ├── backend-dev.md           # API developer (green, full tools)
 │   ├── implementor.md           # General fallback (green, full tools)
@@ -131,6 +133,7 @@ Questions: [if NEEDS_CONTEXT]
 |-------|------|-------|-------|-------|
 | architect | System design, blueprints | Read, Grep, Glob | opus | blue |
 | planner | Task decomposition, execution plans | Read, Grep, Glob | sonnet | cyan |
+| ui-ux-designer | UI/UX: user flows, layouts, specs | Read, Grep, Glob | sonnet | magenta |
 | frontend-dev | UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
 | backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utils | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
@@ -160,7 +163,7 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 |-------|-----|----------|
 | Plugin installed | Type `/dev-team` | Command available |
 | Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Agents available | Claude suggests agents | 7 agents: architect, planner, frontend-dev, backend-dev, implementor, tester, code-reviewer |
+| Agents available | Claude suggests agents | 8 agents: architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
 | Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |

@@ -46,6 +46,7 @@ Initial request: $ARGUMENTS
 3. Determine which agents to dispatch:
    - Architecture/design → architect agent (read-only, model: opus)
    - Planning/decomposition → planner agent (read-only)
+   - UI/UX design → ui-ux-designer agent (read-only, produces specs)
    - Frontend UI work → frontend-dev agent (full tools)
    - Backend API/DB work → backend-dev agent (full tools)
    - Scripts/config/other → implementor agent (full tools, general fallback)
@@ -75,6 +76,9 @@ Initial request: $ARGUMENTS
      - For frontend: "Work with react components and TypeScript in this Next.js project"
      - For backend: "Work with TypeScript controllers and services in this NestJS project"
      - For general: "This is a Node.js TypeScript project using [framework]"
+   - **For ui-ux-designer**: Include design context:
+     - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
+     - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc.
    - **For architect on greenfield**: Include all of the above PLUS:
      - "Read references/architecture-patterns.md for Node.js/TypeScript architecture patterns"
      - Specify the target framework: "Design using NestJS module architecture" or "Design using Next.js App Router"

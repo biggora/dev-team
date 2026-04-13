@@ -46,6 +46,7 @@ Initial request: $ARGUMENTS
 3. Determine which agents to dispatch:
    - Architecture/design → architect agent (read-only, model: opus)
    - Planning/decomposition → planner agent (read-only)
+   - UI/UX design → ui-ux-designer agent (read-only, produces specs)
    - Frontend UI work → frontend-dev agent (full tools)
    - Backend API/DB work → backend-dev agent (full tools)
    - Scripts/config/other → implementor agent (full tools, general fallback)
@@ -76,6 +77,9 @@ Initial request: $ARGUMENTS
      - For Flask: "Work with flask blueprints and routes in this Python project"
      - For FastAPI: "Work with FastAPI endpoints and pydantic models in this Python project"
      - For general: "This is a Python project using [framework]"
+   - **For ui-ux-designer**: Include design context:
+     - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
+     - Specify the aesthetic: "premium SaaS", "minimalist editorial", "admin dashboard", etc.
    - **For architect on greenfield**: Include all of the above PLUS:
      - "Read references/architecture-patterns.md for Python architecture patterns"
      - Specify the target framework: "Design using Django app architecture" or "Design using FastAPI routers"

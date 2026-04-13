@@ -40,6 +40,7 @@ Initial request: $ARGUMENTS
 3. Determine which specialist agents to dispatch based on the task type:
    - Architecture/design → architect agent (read-only, model: opus)
    - Planning/decomposition → planner agent (read-only)
+   - UI/UX design → ui-ux-designer agent (read-only, produces specs)
    - Frontend UI work → frontend-dev agent (full tools)
    - Backend API/DB work → backend-dev agent (full tools)
    - Scripts/config/other → implementor agent (full tools, general fallback)
