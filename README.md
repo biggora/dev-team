@@ -4,12 +4,36 @@ Claude Code plugin with a "coordinator + specialists" architecture. The coordina
 
 ## Installation
 
-```bash
-# From local directory:
-claude plugins add /path/to/dev-team
+### From GitHub (recommended)
 
-# From git repository:
-claude plugins add https://github.com/biggora/dev-team
+```bash
+# Step 1: Add marketplace
+/plugin marketplace add biggora/dev-team
+
+# Step 2: Install (globally by default)
+/plugin install dev-team@dev-team
+
+# OR install per-project (shared with team via .claude/settings.json)
+/plugin install dev-team@dev-team --scope project
+```
+
+### From local directory
+
+```bash
+# Step 1: Add local marketplace
+/plugin marketplace add /path/to/dev-team
+
+# Step 2: Install (globally by default)
+/plugin install dev-team@dev-team
+
+# OR install per-project
+/plugin install dev-team@dev-team --scope project
+```
+
+### Development mode (session only)
+
+```bash
+claude --plugin-dir /path/to/dev-team
 ```
 
 ## Usage

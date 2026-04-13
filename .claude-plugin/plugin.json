@@ -4,5 +4,8 @@
   "version": "1.0.0",
   "author": {
     "name": "Aleksejs Gordejevs"
-  }
+  },
+  "repository": "https://github.com/biggora/dev-team",
+  "license": "MIT",
+  "keywords": ["dev-team", "agents", "coordinator", "specialists", "fullstack"]
 }

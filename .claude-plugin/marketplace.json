@@ -1,0 +1,21 @@
+{
+  "name": "dev-team",
+  "version": "1.0.0",
+  "description": "Framework for specialized development agents with isolated contexts",
+  "owner": {
+    "name": "Aleksejs Gordejevs"
+  },
+  "plugins": [
+    {
+      "name": "dev-team",
+      "source": "./",
+      "description": "Coordinator + specialists architecture for full-stack development",
+      "author": {
+        "name": "Aleksejs Gordejevs"
+      },
+      "repository": "https://github.com/biggora/dev-team",
+      "license": "MIT",
+      "keywords": ["dev-team", "agents", "coordinator", "specialists", "fullstack"]
+    }
+  ]
+}
