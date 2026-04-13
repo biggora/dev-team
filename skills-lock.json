@@ -31,6 +31,11 @@
       "sourceType": "github",
       "computedHash": "7e88897e0371184e97a82b8d9ef080323c13f21eb067b58ef71eb05173a08ac2"
     },
+    "nest-best-practices": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "f55c8cc3c3e12374a181e3f1a1f4c952fee38ded1d3c7aafe9858b8eccb4fc37"
+    },
     "next-best-practices": {
       "source": "biggora/claude-plugins-registry",
       "sourceType": "github",
@@ -41,10 +46,25 @@
       "sourceType": "github",
       "computedHash": "ea1535abf75c983725431fe1a464a063356b1405ed89e163005687b30522a2bb"
     },
+    "postgresql-code-review": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "1167ec9449aa866e16bc7449e05ab4d391cdce95a0b0c5e1155b793160471eb5"
+    },
+    "postgresql-optimization": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "8022448de70ba9a485e3b5bce34c5bbc644f93eb39b68431c9f7dabcf03aeb09"
+    },
     "redesign-existing-projects": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
       "computedHash": "47eced3e960a2c961d3cbee11fa1216264f589344b586a5cbd03967cd6b9c54b"
+    },
+    "redis-development": {
+      "source": "redis/agent-skills",
+      "sourceType": "github",
+      "computedHash": "993ad240385d830a9717796a4b76e835ed737bfc9d3e10a4528e00bacd58cbf8"
     },
     "security-review": {
       "source": "getsentry/skills",
@@ -75,6 +95,11 @@
       "source": "biggora/claude-plugins-registry",
       "sourceType": "github",
       "computedHash": "d6dba1fa111dd209e962b60cf83caad12ca8af688f0c44117eb3c407c936aa1d"
+    },
+    "typescript-expert": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "d74e4185144f1e7caf6e6c6cfab763e9f7aac3925ad7ceb802d2c60c7f09c56a"
     },
     "ui-expert": {
       "source": "sebastiaanwouters/dotagents",

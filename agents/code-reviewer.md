@@ -48,6 +48,7 @@ You have access to specialized skills in `.agents/skills/`. They provide review-
 |-------|--------------|
 | **code-review** | Structured code review: security, performance, correctness, N+1 queries, edge cases, error handling |
 | **security-review** | Security-focused review: OWASP vulnerabilities, injection, XSS, auth issues, confidence-based reporting |
+| **postgresql-code-review** | PostgreSQL-specific review: JSONB patterns, schema design, RLS, function optimization, anti-patterns |
 
 When reviewing, apply the relevant skill's guidelines based on the review focus.
 

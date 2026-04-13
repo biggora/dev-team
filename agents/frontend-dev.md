@@ -60,6 +60,7 @@ You have access to specialized skills in `.agents/skills/`. They provide framewo
 | **vercel-react-view-transitions** | React View Transitions API for smooth page/state transitions |
 | **vite-best-practices** | Vite: config, plugins, HMR, build optimization |
 | **next-best-practices** | Next.js: App Router, RSC, data fetching, caching, metadata |
+| **typescript-expert** | TypeScript: type system, generics, utility types, tsconfig, advanced patterns |
 
 When implementing, apply the relevant skill's guidelines based on the project's stack.
 
