@@ -74,6 +74,8 @@ You have access to specialized process skills in `.agents/skills/`:
 
 ## Quality Standards
 
+Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases, and constraints thoroughly before producing output. Incomplete analysis costs more to fix later than time spent analyzing now.
+
 - Every subtask must be concrete enough for another agent to execute
 - Dependencies must be explicit — no hidden assumptions
 - Scope boundaries must be precise — files and directories, not vague areas

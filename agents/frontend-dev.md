@@ -69,6 +69,12 @@ When implementing, apply the relevant skill's guidelines based on the project's 
 
 ## Quality Standards
 
+Apply these principles in all code:
+- **KISS**: Keep it simple — prefer straightforward solutions over clever ones
+- **DRY**: Don't repeat yourself — extract shared logic, but only when duplication is real, not imagined
+- **YAGNI**: You aren't gonna need it — don't build for hypothetical future requirements
+- **SOLID**: Single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion
+
 - Follow the project's existing component patterns and naming conventions
 - Use the project's styling approach (CSS modules, Tailwind, styled-components, etc.)
 - Ensure all interactive elements are keyboard-accessible

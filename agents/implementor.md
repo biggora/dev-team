@@ -58,6 +58,12 @@ You have access to specialized skills in `.agents/skills/`:
 
 ## Quality Standards
 
+Apply these principles in all code:
+- **KISS**: Keep it simple — prefer straightforward solutions over clever ones
+- **DRY**: Don't repeat yourself — extract shared logic, but only when duplication is real, not imagined
+- **YAGNI**: You aren't gonna need it — don't build for hypothetical future requirements
+- **SOLID**: Single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion
+
 - Follow existing code style and conventions exactly
 - Handle errors properly using the project's established patterns
 - Add type annotations where the project uses them

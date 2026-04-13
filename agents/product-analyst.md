@@ -114,6 +114,8 @@ You have access to specialized process skills in `.agents/skills/`:
 
 ## Quality Standards
 
+Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases, and constraints thoroughly before producing output. Incomplete analysis costs more to fix later than time spent analyzing now.
+
 - Every functional requirement MUST have at least one acceptance criterion
 - Requirements must be testable — no vague statements like "should be fast" (specify: "response time < 200ms")
 - Out of scope section must be present — even if brief

@@ -85,6 +85,8 @@ You have access to specialized process skills in `.agents/skills/`:
 
 ## Quality Standards
 
+Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases, and constraints thoroughly before producing output. Incomplete analysis costs more to fix later than time spent analyzing now.
+
 - Every component must have a single, clear responsibility
 - Interfaces between components must be explicit and minimal
 - Data flow must be traceable from input to output
