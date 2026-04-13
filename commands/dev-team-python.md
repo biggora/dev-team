@@ -92,8 +92,8 @@ Initial request: $ARGUMENTS
      - Specify the target framework: "Design using Django app architecture" or "Design using FastAPI routers"
      - "Save your architecture blueprint to docs/architecture.md"
    - **For tester**: Include full implementation context:
+     - "Read docs/prd.md for acceptance criteria and docs/design.md for user flows. Create docs/test-plan.md with traceability matrix before writing tests."
      - List of all files created/modified (from agent reports)
-     - User flows from ui-ux-designer (if design phase was performed): "Read docs/design.md for user flows to use as test scenarios"
      - Test framework detected from pyproject.toml/requirements.txt (pytest, unittest, Playwright)
      - Stack-specific phrases: "python", "django", "fastapi", "flask" — matching detected stack
      - "Write and run tests for this Python project using [test framework]"

@@ -92,8 +92,8 @@ Initial request: $ARGUMENTS
      - "Include a color palette with hex values and ASCII wireframes for each screen so the design can be reviewed before implementation."
      - "Save your design specification to docs/design.md"
    - **For tester**: Include full implementation context:
+     - "Read docs/prd.md for acceptance criteria and docs/design.md for user flows. Create docs/test-plan.md with traceability matrix before writing tests."
      - List of all files created/modified (from agent reports)
-     - User flows from ui-ux-designer (if design phase was performed) — tester validates that implementation matches design
      - Test framework detected from package manifest
      - Stack-specific phrases matching detected stack
    - **Report requirement**: Include this template in EVERY agent prompt:

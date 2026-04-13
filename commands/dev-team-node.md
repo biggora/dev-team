@@ -95,8 +95,8 @@ Initial request: $ARGUMENTS
      - Specify the target framework: "Design using NestJS module architecture" or "Design using Next.js App Router"
      - "Save your architecture blueprint to docs/architecture.md"
    - **For tester**: Include full implementation context:
+     - "Read docs/prd.md for acceptance criteria and docs/design.md for user flows. Create docs/test-plan.md with traceability matrix before writing tests."
      - List of all files created/modified (from agent reports)
-     - User flows from ui-ux-designer (if design phase was performed): "Read docs/design.md for user flows to use as test scenarios"
      - Test framework detected from package.json (Jest, Vitest, Playwright)
      - Stack-specific phrases: "typescript", "next.js", "nestjs" — matching detected stack
      - "Write and run tests for this TypeScript/Node.js project using [test framework]"
