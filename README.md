@@ -1,6 +1,6 @@
 # dev-team
 
-Claude Code plugin with a "coordinator + specialists" architecture. The coordinator (`/dev`) decomposes tasks and dispatches specialist agents with isolated contexts. Skills are injected dynamically based on file patterns, not loaded globally.
+Claude Code plugin with a "coordinator + specialists" architecture. The coordinator (`/dev-team`) decomposes tasks and dispatches specialist agents with isolated contexts. Skills are injected dynamically based on file patterns, not loaded globally.
 
 ## Installation
 
@@ -15,8 +15,12 @@ claude plugins add https://github.com/biggora/dev-team
 ## Usage
 
 ```bash
-# Launch the coordinator with a task:
-/dev Implement authentication system with JWT and OAuth2
+# Universal coordinator (auto-detects stack):
+/dev-team Implement authentication system with JWT and OAuth2
+
+# Stack-specific coordinators:
+/dev-team-node Add API endpoint with NestJS controller and service
+/dev-team-python Create Django model with DRF serializer and viewset
 
 # The coordinator automatically:
 # 1. Analyzes the task and determines needed specialists
@@ -30,11 +34,14 @@ claude plugins add https://github.com/biggora/dev-team
 ## Architecture
 
 ```
-Coordinator (/dev)          Lightweight orchestrator, read-only
+Coordinators
+├── /dev-team              Universal (auto-detect stack)
+├── /dev-team-node         Node.js / TypeScript
+└── /dev-team-python       Python
     |
-    +-- Agent 1             Full task context, scoped tools
-    +-- Agent 2             Parallel if independent
-    +-- code-reviewer       Read-only, confidence scoring
+    +-- implementor        Writes code (green, full tools)
+    +-- tester             Writes & runs tests (yellow, full tools)
+    +-- code-reviewer      Reviews code (red, read-only)
 ```
 
 **Context isolation**: each agent gets a clean context and does not inherit the coordinator's session. The coordinator includes the full task description, scope boundaries, and report protocol in every dispatch.
@@ -48,11 +55,19 @@ dev-team/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin manifest
 ├── commands/
-│   └── dev.md                   # Coordinator (/dev) — 5-phase workflow
+│   ├── dev-team.md              # Universal coordinator (auto-detect)
+│   ├── dev-team-node.md         # Node.js coordinator
+│   └── dev-team-python.md       # Python coordinator
 ├── agents/
 │   ├── _template.md             # Template for creating new agents
-│   └── code-reviewer.md         # Read-only reviewer (sonnet, red)
+│   ├── implementor.md           # Code writer (green, full tools)
+│   ├── tester.md                # Test writer & runner (yellow, full tools)
+│   └── code-reviewer.md         # Read-only reviewer (red)
 ├── skills/
+│   ├── nodejs-stack/
+│   │   └── SKILL.md             # Node.js/TS patterns & conventions
+│   ├── python-stack/
+│   │   └── SKILL.md             # Python patterns & conventions
 │   └── _template/
 │       ├── SKILL.md             # Skill template with metadata example
 │       └── references/
@@ -113,15 +128,25 @@ Questions: [if NEEDS_CONTEXT]
 4. Put detailed documentation in `references/`
 5. Restart Claude Code — the skill is auto-discovered
 
+## Adding a New Stack
+
+To add support for a new technology stack (e.g., Go, Rust, Java):
+
+1. Create `commands/dev-team-<stack>.md` — copy from an existing stack coordinator, adapt detection patterns and stack-specific instructions
+2. Create `skills/<stack>-stack/SKILL.md` — add `pathPatterns`, `importPatterns`, `promptSignals` for the stack's file types
+3. Optionally add `references/` with framework-specific patterns
+4. Update `commands/dev-team.md` to list the new stack coordinator
+
 ## Verification
 
 | Check | How | Expected |
 |-------|-----|----------|
-| Plugin installed | Type `/dev` | Command available |
-| Agents available | Claude suggests agents | code-reviewer in list |
+| Plugin installed | Type `/dev-team` | Command available |
+| Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
+| Agents available | Claude suggests agents | implementor, tester, code-reviewer in list |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
-| Skill injection | Agent reads matching files | Skill injected |
-| Coordinator isolation | `/dev` doesn't see skills | Clean coordinator context |
+| Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
+| Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |
 
 For debugging: `claude --debug` shows skill injection and hook activity.
 

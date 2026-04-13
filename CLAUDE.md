@@ -4,10 +4,20 @@
 
 This plugin implements a "coordinator + specialists" architecture:
 
-- The `/dev` command is a lightweight coordinator that decomposes tasks and dispatches specialist agents
+- `/dev-team` — universal coordinator that auto-detects the stack
+- `/dev-team-node` — Node.js/TypeScript coordinator (Next.js, NestJS, Vite, Express)
+- `/dev-team-python` — Python coordinator (Django, Flask, FastAPI)
 - Specialist agents operate with isolated contexts — they do not inherit the coordinator's session
 - Skills are injected dynamically based on file patterns, not loaded globally
 - The coordinator does NOT read project source files — only git status, Glob, and Grep for structure analysis
+
+## Available Agents
+
+| Agent | Role | Tools | Color |
+|-------|------|-------|-------|
+| implementor | Writes and modifies code | Read, Write, Edit, Grep, Glob, Bash | green |
+| code-reviewer | Reviews code (read-only) | Read, Grep, Glob | red |
+| tester | Writes and runs tests | Read, Write, Edit, Grep, Glob, Bash | yellow |
 
 ## Report Protocol
 

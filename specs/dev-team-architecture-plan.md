@@ -19,7 +19,7 @@ dev-team/
 ├── .claude-plugin/
 │   └── plugin.json                    # Манифест плагина
 ├── commands/
-│   └── dev.md                         # Координатор (/dev) — 5-фазный workflow
+│   └── dev-team.md                    # Координатор (/dev-team) — 5-фазный workflow
 ├── agents/
 │   ├── _template.md                   # Шаблон для создания новых агентов
 │   └── code-reviewer.md              # Ревьюер (read-only, sonnet, red)
@@ -84,9 +84,9 @@ dev-team/
 
 ---
 
-### Файл 3: `commands/dev.md` — Координатор
+### Файл 3: `commands/dev-team.md` — Координатор
 
-**Назначение**: Slash command `/dev` — лёгкий оркестратор, который НЕ пишет код сам.
+**Назначение**: Slash command `/dev-team` — лёгкий оркестратор, который НЕ пишет код сам.
 
 **Frontmatter**:
 ```yaml
@@ -228,7 +228,7 @@ metadata:
   2b: CLAUDE.md
   
 Шаг 3: Координатор (самый сложный файл)
-  commands/dev.md
+  commands/dev-team.md
 
 Шаг 4: Агенты (параллельно)
   4a: agents/code-reviewer.md
@@ -274,7 +274,7 @@ metadata:
 | 2 | Валидный JSON | `cat .claude-plugin/plugin.json \| python -m json.tool` | Корректный JSON |
 | 3 | Frontmatter агентов | Просмотр agents/*.md | Корректный YAML: name, description, model, color |
 | 4 | Frontmatter скиллов | Просмотр skills/*/SKILL.md | Корректный YAML: name, description, metadata |
-| 5 | Команда доступна | Ввести `/dev test` в Claude Code после установки | Координатор запускается |
+| 5 | Команда доступна | Ввести `/dev-team test` в Claude Code после установки | Координатор запускается |
 | 6 | Агент доступен | Claude предлагает code-reviewer | Агент в списке |
 | 7 | Изоляция tools | Dispatch code-reviewer | Write/Edit НЕ доступны |
 | 8 | Протокол отчёта | Dispatch любого агента | Ответ содержит Status: DONE/... |
