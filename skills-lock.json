@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "code-review": {
+      "source": "anthropics/knowledge-work-plugins",
+      "sourceType": "github",
+      "computedHash": "2b1ac29c8d03ecdd6dbb9d0ebc8cdb05965151bedceed36f262546785b3123bc"
+    },
     "design-taste-frontend": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
@@ -31,10 +36,20 @@
       "sourceType": "github",
       "computedHash": "53a4ae3065d910329020ff57898d3719fba1d63b548fe0f6324a1d6d9d0e0b26"
     },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "computedHash": "ea1535abf75c983725431fe1a464a063356b1405ed89e163005687b30522a2bb"
+    },
     "redesign-existing-projects": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
       "computedHash": "47eced3e960a2c961d3cbee11fa1216264f589344b586a5cbd03967cd6b9c54b"
+    },
+    "security-review": {
+      "source": "getsentry/skills",
+      "sourceType": "github",
+      "computedHash": "1eee1e41aa0a0e75dbbe0cac387e3d61bedf51af1888f184301a173731e6973e"
     },
     "shadcn": {
       "source": "shadcn/ui",
@@ -50,6 +65,16 @@
       "source": "biggora/claude-plugins-registry",
       "sourceType": "github",
       "computedHash": "c11771f27338b76c1f513325f0206cdd0f0285ce17e5d2e374d45410d89e7542"
+    },
+    "test-mobile-app": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "1a066c7c54cb7e9466d88eae8a2452a918b7b5054f7e047026712884e07213c1"
+    },
+    "test-web-ui": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "d6dba1fa111dd209e962b60cf83caad12ca8af688f0c44117eb3c407c936aa1d"
     },
     "ui-expert": {
       "source": "sebastiaanwouters/dotagents",
