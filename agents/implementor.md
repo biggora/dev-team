@@ -1,27 +1,27 @@
 ---
 name: implementor
 description: |
-  Use this agent when code needs to be written, modified, or refactored. This is the primary agent for implementing features, fixing bugs, and making code changes.
+  Use this agent when the task is not clearly frontend or backend — scripts, configuration, CLI tools, DevOps, utilities, refactoring, or cross-cutting changes. General-purpose fallback for code work that doesn't fit frontend-dev or backend-dev.
 
   <example>
-  Context: A new feature needs to be built
-  user: "Implement user registration with email verification"
-  assistant: "I'll dispatch the implementor agent to build the registration flow."
-  <commentary>New feature implementation, trigger implementor with full tools.</commentary>
+  Context: A build or deployment script needs to be created
+  user: "Write a CI/CD pipeline configuration for GitHub Actions"
+  assistant: "I'll dispatch the implementor agent to create the pipeline config."
+  <commentary>DevOps/CI task, not frontend or backend, implementor handles it.</commentary>
   </example>
 
   <example>
-  Context: A bug needs to be fixed in existing code
-  user: "Fix the race condition in the payment processing service"
-  assistant: "I'll use the implementor agent to diagnose and fix the race condition."
-  <commentary>Bug fix requiring code changes, implementor is the right agent.</commentary>
+  Context: A utility or shared library needs work
+  user: "Create a shared logging utility used by both frontend and backend"
+  assistant: "I'll use the implementor agent for the cross-cutting utility."
+  <commentary>Shared utility, doesn't belong to frontend or backend specifically.</commentary>
   </example>
 
   <example>
-  Context: Code needs to be refactored
-  user: "Refactor the auth middleware to use the new token validation library"
-  assistant: "I'll dispatch the implementor agent to handle the refactoring."
-  <commentary>Refactoring task with code modifications, implementor handles it.</commentary>
+  Context: Configuration or project setup
+  user: "Set up ESLint, Prettier, and husky for the monorepo"
+  assistant: "I'll dispatch the implementor agent to configure the tooling."
+  <commentary>Project tooling setup, implementor as general-purpose agent.</commentary>
   </example>
 model: sonnet
 color: green

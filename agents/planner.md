@@ -23,7 +23,7 @@ description: |
   assistant: "I'll dispatch the planner agent to analyze the migration scope."
   <commentary>Scope analysis and risk identification, planner creates structured plan.</commentary>
   </example>
-model: sonnet
+model: opus
 color: cyan
 tools: Read, Grep, Glob
 ---

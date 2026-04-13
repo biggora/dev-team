@@ -46,7 +46,9 @@ Initial request: $ARGUMENTS
 3. Determine which agents to dispatch:
    - Architecture/design → architect agent (read-only, model: opus)
    - Planning/decomposition → planner agent (read-only)
-   - Implementation → implementor agent (full tools)
+   - Frontend UI work → frontend-dev agent (full tools)
+   - Backend API/DB work → backend-dev agent (full tools)
+   - Scripts/config/other → implementor agent (full tools, general fallback)
    - Testing → tester agent (full tools)
    - Code review → code-reviewer agent (read-only)
 4. Decompose into subtasks with clear scope boundaries

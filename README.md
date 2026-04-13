@@ -44,7 +44,9 @@ Coordinators
     |
     +-- architect          Designs architecture (blue, opus, read-only)
     +-- planner            Decomposes tasks (cyan, read-only)
-    +-- implementor        Writes code (green, full tools)
+    +-- frontend-dev       Builds UI (magenta, full tools)
+    +-- backend-dev        Builds API (green, full tools)
+    +-- implementor        General fallback (green, full tools)
     +-- tester             Writes & runs tests (yellow, full tools)
     +-- code-reviewer      Reviews code (red, read-only)
 ```
@@ -67,7 +69,9 @@ dev-team/
 │   ├── _template.md             # Template for creating new agents
 │   ├── architect.md             # System designer (blue, opus, read-only)
 │   ├── planner.md               # Task decomposer (cyan, read-only)
-│   ├── implementor.md           # Code writer (green, full tools)
+│   ├── frontend-dev.md          # UI developer (magenta, full tools)
+│   ├── backend-dev.md           # API developer (green, full tools)
+│   ├── implementor.md           # General fallback (green, full tools)
 │   ├── tester.md                # Test writer & runner (yellow, full tools)
 │   └── code-reviewer.md         # Read-only reviewer (red)
 ├── skills/
@@ -127,7 +131,9 @@ Questions: [if NEEDS_CONTEXT]
 |-------|------|-------|-------|-------|
 | architect | System design, blueprints | Read, Grep, Glob | opus | blue |
 | planner | Task decomposition, execution plans | Read, Grep, Glob | sonnet | cyan |
-| implementor | Code writing, bug fixes, refactoring | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
+| frontend-dev | UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
+| backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
+| implementor | General fallback: scripts, config, utils | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | tester | Test writing and execution | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | code-reviewer | Code quality review | Read, Grep, Glob | sonnet | red |
 
@@ -154,7 +160,7 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 |-------|-----|----------|
 | Plugin installed | Type `/dev-team` | Command available |
 | Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Agents available | Claude suggests agents | architect, planner, implementor, tester, code-reviewer in list |
+| Agents available | Claude suggests agents | 7 agents: architect, planner, frontend-dev, backend-dev, implementor, tester, code-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
 | Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |
