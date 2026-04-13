@@ -15,6 +15,7 @@ This plugin implements a "coordinator + specialists" architecture:
 
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
+| product-analyst | Formalizes requirements into PRD | Read, Write, Grep, Glob | opus | cyan |
 | architect | Designs system architecture and blueprints | Read, Write, Grep, Glob | opus | blue |
 | planner | Decomposes tasks, creates execution plans | Read, Write, Grep, Glob | opus | cyan |
 | ui-ux-designer | Designs UI/UX: flows, layouts, specs | Read, Write, Grep, Glob | sonnet | magenta |

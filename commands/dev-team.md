@@ -43,8 +43,8 @@ Initial request: $ARGUMENTS
    - **Store detected versions** — they will be passed to code-reviewer and tester
 3. Use `git status` and `Glob` to identify relevant project structure (do NOT read source files)
 4. Determine which specialist agents to dispatch based on the task type:
+   - Requirements analysis → product-analyst agent (saves PRD to `docs/prd.md`)
    - Architecture/design → architect agent (read-only, model: opus)
-   - Planning/decomposition → planner agent (read-only, model: opus)
    - UI/UX design → ui-ux-designer agent (read-only, produces specs)
    - Frontend UI work → frontend-dev agent (full tools)
    - Backend API/DB work → backend-dev agent (full tools)
@@ -58,7 +58,8 @@ Initial request: $ARGUMENTS
    - Ask for confirmation before dispatching
 
 **Greenfield detection**: If Glob finds no source files and no package manifest (package.json, pyproject.toml), this is a new project. In this case:
-   - Start with architect agent for system design (saves blueprint to `docs/architecture.md`)
+   - Start with product-analyst to formalize requirements (saves PRD to `docs/prd.md`)
+   - Then architect agent for system design (saves blueprint to `docs/architecture.md`)
    - Then ui-ux-designer for interface design if UI is involved (saves spec to `docs/design.md`)
    - Then planner agent for implementation decomposition (saves plan to `docs/plan.md`)
    - Then implementor for scaffolding
@@ -82,6 +83,9 @@ Initial request: $ARGUMENTS
      - For architect: "Apply brainstorming to explore design alternatives. Use writing-plans for structured implementation blueprints."
      - For planner: "Apply brainstorming before decomposition. Use writing-plans for structured execution plans."
      - For all agents with using-superpowers (architect, planner, implementor, backend-dev, frontend-dev): "Use the superpowers skill framework to discover and apply relevant skills."
+   - **For product-analyst**: Include the user's original request verbatim.
+     - "Formalize the requirements into a PRD. Save to docs/prd.md"
+     - If existing project: "Read the codebase to understand current state and derive requirements for the new feature"
    - **For ui-ux-designer**: Include design context:
      - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
      - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc.
@@ -114,6 +118,7 @@ Initial request: $ARGUMENTS
 ### Inter-agent context passing
 
 When dispatching an agent that depends on a previous agent's output:
+- **After product-analyst**: Pass "Read docs/prd.md for the product requirements document" to architect, ui-ux-designer, planner, and tester
 - **After architect**: Pass "Read docs/architecture.md for the architecture blueprint" to planner and implementation agents
 - **After ui-ux-designer**: Pass "Read docs/design.md for the design specification (color palette, wireframes, user flows)" to frontend-dev AND to tester
 - **After planner**: Use the planner's subtask list (from docs/plan.md) to determine dispatch order and agent assignments

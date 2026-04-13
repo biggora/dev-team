@@ -68,7 +68,8 @@ Coordinators
 ├── /dev-team-node         Node.js / TypeScript
 └── /dev-team-python       Python
     |
-    +-- architect          Designs architecture (blue, opus, read-only)
+    +-- product-analyst    Formalizes PRD (cyan, opus)
+    +-- architect          Designs architecture (blue, opus)
     +-- planner            Decomposes tasks (cyan, read-only)
     +-- ui-ux-designer     Designs UI/UX (magenta, read-only)
     +-- frontend-dev       Builds UI (magenta, full tools)
@@ -95,7 +96,8 @@ dev-team/
 │   └── dev-team-python.md       # Python coordinator
 ├── agents/
 │   ├── _template.md             # Template for creating new agents
-│   ├── architect.md             # System designer (blue, opus, read-only)
+│   ├── product-analyst.md       # PRD creator (cyan, opus)
+│   ├── architect.md             # System designer (blue, opus)
 │   ├── planner.md               # Task decomposer (cyan, read-only)
 │   ├── ui-ux-designer.md        # UI/UX designer (magenta, read-only)
 │   ├── frontend-dev.md          # UI developer (magenta, full tools)
@@ -158,6 +160,7 @@ Questions: [if NEEDS_CONTEXT]
 
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
+| product-analyst | Requirements analysis, PRD | Read, Write, Grep, Glob | opus | cyan |
 | architect | System design, blueprints | Read, Write, Grep, Glob | opus | blue |
 | planner | Task decomposition, execution plans | Read, Write, Grep, Glob | opus | cyan |
 | ui-ux-designer | UI/UX: user flows, layouts, specs | Read, Write, Grep, Glob | sonnet | magenta |
