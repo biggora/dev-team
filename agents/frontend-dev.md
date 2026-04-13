@@ -61,6 +61,7 @@ You have access to specialized skills in `.agents/skills/`. They provide framewo
 | **vite-best-practices** | Vite: config, plugins, HMR, build optimization |
 | **next-best-practices** | Next.js: App Router, RSC, data fetching, caching, metadata |
 | **typescript-expert** | TypeScript: type system, generics, utility types, tsconfig, advanced patterns |
+| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
 
 When implementing, apply the relevant skill's guidelines based on the project's stack.
 

@@ -76,6 +76,10 @@ Initial request: $ARGUMENTS
      - For frontend: "Work with react components and TypeScript in this Next.js project"
      - For backend: "Work with TypeScript controllers and services in this NestJS project"
      - For general: "This is a Node.js TypeScript project using [framework]"
+   - **Process skill instructions** (for agents with process skills):
+     - For architect: "Apply brainstorming to explore design alternatives. Use writing-plans for structured implementation blueprints."
+     - For planner: "Apply brainstorming before decomposition. Use writing-plans for structured execution plans."
+     - For all agents with using-superpowers (architect, planner, implementor, backend-dev, frontend-dev): "Use the superpowers skill framework to discover and apply relevant skills."
    - **For ui-ux-designer**: Include design context:
      - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
      - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc.

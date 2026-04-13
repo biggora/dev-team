@@ -71,6 +71,16 @@ Provide a structured architecture blueprint:
 6. **File structure**: Proposed directory and file layout
 7. **Implementation sequence**: Recommended build order
 
+## Available Process Skills
+
+You have access to specialized process skills in `.agents/skills/`:
+
+| Skill | When to apply |
+|-------|--------------|
+| **brainstorming** | Before creative work: exploring architectural options, evaluating trade-offs, generating design alternatives |
+| **writing-plans** | When producing implementation blueprints and build sequences |
+| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
+
 ## Quality Standards
 
 - Every component must have a single, clear responsibility

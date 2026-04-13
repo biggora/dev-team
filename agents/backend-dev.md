@@ -59,6 +59,7 @@ You have access to specialized skills in `.agents/skills/`. They provide framewo
 | **typescript-expert** | TypeScript: type system, generics, utility types, tsconfig, advanced patterns |
 | **redis-development** | Redis: data structures, query engine, vector search, caching, performance optimization |
 | **postgresql-optimization** | PostgreSQL: JSONB, arrays, full-text search, window functions, extensions, optimization |
+| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
 
 When implementing, apply the relevant skill's guidelines based on the project's stack.
 

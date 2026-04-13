@@ -64,6 +64,10 @@ Initial request: $ARGUMENTS
    - **Scope boundaries**: Exactly which files and directories the agent may read and modify
    - **Context from other agents**: What has already been done (file changes, decisions made)
    - **Constraints**: Coding standards, patterns to follow, things to avoid
+   - **Process skill instructions** (for agents with process skills):
+     - For architect: "Apply brainstorming to explore design alternatives. Use writing-plans for structured implementation blueprints."
+     - For planner: "Apply brainstorming before decomposition. Use writing-plans for structured execution plans."
+     - For all agents with using-superpowers (architect, planner, implementor, backend-dev, frontend-dev): "Use the superpowers skill framework to discover and apply relevant skills."
    - **Report requirement**: Include this template in EVERY agent prompt:
 
    ```

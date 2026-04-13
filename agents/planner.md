@@ -60,6 +60,16 @@ Provide a structured execution plan:
 4. **Execution order**: Which subtasks are parallel, which are sequential
 5. **Risks and unknowns**: What might block progress
 
+## Available Process Skills
+
+You have access to specialized process skills in `.agents/skills/`:
+
+| Skill | When to apply |
+|-------|--------------|
+| **brainstorming** | Before creative work: designing features, planning approaches, exploring alternatives |
+| **writing-plans** | When creating multi-step execution plans from specs or requirements |
+| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
+
 ## Quality Standards
 
 - Every subtask must be concrete enough for another agent to execute
