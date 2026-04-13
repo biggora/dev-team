@@ -22,13 +22,16 @@ claude plugins add https://github.com/biggora/dev-team
 /dev-team-node Add API endpoint with NestJS controller and service
 /dev-team-python Create Django model with DRF serializer and viewset
 
+# Greenfield architecture (works with empty projects):
+/dev-team-node Design a marketplace backend with NestJS
+/dev-team-python Design a SaaS platform with Django
+
 # The coordinator automatically:
-# 1. Analyzes the task and determines needed specialists
-# 2. Decomposes into subtasks with scope boundaries
-# 3. Dispatches agents (parallel when independent)
-# 4. Collects results and handles BLOCKED/NEEDS_CONTEXT
-# 5. Sends for code review (optional)
-# 6. Reports summary to user
+# 1. Analyzes the task (detects greenfield vs existing project)
+# 2. Dispatches architect (opus) for design, planner for decomposition
+# 3. Dispatches implementor/tester (parallel when independent)
+# 4. Sends for code review (optional)
+# 5. Reports summary to user
 ```
 
 ## Architecture
@@ -39,6 +42,8 @@ Coordinators
 ├── /dev-team-node         Node.js / TypeScript
 └── /dev-team-python       Python
     |
+    +-- architect          Designs architecture (blue, opus, read-only)
+    +-- planner            Decomposes tasks (cyan, read-only)
     +-- implementor        Writes code (green, full tools)
     +-- tester             Writes & runs tests (yellow, full tools)
     +-- code-reviewer      Reviews code (red, read-only)
@@ -60,14 +65,20 @@ dev-team/
 │   └── dev-team-python.md       # Python coordinator
 ├── agents/
 │   ├── _template.md             # Template for creating new agents
+│   ├── architect.md             # System designer (blue, opus, read-only)
+│   ├── planner.md               # Task decomposer (cyan, read-only)
 │   ├── implementor.md           # Code writer (green, full tools)
 │   ├── tester.md                # Test writer & runner (yellow, full tools)
 │   └── code-reviewer.md         # Read-only reviewer (red)
 ├── skills/
 │   ├── nodejs-stack/
-│   │   └── SKILL.md             # Node.js/TS patterns & conventions
+│   │   ├── SKILL.md             # Node.js/TS patterns & conventions
+│   │   └── references/
+│   │       └── architecture-patterns.md  # NestJS, Next.js, monorepo
 │   ├── python-stack/
-│   │   └── SKILL.md             # Python patterns & conventions
+│   │   ├── SKILL.md             # Python patterns & conventions
+│   │   └── references/
+│   │       └── architecture-patterns.md  # Django, Flask, FastAPI
 │   └── _template/
 │       ├── SKILL.md             # Skill template with metadata example
 │       └── references/
@@ -110,15 +121,15 @@ Questions: [if NEEDS_CONTEXT]
 4. Include the report protocol at the end
 5. Restart Claude Code — the agent is auto-discovered
 
-**Role-based tool presets:**
+**Available agents:**
 
-| Role | Tools |
-|------|-------|
-| Implementor | Read, Write, Edit, Grep, Glob, Bash |
-| Reviewer | Read, Grep, Glob |
-| Planner | Read, Grep, Glob |
-| Tester | Read, Write, Edit, Grep, Glob, Bash |
-| Researcher | Read, Grep, Glob, WebSearch, WebFetch |
+| Agent | Role | Tools | Model | Color |
+|-------|------|-------|-------|-------|
+| architect | System design, blueprints | Read, Grep, Glob | opus | blue |
+| planner | Task decomposition, execution plans | Read, Grep, Glob | sonnet | cyan |
+| implementor | Code writing, bug fixes, refactoring | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
+| tester | Test writing and execution | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
+| code-reviewer | Code quality review | Read, Grep, Glob | sonnet | red |
 
 ## Adding a New Skill
 
@@ -132,9 +143,9 @@ Questions: [if NEEDS_CONTEXT]
 
 To add support for a new technology stack (e.g., Go, Rust, Java):
 
-1. Create `commands/dev-team-<stack>.md` — copy from an existing stack coordinator, adapt detection patterns and stack-specific instructions
+1. Create `commands/dev-team-<stack>.md` — copy from an existing stack coordinator, adapt detection patterns, greenfield detection, and stack-specific dispatch phrases
 2. Create `skills/<stack>-stack/SKILL.md` — add `pathPatterns`, `importPatterns`, `promptSignals` for the stack's file types
-3. Optionally add `references/` with framework-specific patterns
+3. Create `skills/<stack>-stack/references/architecture-patterns.md` — stack-specific architecture patterns for the architect agent
 4. Update `commands/dev-team.md` to list the new stack coordinator
 
 ## Verification
@@ -143,7 +154,7 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 |-------|-----|----------|
 | Plugin installed | Type `/dev-team` | Command available |
 | Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Agents available | Claude suggests agents | implementor, tester, code-reviewer in list |
+| Agents available | Claude suggests agents | architect, planner, implementor, tester, code-reviewer in list |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
 | Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |

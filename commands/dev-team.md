@@ -38,11 +38,11 @@ Initial request: $ARGUMENTS
    - Whether subtasks are independent (can parallel) or dependent (must sequence)
 2. Use `git status` and `Glob` to identify relevant project structure (do NOT read source files)
 3. Determine which specialist agents to dispatch based on the task type:
-   - Implementation → implementor agent (tools: Read, Write, Edit, Grep, Glob, Bash)
-   - Code review → code-reviewer agent (tools: Read, Grep, Glob)
-   - Testing → tester agent (tools: Read, Write, Edit, Grep, Glob, Bash)
-   - Analysis/planning → planner agent (tools: Read, Grep, Glob)
-   - Research → researcher agent (tools: Read, Grep, Glob, WebSearch, WebFetch)
+   - Architecture/design → architect agent (read-only, model: opus)
+   - Planning/decomposition → planner agent (read-only)
+   - Implementation → implementor agent (full tools)
+   - Testing → tester agent (full tools)
+   - Code review → code-reviewer agent (read-only)
 4. Decompose into concrete subtasks with clear scope boundaries
 5. Present the decomposition plan to the user:
    - List of subtasks with assigned agents

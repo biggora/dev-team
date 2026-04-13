@@ -13,11 +13,13 @@ This plugin implements a "coordinator + specialists" architecture:
 
 ## Available Agents
 
-| Agent | Role | Tools | Color |
-|-------|------|-------|-------|
-| implementor | Writes and modifies code | Read, Write, Edit, Grep, Glob, Bash | green |
-| code-reviewer | Reviews code (read-only) | Read, Grep, Glob | red |
-| tester | Writes and runs tests | Read, Write, Edit, Grep, Glob, Bash | yellow |
+| Agent | Role | Tools | Model | Color |
+|-------|------|-------|-------|-------|
+| architect | Designs system architecture and blueprints | Read, Grep, Glob | opus | blue |
+| planner | Decomposes tasks, creates execution plans | Read, Grep, Glob | sonnet | cyan |
+| implementor | Writes and modifies code | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
+| tester | Writes and runs tests | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
+| code-reviewer | Reviews code for quality and bugs | Read, Grep, Glob | sonnet | red |
 
 ## Report Protocol
 
@@ -50,6 +52,8 @@ Questions: [only if NEEDS_CONTEXT — what information is needed]
 - Include **context** about what other agents have done
 - Always include the **report protocol template** in the agent prompt
 - Independent tasks → **multiple Agent tool calls in one message** (parallel dispatch)
+- Include **stack-specific phrases** in prompts (e.g., "typescript", "nestjs", "django") to trigger skill injection via promptSignals — critical for greenfield projects where no files exist yet
+- For architect on greenfield: explicitly instruct to "Read references/architecture-patterns.md"
 
 ## Agent Guidelines
 

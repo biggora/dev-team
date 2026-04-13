@@ -44,12 +44,18 @@ Initial request: $ARGUMENTS
    - Which areas: models, views/routes, serializers, templates, migrations, services
    - Whether subtasks are independent or dependent
 3. Determine which agents to dispatch:
-   - Implementation → implementor agent
-   - Code review → code-reviewer agent
-   - Testing → tester agent
-   - Analysis → planner agent
+   - Architecture/design → architect agent (read-only, model: opus)
+   - Planning/decomposition → planner agent (read-only)
+   - Implementation → implementor agent (full tools)
+   - Testing → tester agent (full tools)
+   - Code review → code-reviewer agent (read-only)
 4. Decompose into subtasks with clear scope boundaries
 5. Present plan to user and ask for confirmation
+
+**Greenfield detection**: If Glob finds no `.py` files or no `pyproject.toml`/`requirements.txt`, this is a new project. In this case:
+   - Start with architect agent for system design
+   - Then planner agent for implementation decomposition
+   - Then implementor for scaffolding
 
 ---
 
@@ -68,6 +74,9 @@ Initial request: $ARGUMENTS
      - For Flask: "Work with flask blueprints and routes in this Python project"
      - For FastAPI: "Work with FastAPI endpoints and pydantic models in this Python project"
      - For general: "This is a Python project using [framework]"
+   - **For architect on greenfield**: Include all of the above PLUS:
+     - "Read references/architecture-patterns.md for Python architecture patterns"
+     - Specify the target framework: "Design using Django app architecture" or "Design using FastAPI routers"
    - **Report requirement**:
 
    ```

@@ -44,12 +44,18 @@ Initial request: $ARGUMENTS
    - Which areas: frontend (components, pages), backend (routes, controllers, services), shared (types, utils)
    - Whether subtasks are independent or dependent
 3. Determine which agents to dispatch:
-   - Implementation → implementor agent
-   - Code review → code-reviewer agent
-   - Testing → tester agent
-   - Analysis → planner agent
+   - Architecture/design → architect agent (read-only, model: opus)
+   - Planning/decomposition → planner agent (read-only)
+   - Implementation → implementor agent (full tools)
+   - Testing → tester agent (full tools)
+   - Code review → code-reviewer agent (read-only)
 4. Decompose into subtasks with clear scope boundaries
 5. Present plan to user and ask for confirmation
+
+**Greenfield detection**: If Glob finds no `.ts`/`.js` files or no `package.json`, this is a new project. In this case:
+   - Start with architect agent for system design
+   - Then planner agent for implementation decomposition
+   - Then implementor for scaffolding
 
 ---
 
@@ -67,6 +73,9 @@ Initial request: $ARGUMENTS
      - For frontend: "Work with react components and TypeScript in this Next.js project"
      - For backend: "Work with TypeScript controllers and services in this NestJS project"
      - For general: "This is a Node.js TypeScript project using [framework]"
+   - **For architect on greenfield**: Include all of the above PLUS:
+     - "Read references/architecture-patterns.md for Node.js/TypeScript architecture patterns"
+     - Specify the target framework: "Design using NestJS module architecture" or "Design using Next.js App Router"
    - **Report requirement**:
 
    ```
