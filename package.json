@@ -1,0 +1,23 @@
+{
+  "name": "@biggora/dev-team",
+  "version": "1.0.0",
+  "description": "A custom Agent plugin with a coordinator + specialists architecture",
+  "keywords": [
+    "agent"
+  ],
+  "homepage": "https://github.com/biggora/dev-team#readme",
+  "bugs": {
+    "url": "https://github.com/biggora/dev-team/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/biggora/dev-team.git"
+  },
+  "license": "MIT",
+  "author": "Aleksejs Gordejevs",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

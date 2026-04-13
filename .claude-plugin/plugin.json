@@ -1,0 +1,8 @@
+{
+  "name": "dev-team",
+  "description": "Framework for specialized development agents with isolated contexts",
+  "version": "1.0.0",
+  "author": {
+    "name": "Aleksejs Gordejevs"
+  }
+}
