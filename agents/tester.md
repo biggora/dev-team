@@ -70,6 +70,9 @@ You have access to specialized skills in `.agents/skills/`. They provide testing
 | **next-best-practices** | Next.js testing: RSC testing, Server Action testing, route testing |
 | **nest-best-practices** | NestJS testing: module testing, e2e with supertest, guard/pipe testing |
 
+| **brainstorming** | Before test strategy: exploring test scenarios, edge cases, coverage gaps |
+| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
+
 When testing, apply the relevant skill's guidelines based on the project's needs.
 
 ## Output Guidance

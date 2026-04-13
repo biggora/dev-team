@@ -108,6 +108,7 @@ You have access to specialized process skills in `.agents/skills/`:
 
 | Skill | When to apply |
 |-------|--------------|
+| **prd** | PRD creation: structured requirements documents with functional specs, user stories, and acceptance criteria |
 | **brainstorming** | Before formalizing: exploring implicit requirements, evaluating scope alternatives, identifying edge cases |
 | **using-superpowers** | Framework for discovering and applying relevant skills to your work |
 
