@@ -26,20 +26,50 @@
       "sourceType": "github",
       "computedHash": "7e88897e0371184e97a82b8d9ef080323c13f21eb067b58ef71eb05173a08ac2"
     },
+    "next-best-practices": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "53a4ae3065d910329020ff57898d3719fba1d63b548fe0f6324a1d6d9d0e0b26"
+    },
     "redesign-existing-projects": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
       "computedHash": "47eced3e960a2c961d3cbee11fa1216264f589344b586a5cbd03967cd6b9c54b"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "computedHash": "642a177bee320618caa49f5106cadb4e7594c606e867f61ba7b56d19cf745cd5"
     },
     "stitch-design-taste": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
       "computedHash": "acf2921a7e50c06e637f072ba52e36a994cbb44ecbe6e31435bc113b894f5499"
     },
+    "tailwindcss-best-practices": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "c11771f27338b76c1f513325f0206cdd0f0285ce17e5d2e374d45410d89e7542"
+    },
     "ui-expert": {
       "source": "sebastiaanwouters/dotagents",
       "sourceType": "github",
       "computedHash": "1b18352d3577d7e87746456bdb8e7d0aefc06c15cbcd1b747877c11d97632da4"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "43ca6c197f8ec13055079da7053232d477068b03ca443f9ac1bc819b95cdd432"
+    },
+    "vercel-react-view-transitions": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "c8952fc9127fa0564d0cb71dccb4215a5608ac933b5831104f09173a97a46f85"
+    },
+    "vite-best-practices": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "computedHash": "68f9639afe2e97daca82c87d96d56f62d76b982c151e8e8cbc1d21571e9782e8"
     },
     "web-design-reviewer": {
       "source": "github/awesome-copilot",

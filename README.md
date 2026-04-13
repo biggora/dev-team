@@ -132,7 +132,7 @@ Questions: [if NEEDS_CONTEXT]
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
 | architect | System design, blueprints | Read, Grep, Glob | opus | blue |
-| planner | Task decomposition, execution plans | Read, Grep, Glob | sonnet | cyan |
+| planner | Task decomposition, execution plans | Read, Grep, Glob | opus | cyan |
 | ui-ux-designer | UI/UX: user flows, layouts, specs | Read, Grep, Glob | sonnet | magenta |
 | frontend-dev | UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
 | backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
