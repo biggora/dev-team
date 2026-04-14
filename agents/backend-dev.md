@@ -23,6 +23,13 @@ description: |
   assistant: "I'll dispatch backend-dev for the auth implementation."
   <commentary>Auth system with security requirements, backend-dev territory.</commentary>
   </example>
+
+  <example>
+  Context: Fullstack feature — backend portion
+  user: "Add Stripe payment processing with webhooks and update the payment status UI"
+  assistant: "I'll split this: backend-dev for the Stripe webhook handler and payment API, frontend-dev for the payment status UI."
+  <commentary>Fullstack task — backend-dev handles the API/webhook portion, frontend-dev handles the UI portion. Two agents dispatched in parallel.</commentary>
+  </example>
 model: sonnet
 color: green
 tools: Read, Write, Edit, Grep, Glob, Bash

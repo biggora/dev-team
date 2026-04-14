@@ -23,6 +23,20 @@ description: |
   assistant: "I'll dispatch frontend-dev for the responsive and theming work."
   <commentary>CSS, responsive design, theming — frontend-dev territory.</commentary>
   </example>
+
+  <example>
+  Context: Fullstack feature — frontend portion
+  user: "Add Stripe payment processing with webhooks and update the payment status UI"
+  assistant: "I'll split this: backend-dev for the webhook handler, frontend-dev for the payment status page and UI components."
+  <commentary>Fullstack task — frontend-dev handles the UI portion while backend-dev handles the API. Two agents in parallel.</commentary>
+  </example>
+
+  <example>
+  Context: Mixed-stack frontend work
+  user: "Build a Django admin panel with custom React widgets"
+  assistant: "I'll dispatch backend-dev for the Django admin configuration and frontend-dev for the custom React widget components."
+  <commentary>Mixed stack — frontend-dev handles React widgets regardless of the backend stack.</commentary>
+  </example>
 model: sonnet
 color: magenta
 tools: Read, Write, Edit, Grep, Glob, Bash

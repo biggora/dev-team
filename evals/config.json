@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "scoring_weights": {
+    "agent_triggering": 0.40,
+    "skill_injection": 0.30,
+    "coordinator_dispatch": 0.30
+  },
+  "hard_gates": {
+    "min_accuracy_vs_baseline": 0.0,
+    "max_cost_increase_pct": 25,
+    "safety_violation_allowed": false
+  },
+  "tier_config": {
+    "tier1": { "max_api_calls": 0, "repeat_runs": 1 },
+    "tier2": { "max_api_calls_per_case": 1, "repeat_runs": 3 },
+    "tier3": { "max_api_calls_per_case": 15, "repeat_runs": 2 }
+  },
+  "holdout_ids": ["AT-008", "SI-007", "CD-006"]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "eval-mixed-stack",
+  "private": true,
+  "dependencies": {
+    "react": "19.1.0",
+    "typescript": "5.8.0"
+  }
+}

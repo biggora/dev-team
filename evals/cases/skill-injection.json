@@ -1,0 +1,116 @@
+{
+  "category": "skill-injection",
+  "version": 1,
+  "evals": [
+    {
+      "id": "SI-001",
+      "tier": 1,
+      "signal_type": "path",
+      "signal_value": "src/app/page.tsx",
+      "expected": {
+        "injected": ["nodejs-stack"],
+        "not_injected": ["python-stack"]
+      },
+      "tags": ["path", "nodejs"]
+    },
+    {
+      "id": "SI-002",
+      "tier": 1,
+      "signal_type": "path",
+      "signal_value": "app/views.py",
+      "expected": {
+        "injected": ["python-stack"],
+        "not_injected": ["nodejs-stack"]
+      },
+      "tags": ["path", "python"]
+    },
+    {
+      "id": "SI-003",
+      "tier": 1,
+      "signal_type": "bash",
+      "signal_value": "npm run dev",
+      "expected": {
+        "injected": ["nodejs-stack"],
+        "not_injected": ["python-stack"]
+      },
+      "tags": ["bash", "nodejs"]
+    },
+    {
+      "id": "SI-004",
+      "tier": 1,
+      "signal_type": "bash",
+      "signal_value": "python manage.py migrate",
+      "expected": {
+        "injected": ["python-stack"],
+        "not_injected": ["nodejs-stack"]
+      },
+      "tags": ["bash", "python"]
+    },
+    {
+      "id": "SI-005",
+      "tier": 1,
+      "signal_type": "prompt",
+      "signal_value": "django views and serializers",
+      "expected": {
+        "injected": ["python-stack"],
+        "not_injected": ["nodejs-stack"]
+      },
+      "tags": ["prompt", "python"]
+    },
+    {
+      "id": "SI-006",
+      "tier": 1,
+      "signal_type": "prompt",
+      "signal_value": "react component with typescript",
+      "expected": {
+        "injected": ["nodejs-stack"],
+        "not_injected": ["python-stack"]
+      },
+      "tags": ["prompt", "nodejs"]
+    },
+    {
+      "id": "SI-007",
+      "tier": 1,
+      "signal_type": "prompt",
+      "signal_value": "typescript and django",
+      "expected": {
+        "injected": ["python-stack"],
+        "not_injected": ["nodejs-stack"]
+      },
+      "tags": ["prompt", "conflict", "holdout"]
+    },
+    {
+      "id": "SI-008",
+      "tier": 1,
+      "signal_type": "prompt",
+      "signal_value": "build a python flask API with REST endpoints",
+      "expected": {
+        "injected": ["python-stack"],
+        "not_injected": ["nodejs-stack"]
+      },
+      "tags": ["prompt", "python", "clear-signal"]
+    },
+    {
+      "id": "SI-009",
+      "tier": 1,
+      "signal_type": "path",
+      "signal_value": "nest-cli.json",
+      "expected": {
+        "injected": ["nodejs-stack"],
+        "not_injected": ["python-stack"]
+      },
+      "tags": ["path", "nestjs"]
+    },
+    {
+      "id": "SI-010",
+      "tier": 1,
+      "signal_type": "import",
+      "signal_value": "fastapi",
+      "expected": {
+        "injected": ["python-stack"],
+        "not_injected": ["nodejs-stack"]
+      },
+      "tags": ["import", "python"]
+    }
+  ]
+}

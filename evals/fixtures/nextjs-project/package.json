@@ -1,0 +1,16 @@
+{
+  "name": "eval-nextjs-project",
+  "private": true,
+  "dependencies": {
+    "next": "16.2.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "@nestjs/core": "11.0.0",
+    "@nestjs/common": "11.0.0",
+    "typescript": "5.8.0"
+  },
+  "devDependencies": {
+    "vitest": "3.1.0",
+    "@playwright/test": "1.52.0"
+  }
+}

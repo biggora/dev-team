@@ -1,0 +1,108 @@
+{
+  "category": "coordinator-dispatch",
+  "version": 1,
+  "evals": [
+    {
+      "id": "CD-001",
+      "tier": 2,
+      "prompt": "Create a REST API for user management",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": ["backend-dev"],
+        "phases": ["analysis", "dispatch", "collection", "report"],
+        "skill_phrases": ["typescript", "nestjs"]
+      },
+      "tags": ["nodejs", "single-agent"]
+    },
+    {
+      "id": "CD-002",
+      "tier": 2,
+      "prompt": "Add a notification system with email and push notifications",
+      "context": { "fixture": "django-project" },
+      "expected": {
+        "stack": "python",
+        "agents": ["backend-dev"],
+        "phases": ["analysis", "dispatch", "collection", "report"],
+        "skill_phrases": ["django", "python"]
+      },
+      "tags": ["python", "single-agent"]
+    },
+    {
+      "id": "CD-003",
+      "tier": 3,
+      "prompt": "Build a SaaS task manager with authentication, dashboard, and CRUD tasks",
+      "context": { "fixture": "greenfield" },
+      "expected": {
+        "stack": "greenfield",
+        "agents": ["product-analyst", "architect", "ui-ux-designer", "planner", "implementor", "backend-dev", "frontend-dev", "tester", "code-reviewer"],
+        "phases": ["analysis", "dispatch", "collection", "review", "report"],
+        "dispatch_order": "sequential_then_parallel"
+      },
+      "tags": ["greenfield", "full-flow"]
+    },
+    {
+      "id": "CD-004",
+      "tier": 2,
+      "prompt": "Fix the login page styling and the auth endpoint error handling",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": ["frontend-dev", "backend-dev"],
+        "dispatch_mode": "parallel",
+        "scope_isolation": true
+      },
+      "tags": ["parallel", "split-task"]
+    },
+    {
+      "id": "CD-005",
+      "tier": 2,
+      "prompt": "Refactor the data layer to use a repository pattern",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": ["backend-dev"],
+        "not_agents": ["frontend-dev"]
+      },
+      "tags": ["refactor", "backend-only"]
+    },
+    {
+      "id": "CD-006",
+      "tier": 3,
+      "prompt": "Create a payments module: Stripe webhook handler, payment confirmation page, and integration tests",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": ["backend-dev", "frontend-dev", "tester"],
+        "dispatch_mode": "sequential",
+        "dispatch_order": ["backend-dev", "frontend-dev", "tester"]
+      },
+      "tags": ["sequential", "multi-agent", "holdout"]
+    },
+    {
+      "id": "CD-007",
+      "tier": 2,
+      "prompt": "Review the recent authentication changes",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": ["code-reviewer"],
+        "not_agents": ["backend-dev", "frontend-dev", "tester"]
+      },
+      "tags": ["review-only"]
+    },
+    {
+      "id": "CD-008",
+      "tier": 2,
+      "prompt": "Write end-to-end tests for the checkout flow",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": ["tester"],
+        "not_agents": ["backend-dev", "frontend-dev"],
+        "skill_phrases": ["playwright", "typescript"]
+      },
+      "tags": ["testing-only"]
+    }
+  ]
+}

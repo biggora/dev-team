@@ -1,0 +1,138 @@
+{
+  "category": "agent-triggering",
+  "version": 1,
+  "evals": [
+    {
+      "id": "AT-001",
+      "tier": 1,
+      "prompt": "Create a REST endpoint for payments",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["backend-dev"],
+        "not_agents": ["implementor", "frontend-dev"]
+      },
+      "tags": ["backend", "api", "clear-signal"]
+    },
+    {
+      "id": "AT-002",
+      "tier": 1,
+      "prompt": "Design the checkout user flow",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["ui-ux-designer"],
+        "not_agents": ["frontend-dev", "backend-dev"]
+      },
+      "tags": ["design", "ux", "clear-signal"]
+    },
+    {
+      "id": "AT-003",
+      "tier": 1,
+      "prompt": "Build a user registration form with validation",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["frontend-dev"],
+        "not_agents": ["backend-dev", "implementor"]
+      },
+      "tags": ["frontend", "form", "clear-signal"]
+    },
+    {
+      "id": "AT-004",
+      "tier": 1,
+      "prompt": "Write tests for the auth module",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["tester"],
+        "not_agents": ["backend-dev", "frontend-dev"]
+      },
+      "tags": ["testing", "clear-signal"]
+    },
+    {
+      "id": "AT-005",
+      "tier": 1,
+      "prompt": "Review the auth changes for security issues",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["code-reviewer"],
+        "not_agents": ["backend-dev", "tester"]
+      },
+      "tags": ["review", "security", "clear-signal"]
+    },
+    {
+      "id": "AT-006",
+      "tier": 1,
+      "prompt": "Set up ESLint and Prettier for the monorepo",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["implementor"],
+        "not_agents": ["frontend-dev", "backend-dev"]
+      },
+      "tags": ["tooling", "config", "clear-signal"]
+    },
+    {
+      "id": "AT-007",
+      "tier": 1,
+      "prompt": "Design the architecture for real-time notifications",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["architect"],
+        "not_agents": ["backend-dev", "planner"]
+      },
+      "tags": ["architecture", "design", "clear-signal"]
+    },
+    {
+      "id": "AT-008",
+      "tier": 2,
+      "prompt": "Add Stripe payment processing with webhooks and update the payment status UI",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["backend-dev", "frontend-dev"],
+        "not_agents": ["implementor"]
+      },
+      "tags": ["fullstack", "ambiguous", "holdout"]
+    },
+    {
+      "id": "AT-009",
+      "tier": 2,
+      "prompt": "Create a shared validation utility used by both API and forms",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["implementor"],
+        "not_agents": ["frontend-dev", "backend-dev"]
+      },
+      "tags": ["shared", "ambiguous"]
+    },
+    {
+      "id": "AT-010",
+      "tier": 2,
+      "prompt": "Build a Django admin panel with custom React widgets",
+      "context": { "fixture": "mixed-stack" },
+      "expected": {
+        "agents": ["backend-dev", "frontend-dev"],
+        "not_agents": ["implementor"]
+      },
+      "tags": ["mixed-stack", "ambiguous"]
+    },
+    {
+      "id": "AT-011",
+      "tier": 1,
+      "prompt": "Refactor the database queries for better performance",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["backend-dev"],
+        "not_agents": ["frontend-dev", "implementor"]
+      },
+      "tags": ["backend", "refactor", "medium"]
+    },
+    {
+      "id": "AT-012",
+      "tier": 1,
+      "prompt": "Make the product cards responsive and add dark mode support",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["frontend-dev"],
+        "not_agents": ["backend-dev", "ui-ux-designer"]
+      },
+      "tags": ["frontend", "styling", "clear-signal"]
+    }
+  ]
+}
