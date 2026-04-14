@@ -1,0 +1,38 @@
+{
+  "name": "dev-team",
+  "version": "1.0.0",
+  "description": "Coordinator + specialists plugin for full-stack development workflows",
+  "author": {
+    "name": "Aleksejs Gordejevs",
+    "url": "https://github.com/biggora"
+  },
+  "homepage": "https://github.com/biggora/dev-team#readme",
+  "repository": "https://github.com/biggora/dev-team",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "codex",
+    "coordination",
+    "development",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "dev-team",
+    "shortDescription": "Coordinator + specialists for software delivery",
+    "longDescription": "A local Codex plugin that exposes the dev-team skill set and repository metadata for coordinated software development workflows.",
+    "developerName": "Aleksejs Gordejevs",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/biggora/dev-team",
+    "defaultPrompt": [
+      "Plan and implement a feature in this codebase.",
+      "Review my changes and flag correctness risks.",
+      "Choose the right specialist workflow for this task."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

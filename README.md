@@ -2,7 +2,15 @@
 
 Claude Code plugin with a "coordinator + specialists" architecture. The coordinator (`/dev-team`) decomposes tasks and dispatches specialist agents with isolated contexts. Skills are injected dynamically based on file patterns, not loaded globally.
 
+This repository also includes Codex plugin metadata so the same repo can be recognized by Codex as a local plugin.
+
 ## Installation
+
+### In Codex
+
+This repository now includes the standard Codex plugin manifest at `.codex-plugin/plugin.json` and a repo-local marketplace entry at `.agents/plugins/marketplace.json`.
+
+If you use this repository as a local Codex plugin source, Codex can discover `dev-team` directly from the repo.
 
 ### From GitHub (recommended)
 
@@ -40,6 +48,8 @@ claude --plugin-dir /path/to/dev-team
 
 ## Usage
 
+### Coordinators (multi-agent orchestration)
+
 ```bash
 # Universal coordinator (auto-detects stack):
 /dev-team Implement authentication system with JWT and OAuth2
@@ -60,23 +70,58 @@ claude --plugin-dir /path/to/dev-team
 # 5. Reports summary to user
 ```
 
+### Shortcut Commands (direct agent dispatch)
+
+Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordinator. Ideal for single-agent tasks with clear scope.
+
+```bash
+# Requirements & planning:
+/ask-prd Create PRD for a task management system with auth and dashboards
+/ask-architect Design architecture for marketplace — NestJS + PostgreSQL + Next.js
+/ask-planner Decompose migration from REST to GraphQL
+
+# Design:
+/ask-designer Design onboarding flow for mobile-first SaaS
+
+# Implementation:
+/ask-frontend Build responsive user registration form with validation
+/ask-backend Implement JWT authentication with role-based access control
+/ask-implementor Set up GitHub Actions CI/CD pipeline
+
+# Quality:
+/ask-tester Write tests for src/auth/ module
+/ask-reviewer Review recent changes for security and code quality
+```
+
+| Command | Agent | Model |
+|---------|-------|-------|
+| `/ask-prd` | product-analyst | opus |
+| `/ask-architect` | architect | opus |
+| `/ask-planner` | planner | opus |
+| `/ask-designer` | ui-ux-designer | sonnet |
+| `/ask-frontend` | frontend-dev | sonnet |
+| `/ask-backend` | backend-dev | sonnet |
+| `/ask-implementor` | implementor | sonnet |
+| `/ask-tester` | tester | sonnet |
+| `/ask-reviewer` | code-reviewer | sonnet |
+
 ## Architecture
 
 ```
-Coordinators
-├── /dev-team              Universal (auto-detect stack)
-├── /dev-team-node         Node.js / TypeScript
-└── /dev-team-python       Python
-    |
-    +-- product-analyst    Formalizes PRD (cyan, opus)
-    +-- architect          Designs architecture (blue, opus)
-    +-- planner            Decomposes tasks (cyan, read-only)
-    +-- ui-ux-designer     Designs UI/UX (magenta, read-only)
-    +-- frontend-dev       Builds UI (magenta, full tools)
-    +-- backend-dev        Builds API (green, full tools)
-    +-- implementor        General fallback (green, full tools)
-    +-- tester             Writes & runs tests (yellow, full tools)
-    +-- code-reviewer      Reviews code (red, read-only)
+Coordinators (multi-agent)          Shortcuts (single-agent)
+├── /dev-team                       ├── /ask-prd
+├── /dev-team-node                  ├── /ask-architect
+└── /dev-team-python                ├── /ask-planner
+    |                               ├── /ask-designer
+    +-- product-analyst  (opus)     ├── /ask-frontend
+    +-- architect        (opus)     ├── /ask-backend
+    +-- planner          (opus)     ├── /ask-implementor
+    +-- ui-ux-designer   (sonnet)   ├── /ask-tester
+    +-- frontend-dev     (sonnet)   └── /ask-reviewer
+    +-- backend-dev      (sonnet)
+    +-- implementor      (sonnet)
+    +-- tester           (sonnet)
+    +-- code-reviewer    (sonnet)
 ```
 
 **Context isolation**: each agent gets a clean context and does not inherit the coordinator's session. The coordinator includes the full task description, scope boundaries, and report protocol in every dispatch.
@@ -87,13 +132,27 @@ Coordinators
 
 ```
 dev-team/
+├── .codex-plugin/
+│   └── plugin.json              # Codex plugin manifest
 ├── .claude-plugin/
 │   ├── marketplace.json         # Marketplace metadata
 │   └── plugin.json              # Plugin manifest
+├── .agents/
+│   └── plugins/
+│       └── marketplace.json     # Repo-local Codex marketplace entry
 ├── commands/
 │   ├── dev-team.md              # Universal coordinator (auto-detect)
 │   ├── dev-team-node.md         # Node.js coordinator
-│   └── dev-team-python.md       # Python coordinator
+│   ├── dev-team-python.md       # Python coordinator
+│   ├── ask-prd.md               # Direct: product-analyst
+│   ├── ask-architect.md         # Direct: architect
+│   ├── ask-planner.md           # Direct: planner
+│   ├── ask-designer.md          # Direct: ui-ux-designer
+│   ├── ask-frontend.md          # Direct: frontend-dev
+│   ├── ask-backend.md           # Direct: backend-dev
+│   ├── ask-implementor.md       # Direct: implementor
+│   ├── ask-tester.md            # Direct: tester
+│   └── ask-reviewer.md          # Direct: code-reviewer
 ├── agents/
 │   ├── _template.md             # Template for creating new agents
 │   ├── product-analyst.md       # PRD creator (cyan, opus)
@@ -193,7 +252,8 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 |-------|-----|----------|
 | Plugin installed | Type `/dev-team` | Command available |
 | Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Agents available | Claude suggests agents | 8 agents: architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer |
+| Shortcut commands | Type `/ask-prd` | 9 shortcut commands available |
+| Agents available | Claude suggests agents | 9 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
 | Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |
