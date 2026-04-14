@@ -2,3 +2,4 @@
 
 /evals/results/*.json
 *.prompt.md
+/.claude/settings.local.json
