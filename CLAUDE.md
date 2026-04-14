@@ -25,6 +25,26 @@ This plugin implements a "coordinator + specialists" architecture:
 | tester | Writes and runs tests | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | code-reviewer | Reviews code for quality and bugs | Read, Grep, Glob | sonnet | red |
 
+## Shortcut Commands (Direct Agent Dispatch)
+
+Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordinator:
+
+| Command | Agent | Use case |
+|---------|-------|----------|
+| `/ask-prd` | product-analyst | Create PRD, formalize requirements |
+| `/ask-architect` | architect | Design system architecture |
+| `/ask-planner` | planner | Decompose task into subtasks |
+| `/ask-designer` | ui-ux-designer | Design UI/UX flows and layouts |
+| `/ask-frontend` | frontend-dev | Build UI components, pages, styles |
+| `/ask-backend` | backend-dev | Build API, models, services |
+| `/ask-implementor` | implementor | Scripts, config, CI/CD, utilities |
+| `/ask-tester` | tester | Write and run tests |
+| `/ask-reviewer` | code-reviewer | Review code for quality and bugs |
+
+**When to use shortcuts vs coordinator:**
+- `/ask-*` — single-agent tasks with clear scope (e.g., "write a PRD", "review this code")
+- `/dev-team` — complex tasks requiring multiple agents, decomposition, and coordination
+
 ## Report Protocol
 
 Every agent MUST end its response with a structured report:
