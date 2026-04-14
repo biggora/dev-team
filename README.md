@@ -2,7 +2,15 @@
 
 Claude Code plugin with a "coordinator + specialists" architecture. The coordinator (`/dev-team`) decomposes tasks and dispatches specialist agents with isolated contexts. Skills are injected dynamically based on file patterns, not loaded globally.
 
+This repository also includes Codex plugin metadata so the same repo can be recognized by Codex as a local plugin.
+
 ## Installation
+
+### In Codex
+
+This repository now includes the standard Codex plugin manifest at `.codex-plugin/plugin.json` and a repo-local marketplace entry at `.agents/plugins/marketplace.json`.
+
+If you use this repository as a local Codex plugin source, Codex can discover `dev-team` directly from the repo.
 
 ### From GitHub (recommended)
 
@@ -124,9 +132,14 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
 
 ```
 dev-team/
+├── .codex-plugin/
+│   └── plugin.json              # Codex plugin manifest
 ├── .claude-plugin/
 │   ├── marketplace.json         # Marketplace metadata
 │   └── plugin.json              # Plugin manifest
+├── .agents/
+│   └── plugins/
+│       └── marketplace.json     # Repo-local Codex marketplace entry
 ├── commands/
 │   ├── dev-team.md              # Universal coordinator (auto-detect)
 │   ├── dev-team-node.md         # Node.js coordinator

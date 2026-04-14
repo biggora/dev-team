@@ -1,0 +1,20 @@
+{
+  "name": "dev-team-local",
+  "interface": {
+    "displayName": "dev-team Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "dev-team",
+      "source": {
+        "source": "local",
+        "path": "."
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
