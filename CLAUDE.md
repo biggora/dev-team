@@ -2,7 +2,7 @@
 
 ## Architecture
 
-This plugin implements a "coordinator + specialists" architecture:
+This plugin implements a "coordinator + specialists" architecture with inline quality gates:
 
 - `/dev-team` — universal coordinator that auto-detects the stack
 - `/dev-team-node` — Node.js/TypeScript coordinator (Next.js, NestJS, Vite, Express)
@@ -10,6 +10,8 @@ This plugin implements a "coordinator + specialists" architecture:
 - Specialist agents operate with isolated contexts — they do not inherit the coordinator's session
 - Skills are injected dynamically based on file patterns, not loaded globally
 - The coordinator does NOT read project source files — only git status, Glob, and Grep for structure analysis
+- **Every artifact is reviewed inline**: doc-reviewer after each document, code-reviewer after each code agent
+- **Review-and-rework pattern**: if reviewer finds concerns → original agent is re-dispatched with findings (max 1 rework to prevent loops)
 
 ## Available Agents
 
@@ -67,9 +69,28 @@ Questions: [only if NEEDS_CONTEXT — what information is needed]
 | Status | Coordinator Action |
 |--------|-------------------|
 | DONE | Proceed to next phase |
-| DONE_WITH_CONCERNS | Evaluate concerns, decide if action needed |
-| BLOCKED | Provide missing info, re-dispatch agent |
+| DONE_WITH_CONCERNS | Re-dispatch original agent with findings to fix (max 1 rework) |
+| BLOCKED | Provide missing info, re-dispatch agent (max 2 attempts) |
 | NEEDS_CONTEXT | Answer questions or ask user, re-dispatch |
+
+## Inline Review Workflow
+
+Every artifact produced in Phase 2 goes through an inline review gate before the next agent consumes it:
+
+| Artifact | Creator | Reviewer | On concerns |
+|----------|---------|----------|-------------|
+| PRD | product-analyst | doc-reviewer | Re-dispatch product-analyst |
+| Architecture | architect | doc-reviewer | Re-dispatch architect |
+| Design spec | ui-ux-designer | doc-reviewer | Re-dispatch ui-ux-designer |
+| Execution plan | planner | doc-reviewer | Re-dispatch planner |
+| Scaffold code | implementor | code-reviewer | Re-dispatch implementor |
+| Backend code | backend-dev | code-reviewer | Re-dispatch backend-dev |
+| Frontend code | frontend-dev | code-reviewer | Re-dispatch frontend-dev |
+| Test code | tester | code-reviewer | Re-dispatch tester |
+
+Phase 4 performs a final cross-cutting review (code-reviewer for cross-module consistency + doc-reviewer for cross-document consistency) only when multiple agents were dispatched.
+
+See `specs/workflow.md` for full mermaid diagrams.
 
 ## Dispatch Rules (for coordinator)
 

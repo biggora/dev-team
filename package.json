@@ -1,9 +1,23 @@
 {
   "name": "@biggora/dev-team",
   "version": "1.0.0",
-  "description": "A custom Agent plugin with a coordinator + specialists architecture",
+  "description": "Claude Code plugin that orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
   "keywords": [
-    "agent"
+    "claude-code",
+    "claude-code-plugin",
+    "ai-agents",
+    "multi-agent",
+    "code-review",
+    "doc-review",
+    "coordinator",
+    "software-development",
+    "orchestration",
+    "nextjs",
+    "nestjs",
+    "django",
+    "fastapi",
+    "typescript",
+    "python"
   ],
   "homepage": "https://github.com/biggora/dev-team#readme",
   "bugs": {

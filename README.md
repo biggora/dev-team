@@ -1,8 +1,10 @@
 # dev-team
 
-Claude Code plugin with a "coordinator + specialists" architecture. The coordinator (`/dev-team`) decomposes tasks and dispatches specialist agents with isolated contexts. Skills are injected dynamically based on file patterns, not loaded globally.
+Claude Code plugin that orchestrates a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
 
-This repository also includes Codex plugin metadata so the same repo can be recognized by Codex as a local plugin.
+The coordinator (`/dev-team`) decomposes tasks, dispatches specialist agents with isolated contexts, and enforces inline quality gates: every document is reviewed by `doc-reviewer`, every piece of code is reviewed by `code-reviewer`, and artifacts with concerns are automatically sent back for rework (max 1 rework cycle to prevent loops).
+
+Skills are injected dynamically based on file patterns, not loaded globally. This repository also includes Codex plugin metadata.
 
 ## Installation
 
@@ -64,9 +66,11 @@ claude --plugin-dir /path/to/dev-team
 
 # The coordinator automatically:
 # 1. Analyzes the task (detects greenfield vs existing project)
-# 2. Dispatches architect (opus) for design, planner for decomposition
+# 2. Dispatches agents with inline quality gates:
+#    - Each document → doc-reviewer → rework if needed
+#    - Each code change → code-reviewer → rework if needed
 # 3. Dispatches implementor/tester (parallel when independent)
-# 4. Sends for code review (optional)
+# 4. Final cross-cutting review (multi-agent tasks)
 # 5. Reports summary to user
 ```
 
@@ -91,6 +95,7 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 # Quality:
 /ask-tester Write tests for src/auth/ module
 /ask-reviewer Review recent changes for security and code quality
+/ask-doc-reviewer Review docs/prd.md for completeness and clarity
 ```
 
 | Command | Agent | Model |
@@ -104,6 +109,7 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 | `/ask-implementor` | implementor | sonnet |
 | `/ask-tester` | tester | sonnet |
 | `/ask-reviewer` | code-reviewer | sonnet |
+| `/ask-doc-reviewer` | doc-reviewer | sonnet |
 
 ## Architecture
 
@@ -117,16 +123,19 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
     +-- architect        (opus)     ├── /ask-backend
     +-- planner          (opus)     ├── /ask-implementor
     +-- ui-ux-designer   (sonnet)   ├── /ask-tester
-    +-- frontend-dev     (sonnet)   └── /ask-reviewer
-    +-- backend-dev      (sonnet)
+    +-- frontend-dev     (sonnet)   ├── /ask-reviewer
+    +-- backend-dev      (sonnet)   └── /ask-doc-reviewer
     +-- implementor      (sonnet)
     +-- tester           (sonnet)
-    +-- code-reviewer    (sonnet)
+    +-- code-reviewer    (sonnet)   ← inline after every code agent
+    +-- doc-reviewer     (sonnet)   ← inline after every doc agent
 ```
 
 **Context isolation**: each agent gets a clean context and does not inherit the coordinator's session. The coordinator includes the full task description, scope boundaries, and report protocol in every dispatch.
 
 **Dynamic skill injection**: skills are injected into agents based on file patterns (`pathPatterns`), command patterns (`bashPatterns`), import detection (`importPatterns`), and prompt signals (`promptSignals`) — not loaded globally.
+
+**Inline quality gates**: every artifact goes through a review-and-rework cycle. Documents are reviewed by `doc-reviewer`, code by `code-reviewer`. If concerns are found, the original agent is re-dispatched with findings (max 1 rework). See `specs/workflow.md` for full mermaid diagrams.
 
 ## Plugin Structure
 
@@ -152,18 +161,20 @@ dev-team/
 │   ├── ask-backend.md           # Direct: backend-dev
 │   ├── ask-implementor.md       # Direct: implementor
 │   ├── ask-tester.md            # Direct: tester
-│   └── ask-reviewer.md          # Direct: code-reviewer
+│   ├── ask-reviewer.md          # Direct: code-reviewer
+│   └── ask-doc-reviewer.md      # Direct: doc-reviewer
 ├── agents/
 │   ├── _template.md             # Template for creating new agents
 │   ├── product-analyst.md       # PRD creator (cyan, opus)
 │   ├── architect.md             # System designer (blue, opus)
-│   ├── planner.md               # Task decomposer (cyan, read-only)
+│   ├── planner.md               # Task decomposer (cyan, opus)
 │   ├── ui-ux-designer.md        # UI/UX designer (magenta, read-only)
 │   ├── frontend-dev.md          # UI developer (magenta, full tools)
 │   ├── backend-dev.md           # API developer (green, full tools)
 │   ├── implementor.md           # General fallback (green, full tools)
 │   ├── tester.md                # Test writer & runner (yellow, full tools)
-│   └── code-reviewer.md         # Read-only reviewer (red)
+│   ├── code-reviewer.md         # Code reviewer (red, read-only)
+│   └── doc-reviewer.md          # Doc reviewer (cyan, read-only)
 ├── skills/
 │   ├── nodejs-stack/
 │   │   ├── SKILL.md             # Node.js/TS patterns & conventions
@@ -179,18 +190,19 @@ dev-team/
 │           └── _template.md     # Reference file template
 ├── CLAUDE.md                    # Plugin instructions
 └── specs/
-    └── dev-team-architecture.md # Architecture specification
+    ├── dev-team-architecture.md # Architecture specification
+    └── workflow.md              # Workflow mermaid diagrams
 ```
 
 ## Coordinator Workflow
 
 | Phase | Goal | Details |
 |-------|------|---------|
-| 1. Analysis | Understand the task | Determine specialists, decompose into subtasks |
-| 2. Dispatch | Launch agents | Full context, scope boundaries, report protocol |
-| 3. Collection | Process results | Handle DONE / BLOCKED / NEEDS_CONTEXT statuses |
-| 4. Review | Code review | Dispatch code-reviewer (optional) |
-| 5. Report | Summary | Files changed, tests, concerns, next steps |
+| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into subtasks |
+| 2. Dispatch | Launch agents with inline review | Each doc → doc-reviewer, each code → code-reviewer. Rework on concerns (max 1x) |
+| 3. Collection | Process results | Handle DONE / BLOCKED / NEEDS_CONTEXT statuses (max 2 re-dispatches) |
+| 4. Final Review | Cross-cutting review | Cross-module code consistency + cross-document consistency (if multi-agent) |
+| 5. Report | Summary | Files changed, tests, review findings, concerns, next steps |
 
 ## Report Protocol
 
@@ -227,7 +239,8 @@ Questions: [if NEEDS_CONTEXT]
 | backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utils | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | tester | Test writing and execution | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
-| code-reviewer | Code quality review | Read, Grep, Glob | sonnet | red |
+| code-reviewer | Code quality review (inline after every code agent) | Read, Grep, Glob | sonnet | red |
+| doc-reviewer | Doc quality review (inline after every doc agent) | Read, Grep, Glob | sonnet | cyan |
 
 ## Adding a New Skill
 
@@ -252,8 +265,8 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 |-------|-----|----------|
 | Plugin installed | Type `/dev-team` | Command available |
 | Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Shortcut commands | Type `/ask-prd` | 9 shortcut commands available |
-| Agents available | Claude suggests agents | 9 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer |
+| Shortcut commands | Type `/ask-prd` | 10 shortcut commands available |
+| Agents available | Claude suggests agents | 10 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer, doc-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
 | Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |
