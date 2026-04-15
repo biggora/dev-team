@@ -67,6 +67,14 @@ Use /ask-backend semantics for this API task.
 
 The Codex skill interprets those phrases, reads the repository's `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`.
 
+Short Windows setup:
+
+1. Put the plugin in `C:\Users\<you>\.codex\plugins\dev-team`
+2. Add the personal marketplace entry in `C:\Users\<you>\.agents\plugins\marketplace.json`
+3. Restart Codex Desktop, open Plugin Directory, choose your marketplace, and install `dev-team`
+
+If Codex Desktop still shows an old version after you update the plugin, uninstall it in the UI, close Codex, delete `C:\Users\<you>\.codex\plugins\cache\<marketplace-name>\dev-team`, then install it again.
+
 ### In GitHub Copilot CLI
 
 ```bash
