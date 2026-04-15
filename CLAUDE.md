@@ -24,6 +24,7 @@ This plugin implements a "coordinator + specialists" architecture:
 | implementor | General fallback: scripts, config, utilities | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | tester | Writes and runs tests | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | code-reviewer | Reviews code for quality and bugs | Read, Grep, Glob | sonnet | red |
+| doc-reviewer | Reviews documentation for quality and completeness | Read, Grep, Glob | sonnet | cyan |
 
 ## Shortcut Commands (Direct Agent Dispatch)
 
@@ -40,6 +41,7 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 | `/ask-implementor` | implementor | Scripts, config, CI/CD, utilities |
 | `/ask-tester` | tester | Write and run tests |
 | `/ask-reviewer` | code-reviewer | Review code for quality and bugs |
+| `/ask-doc-reviewer` | doc-reviewer | Review documentation quality |
 
 **When to use shortcuts vs coordinator:**
 - `/ask-*` — single-agent tasks with clear scope (e.g., "write a PRD", "review this code")

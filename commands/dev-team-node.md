@@ -52,6 +52,7 @@ Initial request: $ARGUMENTS
    - Scripts/config/other → implementor agent (full tools, general fallback)
    - Testing → tester agent (full tools)
    - Code review → code-reviewer agent (read-only)
+   - Document review → doc-reviewer agent (read-only)
 4. Decompose into subtasks with clear scope boundaries
 5. Present plan to user and ask for confirmation
 
@@ -122,10 +123,10 @@ Initial request: $ARGUMENTS
 ### Inter-agent context passing
 
 When dispatching an agent that depends on a previous agent's output:
-- **After product-analyst**: Pass "Read docs/prd.md for the product requirements document" to architect, ui-ux-designer, planner, and tester
-- **After architect**: Pass "Read docs/architecture.md for the architecture blueprint" to planner and implementation agents
-- **After ui-ux-designer**: Pass "Read docs/design.md for the design specification (color palette, wireframes, user flows)" to frontend-dev AND to tester
-- **After planner**: Use the planner's subtask list (from docs/plan.md) to determine dispatch order and agent assignments
+- **After product-analyst**: Dispatch doc-reviewer: "Review docs/prd.md for completeness, testable acceptance criteria, measurable NFRs, requirement IDs, and MoSCoW priorities." If DONE_WITH_CONCERNS → re-dispatch product-analyst with all findings to fix the document (max 1 re-dispatch to prevent loops). Then pass "Read docs/prd.md" to architect, ui-ux-designer, planner, and tester.
+- **After architect**: Dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." If DONE_WITH_CONCERNS → re-dispatch architect with all findings to fix the document (max 1 re-dispatch). Then pass "Read docs/architecture.md" to planner and implementation agents.
+- **After ui-ux-designer**: Dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." If DONE_WITH_CONCERNS → re-dispatch ui-ux-designer with all findings to fix the document (max 1 re-dispatch). Then pass "Read docs/design.md" to frontend-dev and tester.
+- **After planner**: Dispatch doc-reviewer: "Review docs/plan.md for consistency with docs/architecture.md, concrete subtasks with scope boundaries, explicit dependencies, and agent assignments." If DONE_WITH_CONCERNS → re-dispatch planner with all findings to fix the document (max 1 re-dispatch). Then use plan for dispatch order.
 - **After backend-dev**: Pass API endpoints and response formats to frontend-dev (if dispatched sequentially)
 - **After all implementors**: Pass complete list of changed files and summaries to tester and code-reviewer
 
@@ -169,6 +170,10 @@ When dispatching an agent that depends on a previous agent's output:
 3. Handle review findings:
    - DONE: proceed
    - DONE_WITH_CONCERNS: present to user, ask if fixes needed
+4. **Document review** (if docs/ files were created or modified):
+   - Dispatch doc-reviewer for a final cross-document consistency check across all docs/ files
+   - Include all docs/ files and the original task requirements
+   - If DONE_WITH_CONCERNS → re-dispatch the original document agent with findings to fix (max 1 re-dispatch per doc to prevent loops)
 
 ---
 
