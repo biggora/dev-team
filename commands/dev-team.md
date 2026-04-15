@@ -123,8 +123,11 @@ When dispatching an agent that depends on a previous agent's output:
 - **After architect**: Dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." If DONE_WITH_CONCERNS → re-dispatch architect with all findings to fix the document (max 1 re-dispatch). Then pass "Read docs/architecture.md" to planner and implementation agents.
 - **After ui-ux-designer**: Dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." If DONE_WITH_CONCERNS → re-dispatch ui-ux-designer with all findings to fix the document (max 1 re-dispatch). Then pass "Read docs/design.md" to frontend-dev and tester.
 - **After planner**: Dispatch doc-reviewer: "Review docs/plan.md for consistency with docs/architecture.md, concrete subtasks with scope boundaries, explicit dependencies, and agent assignments." If DONE_WITH_CONCERNS → re-dispatch planner with all findings to fix the document (max 1 re-dispatch). Then use plan for dispatch order.
-- **After backend-dev**: Pass API endpoints and response formats to frontend-dev (if dispatched sequentially)
-- **After all implementors**: Pass complete list of changed files and summaries to tester and code-reviewer
+- **After implementor**: Dispatch code-reviewer: "Review the code changes for correctness, consistency with project patterns, and potential bugs. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch implementor with all findings to fix the code (max 1 re-dispatch to prevent loops).
+- **After backend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, type safety, error handling, security, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch backend-dev with all findings to fix the code (max 1 re-dispatch). Then pass API endpoints and response formats to frontend-dev (if dispatched sequentially).
+- **After frontend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, accessibility, component patterns, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch frontend-dev with all findings to fix the code (max 1 re-dispatch).
+- **After tester**: Dispatch code-reviewer: "Review the test code for correctness, coverage completeness, and testing best practices. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch tester with all findings to fix the tests (max 1 re-dispatch).
+- **After all code agents complete**: Pass complete list of changed files and summaries to the final report.
 
 ---
 
@@ -149,29 +152,23 @@ When dispatching an agent that depends on a previous agent's output:
 
 ---
 
-## Phase 4: Review (Optional)
+## Phase 4: Final Review
 
-**Goal**: Verify code quality via code-reviewer agent
+**Goal**: Final cross-cutting review of all changes (code + documents)
+
+**Note**: Individual code reviews already happen inline after each code agent (Phase 2). This phase catches cross-cutting issues that span multiple agents' work.
 
 **Actions**:
-1. Decide whether code review is warranted:
-   - **YES** if: implementation involved, multiple files changed, complex logic added
-   - **NO** if: task was analysis-only, documentation-only, or user explicitly skipped review
-2. If review is warranted, dispatch the code-reviewer agent with:
-   - Summary of all changes made (from agent reports)
-   - List of all files changed
-   - The original task requirements
-   - Stack context with **exact versions** from package manifest: "Review this [language] [version] / [framework] [version] code for correctness and modern patterns"
-   - Include stack-specific phrases to trigger skill injection — matching the actual detected stack
-   - Focus areas: correctness, consistency with project patterns, version-appropriate patterns, potential bugs
-3. Process the code-reviewer's report:
-   - DONE: No significant issues — proceed to Phase 5
-   - DONE_WITH_CONCERNS: Present concerns to user, ask if they want fixes applied
-   - If fixes needed: dispatch appropriate agent to address review findings
-4. **Document review** (if docs/ files were created or modified):
+1. **Cross-cutting code review** (if multiple code agents were dispatched):
+   - Dispatch code-reviewer with the complete list of ALL files changed by ALL code agents
+   - Include the original task requirements and stack context with **exact versions**
+   - Focus: cross-module consistency, shared type correctness, integration points between frontend/backend, import coherence
+   - If DONE_WITH_CONCERNS → re-dispatch the appropriate code agent with findings to fix (max 1 re-dispatch per agent to prevent loops)
+2. **Cross-document review** (if docs/ files were created or modified):
    - Dispatch doc-reviewer for a final cross-document consistency check across all docs/ files
    - Include all docs/ files and the original task requirements
    - If DONE_WITH_CONCERNS → re-dispatch the original document agent with findings to fix (max 1 re-dispatch per doc to prevent loops)
+3. **Skip this phase** if: task was single-agent, analysis-only, or user explicitly skipped review
 
 ---
 
