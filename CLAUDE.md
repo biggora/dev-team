@@ -25,8 +25,8 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 | backend-dev | Builds API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utilities | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | tester | Writes and runs tests | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
-| code-reviewer | Reviews code for quality and bugs | Read, Grep, Glob | sonnet | red |
-| doc-reviewer | Reviews documentation for quality and completeness | Read, Grep, Glob | sonnet | cyan |
+| code-reviewer | Reviews code for quality and bugs | Read, Grep, Glob | opus | red |
+| doc-reviewer | Reviews documentation for quality and completeness | Read, Grep, Glob | opus | cyan |
 
 ## Shortcut Commands (Direct Agent Dispatch)
 
