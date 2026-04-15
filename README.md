@@ -108,8 +108,8 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 | `/ask-backend` | backend-dev | sonnet |
 | `/ask-implementor` | implementor | sonnet |
 | `/ask-tester` | tester | sonnet |
-| `/ask-reviewer` | code-reviewer | sonnet |
-| `/ask-doc-reviewer` | doc-reviewer | sonnet |
+| `/ask-reviewer` | code-reviewer | opus |
+| `/ask-doc-reviewer` | doc-reviewer | opus |
 
 ## Architecture
 
@@ -127,8 +127,8 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
     +-- backend-dev      (sonnet)   └── /ask-doc-reviewer
     +-- implementor      (sonnet)
     +-- tester           (sonnet)
-    +-- code-reviewer    (sonnet)   ← inline after every code agent
-    +-- doc-reviewer     (sonnet)   ← inline after every doc agent
+    +-- code-reviewer    (opus)     ← inline after every code agent
+    +-- doc-reviewer     (opus)     ← inline after every doc agent
 ```
 
 **Context isolation**: each agent gets a clean context and does not inherit the coordinator's session. The coordinator includes the full task description, scope boundaries, and report protocol in every dispatch.
