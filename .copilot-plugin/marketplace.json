@@ -15,7 +15,14 @@
       },
       "repository": "https://github.com/biggora/dev-team",
       "license": "MIT",
-      "keywords": ["claude-code", "ai-agents", "multi-agent", "coordinator", "code-review", "doc-review"]
+      "keywords": [
+        "copilot-cli",
+        "ai-agents",
+        "multi-agent",
+        "coordinator",
+        "code-review",
+        "doc-review"
+      ]
     }
   ]
 }

@@ -1,11 +1,11 @@
 {
   "name": "dev-team",
-  "description": "Framework for specialized development agents with isolated contexts",
+  "description": "Orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
   "version": "1.0.0",
   "author": {
     "name": "Aleksejs Gordejevs"
   },
   "repository": "https://github.com/biggora/dev-team",
   "license": "MIT",
-  "keywords": ["dev-team", "agents", "coordinator", "specialists", "fullstack"]
+  "keywords": ["claude-code", "ai-agents", "multi-agent", "coordinator", "code-review", "doc-review", "software-development"]
 }

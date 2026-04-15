@@ -4,17 +4,13 @@ Claude Code plugin that orchestrates a team of specialized AI agents for full-cy
 
 The coordinator (`/dev-team`) decomposes tasks, dispatches specialist agents with isolated contexts, and enforces inline quality gates: every document is reviewed by `doc-reviewer`, every piece of code is reviewed by `code-reviewer`, and artifacts with concerns are automatically sent back for rework (max 1 rework cycle to prevent loops).
 
-Skills are injected dynamically based on file patterns, not loaded globally. This repository also includes Codex plugin metadata.
+Skills are injected dynamically based on file patterns, not loaded globally. This repository includes plugin manifests for Claude Code, Codex, and GitHub Copilot CLI.
 
 ## Installation
 
-### In Codex
+### In Claude Code
 
-This repository now includes the standard Codex plugin manifest at `.codex-plugin/plugin.json` and a repo-local marketplace entry at `.agents/plugins/marketplace.json`.
-
-If you use this repository as a local Codex plugin source, Codex can discover `dev-team` directly from the repo.
-
-### From GitHub (recommended)
+#### From GitHub (recommended)
 
 ```bash
 # Step 1: Add marketplace
@@ -42,10 +38,31 @@ If you use this repository as a local Codex plugin source, Codex can discover `d
 /plugin install dev-team@dev-team --scope project
 ```
 
-### Development mode (session only)
+#### Development mode (session only)
 
 ```bash
 claude --plugin-dir /path/to/dev-team
+```
+
+### In Codex
+
+This repository includes the Codex plugin manifest at `.codex-plugin/plugin.json` and a repo-local marketplace entry at `.agents/plugins/marketplace.json`.
+
+```bash
+# If using as a local Codex plugin source, Codex discovers dev-team directly from the repo
+```
+
+### In GitHub Copilot CLI
+
+```bash
+# Install from GitHub
+copilot plugin install https://github.com/biggora/dev-team
+
+# Or from local directory
+copilot plugin install /path/to/dev-team
+
+# Verify
+copilot plugin list
 ```
 
 ## Usage
@@ -141,11 +158,14 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
 
 ```
 dev-team/
+├── .claude-plugin/
+│   ├── marketplace.json         # Claude Code marketplace metadata
+│   └── plugin.json              # Claude Code plugin manifest
 ├── .codex-plugin/
 │   └── plugin.json              # Codex plugin manifest
-├── .claude-plugin/
-│   ├── marketplace.json         # Marketplace metadata
-│   └── plugin.json              # Plugin manifest
+├── .copilot-plugin/
+│   ├── marketplace.json         # Copilot CLI marketplace metadata
+│   └── plugin.json              # Copilot CLI plugin manifest
 ├── .agents/
 │   └── plugins/
 │       └── marketplace.json     # Repo-local Codex marketplace entry
@@ -263,7 +283,9 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 
 | Check | How | Expected |
 |-------|-----|----------|
-| Plugin installed | Type `/dev-team` | Command available |
+| Claude Code plugin | Type `/dev-team` | Command available |
+| Codex plugin | Codex discovers from `.codex-plugin/` | Plugin listed |
+| Copilot CLI plugin | `copilot plugin list` | dev-team listed |
 | Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
 | Shortcut commands | Type `/ask-prd` | 10 shortcut commands available |
 | Agents available | Claude suggests agents | 10 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer, doc-reviewer |
