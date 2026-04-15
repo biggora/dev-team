@@ -1,6 +1,6 @@
 # dev-team
 
-Claude Code plugin that orchestrates a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
+Plugin toolkit for orchestrating a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
 
 The coordinator (`/dev-team`) decomposes tasks, dispatches specialist agents with isolated contexts, and enforces inline quality gates: every document is reviewed by `doc-reviewer`, every piece of code is reviewed by `code-reviewer`, and artifacts with concerns are automatically sent back for rework (max 1 rework cycle to prevent loops).
 
@@ -48,9 +48,24 @@ claude --plugin-dir /path/to/dev-team
 
 This repository includes the Codex plugin manifest at `.codex-plugin/plugin.json` and a repo-local marketplace entry at `.agents/plugins/marketplace.json`.
 
+Codex uses the plugin through bundled skills. It does **not** expose the Claude-style slash commands from `commands/` as native commands.
+
 ```bash
-# If using as a local Codex plugin source, Codex discovers dev-team directly from the repo
+# Local development flow:
+# 1. Keep this repo as the plugin source
+# 2. Ensure the repo marketplace file exists at .agents/plugins/marketplace.json
+# 3. Restart Codex and install dev-team from the local marketplace
 ```
+
+Once installed, invoke it with natural language such as:
+
+```text
+Use dev-team to plan and implement this feature.
+Use dev-team reviewer flow to inspect my recent changes.
+Use /ask-backend semantics for this API task.
+```
+
+The Codex skill interprets those phrases, reads the repository's `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`.
 
 ### In GitHub Copilot CLI
 
@@ -67,7 +82,7 @@ copilot plugin list
 
 ## Usage
 
-### Coordinators (multi-agent orchestration)
+### In Claude Code: Coordinators (multi-agent orchestration)
 
 ```bash
 # Universal coordinator (auto-detects stack):
@@ -91,7 +106,26 @@ copilot plugin list
 # 5. Reports summary to user
 ```
 
-### Shortcut Commands (direct agent dispatch)
+### In Codex
+
+Codex does not provide `/dev-team` or `/ask-*` as real slash commands from this plugin. Use the same names as prompt phrases instead:
+
+```text
+Use dev-team to implement authentication with JWT and OAuth2.
+Use dev-team-node semantics to add a NestJS controller and service.
+Use dev-team-python semantics to create a Django model and DRF serializer.
+Use /ask-reviewer semantics to review my recent changes for security and correctness.
+```
+
+When those phrases appear, the `dev-team Codex Orchestrator` skill acts as the coordinator bridge:
+
+1. It interprets the requested coordinator or specialist flow.
+2. It reads the matching prompt templates from `commands/` and `agents/`.
+3. It dispatches Codex subagents with `spawn_agent`.
+4. It preserves the inline `code-reviewer` and `doc-reviewer` gates.
+5. It reports back using the same structured report protocol.
+
+### In Claude Code: Shortcut Commands (direct agent dispatch)
 
 Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordinator. Ideal for single-agent tasks with clear scope.
 
@@ -196,6 +230,8 @@ dev-team/
 │   ├── code-reviewer.md         # Code reviewer (red, read-only)
 │   └── doc-reviewer.md          # Doc reviewer (cyan, read-only)
 ├── skills/
+│   ├── dev-team-codex/
+│   │   └── SKILL.md             # Codex-native bridge for coordinator + specialists
 │   ├── nodejs-stack/
 │   │   ├── SKILL.md             # Node.js/TS patterns & conventions
 │   │   └── references/
@@ -284,14 +320,19 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 | Check | How | Expected |
 |-------|-----|----------|
 | Claude Code plugin | Type `/dev-team` | Command available |
-| Codex plugin | Codex discovers from `.codex-plugin/` | Plugin listed |
+| Codex plugin | Install from local marketplace and prompt `Use dev-team ...` | Skill activates and orchestrates |
 | Copilot CLI plugin | `copilot plugin list` | dev-team listed |
-| Stack commands | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Shortcut commands | Type `/ask-prd` | 10 shortcut commands available |
+| Stack commands (Claude Code) | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
+| Shortcut commands (Claude Code) | Type `/ask-prd` | 10 shortcut commands available |
 | Agents available | Claude suggests agents | 10 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer, doc-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
 | Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |
+
+For Codex specifically:
+
+- `dev-team-codex` should trigger when the prompt includes `dev-team`, `/dev-team`, or `/ask-*` phrases.
+- The skill should dispatch specialists through `spawn_agent` rather than claiming native slash-command support.
 
 For debugging: `claude --debug` shows skill injection and hook activity.
 

@@ -21,8 +21,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "dev-team",
-    "shortDescription": "Coordinator + specialists with inline quality gates",
-    "longDescription": "Orchestrates specialized AI agents for full-cycle software development — from requirements to tested, reviewed code with inline quality gates.",
+    "shortDescription": "Codex-native specialist orchestration with review gates",
+    "longDescription": "Brings the dev-team coordinator workflow to Codex through bundled skills that dispatch specialist subagents and enforce inline review-and-rework gates.",
     "developerName": "Aleksejs Gordejevs",
     "category": "Productivity",
     "capabilities": [
@@ -31,9 +31,9 @@
     ],
     "websiteURL": "https://github.com/biggora/dev-team",
     "defaultPrompt": [
-      "Plan and implement a feature in this codebase.",
-      "Review my changes and flag correctness risks.",
-      "Choose the right specialist workflow for this task."
+      "Use dev-team to coordinate a backend and frontend implementation for this task.",
+      "Use dev-team reviewer flow to inspect my recent changes for correctness risks.",
+      "Use dev-team to choose the right specialist workflow for this codebase task."
     ],
     "brandColor": "#2563EB"
   }
