@@ -23,7 +23,7 @@ description: |
   assistant: "I'll launch the doc-reviewer agent to analyze the documentation suite."
   <commentary>Batch document review before implementation phase.</commentary>
   </example>
-model: sonnet
+model: opus
 color: cyan
 tools: Read, Grep, Glob
 ---

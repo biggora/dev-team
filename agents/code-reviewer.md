@@ -23,7 +23,7 @@ description: |
   assistant: "I'll launch the code-reviewer agent to analyze that directory for security concerns."
   <commentary>Explicit review request for a specific area of the codebase.</commentary>
   </example>
-model: sonnet
+model: opus
 color: red
 tools: Read, Grep, Glob
 ---

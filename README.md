@@ -239,8 +239,8 @@ Questions: [if NEEDS_CONTEXT]
 | backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utils | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | tester | Test writing and execution | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
-| code-reviewer | Code quality review (inline after every code agent) | Read, Grep, Glob | sonnet | red |
-| doc-reviewer | Doc quality review (inline after every doc agent) | Read, Grep, Glob | sonnet | cyan |
+| code-reviewer | Code quality review (inline after every code agent) | Read, Grep, Glob | opus | red |
+| doc-reviewer | Doc quality review (inline after every doc agent) | Read, Grep, Glob | opus | cyan |
 
 ## Adding a New Skill
 
