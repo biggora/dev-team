@@ -8,7 +8,7 @@
       "name": "dev-team",
       "source": {
         "source": "local",
-        "path": "./.codex/plugins/dev-team"
+        "path": "."
       },
       "policy": {
         "installation": "AVAILABLE",
