@@ -1,7 +1,7 @@
 {
-  "name": "dev-team-local",
+  "name": "personal-local",
   "interface": {
-    "displayName": "dev-team Local Plugins"
+    "displayName": "Personal Plugins"
   },
   "plugins": [
     {

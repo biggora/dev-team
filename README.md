@@ -46,15 +46,15 @@ claude --plugin-dir /path/to/dev-team
 
 ### In Codex
 
-This repository includes the Codex plugin manifest at `.codex-plugin/plugin.json` and a repo-local marketplace entry at `.agents/plugins/marketplace.json`.
+This repository is structured as a Codex plugin directory repository. The installable plugin lives at `plugins/dev-team/`, and `.agents/plugins/marketplace.json` exposes it as marketplace `dev-team`.
 
 Codex uses the plugin through bundled skills. It does **not** expose the Claude-style slash commands from `commands/` as native commands.
 
 ```bash
-# Local development flow:
-# 1. Keep this repo as the plugin source
-# 2. Ensure the repo marketplace file exists at .agents/plugins/marketplace.json
-# 3. Restart Codex and install dev-team from the local marketplace
+# Git repo flow:
+# 1. Add this GitHub repository as a Codex Plugin Directory
+# 2. Codex reads .agents/plugins/marketplace.json from the cloned repo
+# 3. Install dev-team from marketplace "dev-team"
 ```
 
 Once installed, invoke it with natural language such as:
@@ -65,15 +65,15 @@ Use dev-team reviewer flow to inspect my recent changes.
 Use /ask-backend semantics for this API task.
 ```
 
-The Codex skill interprets those phrases, reads the repository's `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`.
+The Codex skill interprets those phrases, reads the plugin-bundled `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`.
 
-Short Windows setup:
+No user-specific `C:\Users\<you>\...` setup is required for the GitHub flow. This repository already contains:
 
-1. Put the plugin in `C:\Users\<you>\.codex\plugins\dev-team`
-2. Add the personal marketplace entry in `C:\Users\<you>\.agents\plugins\marketplace.json`
-3. Restart Codex Desktop, open Plugin Directory, choose your marketplace, and install `dev-team`
+1. `.agents/plugins/marketplace.json`
+2. `plugins/dev-team/.codex-plugin/plugin.json`
+3. `plugins/dev-team/skills/`, `plugins/dev-team/agents/`, and `plugins/dev-team/commands/`
 
-If Codex Desktop still shows an old version after you update the plugin, uninstall it in the UI, close Codex, delete `C:\Users\<you>\.codex\plugins\cache\<marketplace-name>\dev-team`, then install it again.
+If Codex shows an old cached revision after a repository update, reinstall the plugin from the same Plugin Directory so Codex refreshes the cloned repo cache.
 
 ### In GitHub Copilot CLI
 
@@ -197,6 +197,20 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
 **Inline quality gates**: every artifact goes through a review-and-rework cycle. Documents are reviewed by `doc-reviewer`, code by `code-reviewer`. If concerns are found, the original agent is re-dispatched with findings (max 1 rework). See `specs/workflow.md` for full mermaid diagrams.
 
 ## Plugin Structure
+
+For Codex, the canonical install root is `plugins/dev-team/`, and `.agents/plugins/marketplace.json` points to `./plugins/dev-team`.
+
+Canonical Codex subtree:
+
+```text
+dev-team/
+|-- .agents/plugins/marketplace.json
+`-- plugins/dev-team/
+    |-- .codex-plugin/plugin.json
+    |-- skills/
+    |-- agents/
+    `-- commands/
+```
 
 ```
 dev-team/
@@ -328,7 +342,7 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 | Check | How | Expected |
 |-------|-----|----------|
 | Claude Code plugin | Type `/dev-team` | Command available |
-| Codex plugin | Install from local marketplace and prompt `Use dev-team ...` | Skill activates and orchestrates |
+| Codex plugin | Add this GitHub repo as Plugin Directory, install `dev-team`, then prompt `Use dev-team ...` | Skill activates and orchestrates |
 | Copilot CLI plugin | `copilot plugin list` | dev-team listed |
 | Stack commands (Claude Code) | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
 | Shortcut commands (Claude Code) | Type `/ask-prd` | 10 shortcut commands available |
