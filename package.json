@@ -1,10 +1,10 @@
 {
   "name": "@biggora/dev-team",
   "version": "1.0.0",
-  "description": "Claude Code plugin that orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
+  "description": "Agent plugin that orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
   "keywords": [
-    "claude-code",
-    "claude-code-plugin",
+    "dev-team",
+    "plugin",
     "ai-agents",
     "multi-agent",
     "code-review",

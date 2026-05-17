@@ -1,20 +1,29 @@
 {
-  "name": "personal-local",
+  "name": "dev-team",
   "interface": {
-    "displayName": "Personal Plugins"
+    "displayName": "Dev Team",
+    "description": "Agent plugin that orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates"
   },
   "plugins": [
     {
       "name": "dev-team",
       "source": {
-        "source": "local",
-        "path": "./.codex/plugins/dev-team"
+        "source": "url",
+        "url": "https://github.com/biggora/dev-team.git",
+        "ref": "main"
       },
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL"
       },
-      "category": "Productivity"
+      "category": "Productivity",
+      "tags": [
+        "dev",
+        "coding",
+        "review",
+        "design"
+      ],
+      "homepage": "https://github.com/biggora/dev-team"
     }
   ]
 }
