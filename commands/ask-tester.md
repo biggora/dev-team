@@ -27,22 +27,16 @@ $ARGUMENTS
    - If `docs/prd.md` exists: instruct to "Read docs/prd.md for acceptance criteria"
    - If `docs/design.md` exists: instruct to "Read docs/design.md for user flows"
    - Instruct to "Create docs/test-plan.md with traceability matrix before writing tests."
+   - **State the mode**: Mode A ("derive failing acceptance tests from the PRD criteria before implementation — expected-red") when tests are wanted ahead of code; Mode B ("run the full suite, extend coverage, update docs/test-plan.md") when verifying existing code. Default to Mode B
    - Include stack-specific phrases matching the detected stack to trigger skill injection
-   - Include the report protocol (below)
+   - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user
 
-## Report Protocol (include in agent prompt)
+## Report Reminder (include in agent prompt)
 
-```
-End your response with a structured report:
+The agent's own prompt mandates the structured report protocol (Status, Files changed, Summary, Evidence, Criteria...). Add this single line to the dispatch:
 
-Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
+"Reminder: Status DONE requires the Evidence field with fresh command output (or citations for read-only work); failing checks forbid DONE."
 
-Files changed: [list of files created or modified]
-Summary: [what was done, key decisions made]
-Tests: [tests written or run, and their results]
-Concerns: [only if DONE_WITH_CONCERNS — what worries you]
-Blocked on: [only if BLOCKED — what prevents completion]
-Questions: [only if NEEDS_CONTEXT — what information is needed]
-```
+When presenting the result, flag any DONE report lacking Evidence as unverified.

@@ -127,14 +127,11 @@ You have access to specialized design skills installed in `.agents/skills/`. Use
 | Skill | When to apply |
 |-------|--------------|
 | **ui-expert** | General UI/UX design: layout, interaction, accessibility, visual polish |
-| **design-taste-frontend** | Premium, non-generic interfaces with parametric control (variance, motion, density) |
-| **high-end-visual-design** | Luxury aesthetic: soft UI, whitespace, depth, smooth animations |
-| **minimalist-ui** | Clean editorial style inspired by Notion, Linear |
-| **industrial-brutalist-ui** | Raw mechanical interfaces, Swiss typography, CRT aesthetics |
+| **design-styles** | Aesthetic presets: premium/parametric, luxury, minimalist editorial, brutalist — pick the style the spec calls for |
 | **redesign-existing-projects** | Auditing and upgrading existing UI — fixing design problems |
 | **web-design-reviewer** | Visual inspection via browser: layout, responsive, accessibility issues |
 
-When producing design specifications, reference the appropriate skill's principles to guide frontend-dev implementation. For example, if the project needs a premium SaaS feel, apply design-taste-frontend guidelines in your specs.
+When producing design specifications, reference the appropriate skill's principles to guide frontend-dev implementation. For example, if the project needs a premium SaaS feel, apply the design-styles premium preset in your specs.
 
 ## Quality Standards
 
@@ -155,8 +152,13 @@ Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [docs/ files created]
 Summary: [screens designed, user flows mapped, key UX decisions]
-Tests: N/A (designer does not write tests)
+Evidence: [PRD user stories and requirements each screen traces to; file:line citations for claims about existing UI]
+Criteria: [each PRD user story with the screen(s) that cover it — or "N/A: no PRD"]
 Concerns: [only if DONE_WITH_CONCERNS — UX risks, unclear requirements, a11y gaps]
 Blocked on: [only if BLOCKED — missing user research, unclear business requirements]
 Questions: [only if NEEDS_CONTEXT — target audience, device constraints, brand guidelines]
 ```
+
+Report rules:
+- **DONE requires Evidence.** Every screen must trace to a PRD user story or requirement — no orphan screens, no uncovered stories.
+- **Fix-or-abstain.** If the existing design already covers a flow, say so — do not redesign what works.

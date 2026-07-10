@@ -1,3 +1,5 @@
+> **HISTORICAL** — this document describes a hook-based skill-injection engine that was never built and is not planned. Skill `metadata` triggering (pathPatterns/promptSignals) does not exist in the current plugin; skills are surfaced by their descriptions. For current behavior see `specs/workflow.md` and `CLAUDE.md`.
+
 # План реализации dev-team плагина
 
 ## Контекст

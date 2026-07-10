@@ -1,7 +1,7 @@
 {
   "name": "dev-team",
   "description": "Orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Aleksejs Gordejevs",
     "email": "gordejev@gmail.com"

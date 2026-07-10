@@ -3,56 +3,6 @@ name: Node.js Stack Knowledge
 description: >
   This skill should be used when working with Node.js, TypeScript, or JavaScript projects,
   including frameworks like Next.js, NestJS, Express, Fastify, and Vite.
-metadata:
-  priority: 7
-  pathPatterns:
-    - "**/*.ts"
-    - "**/*.tsx"
-    - "**/*.js"
-    - "**/*.mjs"
-    - "**/*.jsx"
-    - "**/package.json"
-    - "**/tsconfig*.json"
-    - "**/next.config.*"
-    - "**/nest-cli.json"
-    - "**/vite.config.*"
-    - "**/vitest.config.*"
-    - "**/jest.config.*"
-    - "**/.eslintrc*"
-    - "**/eslint.config.*"
-  bashPatterns:
-    - "npm *"
-    - "npx *"
-    - "yarn *"
-    - "pnpm *"
-    - "node *"
-    - "tsx *"
-    - "ts-node *"
-  importPatterns:
-    - "react"
-    - "next"
-    - "express"
-    - "fastify"
-    - "@nestjs"
-    - "vite"
-  promptSignals:
-    phrases:
-      - "typescript"
-      - "node.js"
-      - "react component"
-      - "next.js"
-      - "nestjs"
-      - "express"
-      - "vite"
-    allOf:
-      - ["node", "project"]
-      - ["typescript", "project"]
-      - ["react", "component"]
-    noneOf:
-      - "python only"
-      - "django"
-      - "flask"
-    minScore: 6
 ---
 
 # Node.js Stack Knowledge

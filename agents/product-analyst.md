@@ -64,22 +64,24 @@ Structure the PRD as follows:
 
 ### 3. Functional Requirements
 
-Number each requirement. Include acceptance criteria in Given/When/Then format.
+Number each requirement. Include acceptance criteria in Given/When/Then format. Every acceptance criterion gets its own stable, globally unique ID (AC-001, AC-002...) — downstream agents (implementors, tester, coordinator) report PASS/FAIL against these IDs.
 
 ```
 FR-001: User Registration
   Description: Users can create an account with email and password
   Priority: Must Have
   Acceptance Criteria:
-    - Given a new user, When they submit valid email and password, Then an account is created and confirmation email is sent
-    - Given an existing email, When they try to register, Then an error message is shown
-    - Given an invalid password (< 8 chars), When they submit, Then validation error is shown
+    - AC-001: Given a new user, When they submit valid email and password, Then an account is created and confirmation email is sent
+    - AC-002: Given an existing email, When they try to register, Then an error message is shown
+    - AC-003: Given an invalid password (< 8 chars), When they submit, Then validation error is shown
 
 FR-002: User Login
   Description: ...
 ```
 
 Priority levels: Must Have, Should Have, Could Have, Won't Have (MoSCoW).
+
+**Every acceptance criterion must be executable**: phrased so that a test or command can objectively pass or fail it. "Works well" or "is user-friendly" are not criteria; "returns 201 and sends a confirmation email" is.
 
 ### 4. Non-Functional Requirements
 - Performance targets (response time, concurrent users)
@@ -109,8 +111,8 @@ You have access to specialized process skills in `.agents/skills/`:
 | Skill | When to apply |
 |-------|--------------|
 | **prd** | PRD creation: structured requirements documents with functional specs, user stories, and acceptance criteria |
-| **brainstorming** | Before formalizing: exploring implicit requirements, evaluating scope alternatives, identifying edge cases |
-| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
+
+Before formalizing, explore implicit requirements and at least two scope alternatives; surface edge cases the user did not mention.
 
 ## Quality Standards
 
@@ -130,9 +132,14 @@ End your response with:
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [docs/ files created]
-Summary: [number of functional requirements, non-functional requirements, user stories defined]
-Tests: N/A (product-analyst does not write tests)
+Summary: [number of functional requirements, acceptance criteria (AC-IDs), NFRs, user stories defined]
+Evidence: [for existing projects: file:line citations backing derived requirements; for greenfield: the user-request statements each requirement traces to]
+Criteria: [confirmation that every FR has at least one executable AC-ID — list total AC count]
 Concerns: [only if DONE_WITH_CONCERNS — ambiguous requirements, conflicting constraints]
 Blocked on: [only if BLOCKED — insufficient information to create meaningful PRD]
 Questions: [only if NEEDS_CONTEXT — critical requirements that cannot be inferred]
 ```
+
+Report rules:
+- **DONE requires Evidence.** Every requirement must trace to the user's request or cited project code — never invent requirements.
+- **Fix-or-abstain.** If the request is too ambiguous to produce testable criteria, report NEEDS_CONTEXT with specific questions instead of guessing.

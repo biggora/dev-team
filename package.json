@@ -1,6 +1,6 @@
 {
   "name": "@biggora/dev-team",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Agent plugin that orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
   "keywords": [
     "dev-team",

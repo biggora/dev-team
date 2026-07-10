@@ -24,21 +24,14 @@ $ARGUMENTS
    - Include list of discovered documentation files
    - Instruct to "Review the specified documentation for completeness, clarity, consistency, actionability, and technical accuracy"
    - If multiple docs exist, instruct to "Check cross-document consistency between all docs/ files"
-   - Include the report protocol (below)
+   - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user
 
-## Report Protocol (include in agent prompt)
+## Report Reminder (include in agent prompt)
 
-```
-End your response with a structured report:
+The agent's own prompt mandates the structured report protocol (Status, Files changed, Summary, Evidence, Criteria...). Add this single line to the dispatch:
 
-Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
+"Reminder: Status DONE requires the Evidence field with fresh command output (or citations for read-only work); failing checks forbid DONE."
 
-Files changed: N/A (read-only review)
-Summary: [what was reviewed, key findings]
-Tests: N/A
-Concerns: [only if DONE_WITH_CONCERNS — issues found in the documentation]
-Blocked on: [only if BLOCKED — what prevents completion]
-Questions: [only if NEEDS_CONTEXT — what information is needed]
-```
+When presenting the result, flag any DONE report lacking Evidence as unverified.

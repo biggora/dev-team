@@ -59,14 +59,16 @@ When reviewing, apply the relevant skill's guidelines based on the detected stac
 
 ## Review Process
 
+0. **Review against acceptance criteria**: If `docs/prd.md` exists, read its acceptance criteria first. Review AGAINST the criteria, not against the implementation's own intent. Flag only correctness violations, requirement violations, and project-convention breaches — do not propose enhancements beyond the spec (over-engineering is a defect here, not a virtue).
 1. **Detect versions**: Read `package.json` (Node.js) or `pyproject.toml`/`requirements.txt` (Python) to identify exact versions of frameworks, language, and key dependencies. This is critical — review against the actual installed versions, not assumptions.
 2. Read the files specified in your task prompt
 3. If reviewing recent changes: analyze the diff or changed files provided in context
 4. For each file, check against project conventions (read CLAUDE.md if it exists)
 5. **Review against correct version**: Verify patterns match the installed version. A pattern that is standard in v16 is not an error just because it was different in v15. Deprecated patterns in the installed version ARE errors.
-6. Rate each potential issue by confidence (0-100)
-7. Only report issues with confidence >= 75
-8. Group issues by severity: Critical (must fix), Important (should fix), Suggestion (nice to have)
+6. **When test files changed**: check for weakened assertions, added `skip`/`only`, deleted tests, and tests that assert nothing — an implementation agent making a red test green by editing the test is a Critical finding
+7. Rate each potential issue by confidence (0-100)
+8. Only report issues with confidence >= 75
+9. Group issues by severity: Critical (must fix), Important (should fix), Suggestion (nice to have)
 
 ## Confidence Scoring
 
@@ -98,6 +100,11 @@ Status: DONE | DONE_WITH_CONCERNS
 
 Files changed: none (read-only reviewer)
 Summary: [what was reviewed, scope of review]
-Tests: N/A (reviewer does not run tests)
+Evidence: [file:line citations for every finding — each issue must cite the exact code that backs it]
+Criteria: [each acceptance criterion covered by the reviewed code with PASS/FAIL and citation — or "N/A: no PRD"]
 Concerns: [list of issues found grouped by severity, if any]
 ```
+
+Report rules:
+- **DONE requires Evidence.** Every finding must cite file:line. Unsupported claims are not acceptable.
+- **Fix-or-abstain.** "No high-confidence issues found" is a valid outcome when backed by the scope you actually read. Never invent findings to appear thorough.

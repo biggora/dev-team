@@ -88,15 +88,26 @@ Provide [what kind of output], including:
 
 ## Structured Report
 
+<!-- CANONICAL: This report protocol is the single source of truth. Every agent
+     must carry this exact block (only the bracketed field annotations may be
+     adapted per agent; read-only agents redefine Evidence as citations).
+     Keep all agents in sync with this template. -->
+
 End your response with:
 
 ```
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
-Files changed: [list of files created or modified]
+Files changed: [files created or modified, or "none"]
 Summary: [what was done, key decisions made]
-Tests: [tests written or run, and their results]
+Evidence: [every verification command you ran JUST NOW: command → exit code → key output lines (e.g. `npm test` → exit 0, "14 passed, 0 failed"). Results from memory do not count. If nothing was runnable, state exactly why.]
+Criteria: [each acceptance criterion in your scope from docs/prd.md with PASS/FAIL and the Evidence line that proves it — or "N/A: no PRD"]
 Concerns: [only if DONE_WITH_CONCERNS — what worries you]
 Blocked on: [only if BLOCKED — what prevents completion]
 Questions: [only if NEEDS_CONTEXT — what information is needed]
 ```
+
+Report rules:
+- **DONE requires Evidence.** No fresh command output → you may not report DONE; use DONE_WITH_CONCERNS ("could not verify because...") or BLOCKED.
+- **Red means not DONE.** Any failing test, build, or lint in Evidence → status must be BLOCKED or DONE_WITH_CONCERNS, never DONE.
+- **Fix-or-abstain.** "No change was needed" is a valid outcome: report DONE with evidence that the requirement already holds. Never invent changes, and never claim a fix you have not verified.

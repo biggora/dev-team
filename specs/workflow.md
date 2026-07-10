@@ -2,7 +2,13 @@
 
 ## Overview
 
-The dev-team plugin follows a 5-phase coordinator + specialists architecture. Documents and code are reviewed inline — every artifact is validated immediately after creation, and reworked if issues are found (max 1 rework cycle per artifact to prevent loops).
+The dev-team plugin follows a 5-phase coordinator + specialists architecture. Documents and code are reviewed inline — every artifact is validated immediately after creation, and reworked if issues are found (max 2 rework cycles per artifact per gate; after 3 identical failures the coordinator changes strategy once or escalates to the user).
+
+Core disciplines:
+- **Evidence gate**: every agent report must contain an `Evidence` field with fresh command output (or file:line citations for read-only agents). A DONE without Evidence is treated as DONE_WITH_CONCERNS.
+- **Vertical slices**: the planner decomposes into end-to-end user paths (tracer bullet first), mapped to PRD acceptance criterion IDs (AC-001...).
+- **Tester-first per slice**: tester Mode A writes failing acceptance tests before implementation; implementation agents make them green (but never touch test files); tester Mode B verifies green and extends coverage.
+- **Progress ledger**: the coordinator maintains `docs/progress.md` and re-reads it (plus `docs/prd.md`) at every phase and slice start.
 
 ## Full Workflow (Greenfield)
 
@@ -19,7 +25,8 @@ flowchart TD
 
     P1 --> CONFIRM{User confirms?}
     CONFIRM -- No --> P1
-    CONFIRM -- Yes --> P2
+    CONFIRM -- Yes --> LEDGER[Create docs/progress.md]
+    LEDGER --> P2
 
     subgraph P2["Phase 2: Dispatch & Inline Review"]
         direction TB
@@ -27,7 +34,7 @@ flowchart TD
         subgraph DOC_PHASE["Documentation Phase"]
             direction TB
 
-            PA[product-analyst] -->|docs/prd.md| DR1
+            PA[product-analyst] -->|docs/prd.md with AC-IDs| DR1
             subgraph DR1["Doc Review: PRD"]
                 DR1_R[doc-reviewer]
                 DR1_D{Concerns?}
@@ -60,7 +67,7 @@ flowchart TD
             end
 
             DR3 --> PL[planner]
-            PL -->|docs/plan.md| DR4
+            PL -->|docs/plan.md: vertical slices| DR4
             subgraph DR4["Doc Review: Plan"]
                 DR4_R[doc-reviewer]
                 DR4_D{Concerns?}
@@ -71,12 +78,10 @@ flowchart TD
             end
         end
 
-        DOC_PHASE --> CODE_PHASE
+        DOC_PHASE --> SCAFFOLD
 
-        subgraph CODE_PHASE["Implementation Phase"]
-            direction TB
-
-            IMP[implementor: scaffolding] --> CR1
+        subgraph SCAFFOLD["Shared Scaffolding"]
+            IMP[implementor: skeleton, config, shared types] --> CR1
             subgraph CR1["Code Review: Scaffold"]
                 CR1_R[code-reviewer]
                 CR1_D{Concerns?}
@@ -85,51 +90,44 @@ flowchart TD
                 CR1_FIX --> CR1_OK[Scaffold ready]
                 CR1_D -- No --> CR1_OK
             end
+        end
 
-            CR1 --> PARALLEL
+        SCAFFOLD --> SLICE_LOOP
 
-            subgraph PARALLEL["Parallel Dispatch"]
+        subgraph SLICE_LOOP["Per Slice (tracer bullet first)"]
+            direction TB
+            TA["tester Mode A: failing acceptance tests<br/>(expected-red per AC-ID)"] --> PARALLEL
+
+            subgraph PARALLEL["Parallel Implementation (disjoint scopes)"]
                 direction LR
-                BE[backend-dev] --> CR2
-                subgraph CR2["Code Review"]
-                    CR2_R[code-reviewer]
-                    CR2_D{Concerns?}
-                    CR2_R --> CR2_D
-                    CR2_D -- Yes --> CR2_FIX[re-dispatch backend-dev]
-                    CR2_FIX --> CR2_OK[Backend ready]
-                    CR2_D -- No --> CR2_OK
-                end
-
-                FE[frontend-dev] --> CR3
-                subgraph CR3["Code Review"]
-                    CR3_R[code-reviewer]
-                    CR3_D{Concerns?}
-                    CR3_R --> CR3_D
-                    CR3_D -- Yes --> CR3_FIX[re-dispatch frontend-dev]
-                    CR3_FIX --> CR3_OK[Frontend ready]
-                    CR3_D -- No --> CR3_OK
-                end
+                BE[backend-dev] 
+                FE[frontend-dev]
             end
 
-            PARALLEL --> TEST[tester]
-            TEST --> CR4
-            subgraph CR4["Code Review: Tests"]
-                CR4_R[code-reviewer]
-                CR4_D{Concerns?}
-                CR4_R --> CR4_D
-                CR4_D -- Yes --> CR4_FIX[re-dispatch tester]
-                CR4_FIX --> CR4_OK[Tests ready]
-                CR4_D -- No --> CR4_OK
+            PARALLEL --> TB2["tester Mode B: full suite green,<br/>extend coverage, update docs/test-plan.md"]
+            TB2 --> CRS
+            subgraph CRS["Code Review: Slice"]
+                CRS_R[code-reviewer]
+                CRS_D{Concerns?}
+                CRS_R --> CRS_D
+                CRS_D -- Yes --> CRS_FIX[re-dispatch responsible agent]
+                CRS_FIX --> CRS_OK[Slice done]
+                CRS_D -- No --> CRS_OK
             end
+            CRS --> GATE{"Slice acceptance tests<br/>pass end-to-end?"}
+            GATE -- Yes --> NEXT_SLICE[Next slice]
+            GATE -- No --> FIX[re-dispatch within rework limits]
+            FIX --> TB2
         end
     end
 
     P2 --> P3
 
     subgraph P3["Phase 3: Collection"]
-        C1[Process agent reports]
+        C0["Evidence gate: DONE without Evidence<br/>= DONE_WITH_CONCERNS"]
+        C1[Process agent reports, update docs/progress.md]
         C2{All DONE?}
-        C1 --> C2
+        C0 --> C1 --> C2
         C2 -- "BLOCKED / NEEDS_CONTEXT" --> C3[Re-dispatch with info]
         C3 --> C1
         C2 -- Yes --> C4[Proceed]
@@ -139,8 +137,9 @@ flowchart TD
 
     subgraph P4["Phase 4: Final Review"]
         direction TB
-        F1{Multiple code agents?}
-        F1 -- Yes --> F2[code-reviewer: cross-cutting review]
+        F0["Criteria coverage check:<br/>every AC-ID has passing evidence<br/>or is listed UNVERIFIED"]
+        F0 --> F1{Multiple code agents?}
+        F1 -- Yes --> F2[code-reviewer: cross-cutting review + test integrity]
         F2 --> F2D{Concerns?}
         F2D -- Yes --> F2FIX[re-dispatch code agent]
         F2FIX --> F3
@@ -160,8 +159,8 @@ flowchart TD
 
     subgraph P5["Phase 5: Report"]
         R1[Compile summary]
-        R2[Files changed + tests + concerns]
-        R3[Suggested next steps]
+        R2["AC-IDs verified N/M + files changed<br/>+ test evidence + concerns"]
+        R3[Link docs/progress.md + next steps]
         R1 --> R2 --> R3
     end
 
@@ -177,21 +176,23 @@ flowchart LR
     AGENT[Agent creates artifact] --> REVIEWER[Reviewer checks]
     REVIEWER --> D{DONE_WITH_CONCERNS?}
     D -- Yes --> REWORK[Re-dispatch original agent\nwith all findings]
-    REWORK --> PASS[Artifact accepted\nmax 1 rework]
+    REWORK --> PASS[Artifact accepted\nmax 2 reworks per gate]
     D -- No --> PASS
     PASS --> NEXT[Continue workflow]
 ```
 
 | Artifact type | Creator agents | Reviewer | Rework limit |
 |---|---|---|---|
-| PRD | product-analyst | doc-reviewer | 1 |
-| Architecture | architect | doc-reviewer | 1 |
-| Design spec | ui-ux-designer | doc-reviewer | 1 |
-| Execution plan | planner | doc-reviewer | 1 |
-| Scaffold code | implementor | code-reviewer | 1 |
-| Backend code | backend-dev | code-reviewer | 1 |
-| Frontend code | frontend-dev | code-reviewer | 1 |
-| Test code | tester | code-reviewer | 1 |
+| PRD | product-analyst | doc-reviewer | 2 |
+| Architecture | architect | doc-reviewer | 2 |
+| Design spec | ui-ux-designer | doc-reviewer | 2 |
+| Execution plan | planner | doc-reviewer | 2 |
+| Scaffold code | implementor | code-reviewer | 2 |
+| Backend code | backend-dev | code-reviewer | 2 |
+| Frontend code | frontend-dev | code-reviewer | 2 |
+| Test code | tester | code-reviewer | 2 |
+
+After 3 identical failure signatures: change strategy once (different agent, narrower scope, split the task) or escalate to the user with the full attempt history.
 
 ## Agent Dispatch Order
 
@@ -213,11 +214,12 @@ sequenceDiagram
     U->>C: Task request
     C->>U: Decomposition plan
     U->>C: Confirm
+    Note over C: Create docs/progress.md
 
     rect rgb(230, 245, 255)
         Note over C,DR: Documentation Phase
-        C->>PA: Create PRD
-        PA-->>C: docs/prd.md
+        C->>PA: Create PRD (AC-IDs)
+        PA-->>C: docs/prd.md + Evidence
         C->>DR: Review PRD
         DR-->>C: DONE or DONE_WITH_CONCERNS
         opt Concerns found
@@ -226,7 +228,7 @@ sequenceDiagram
         end
 
         C->>AR: Design architecture (read PRD)
-        AR-->>C: docs/architecture.md
+        AR-->>C: docs/architecture.md + Evidence
         C->>DR: Review architecture
         DR-->>C: DONE or DONE_WITH_CONCERNS
         opt Concerns found
@@ -235,7 +237,7 @@ sequenceDiagram
         end
 
         C->>UD: Design UI/UX (read PRD)
-        UD-->>C: docs/design.md
+        UD-->>C: docs/design.md + Evidence
         C->>DR: Review design
         DR-->>C: DONE or DONE_WITH_CONCERNS
         opt Concerns found
@@ -243,9 +245,9 @@ sequenceDiagram
             UD-->>C: docs/design.md updated
         end
 
-        C->>PL: Create plan (read architecture)
-        PL-->>C: docs/plan.md
-        C->>DR: Review plan
+        C->>PL: Create slice plan (read architecture)
+        PL-->>C: docs/plan.md (vertical slices) + Evidence
+        C->>DR: Review plan (slicing, AC-ID mapping)
         DR-->>C: DONE or DONE_WITH_CONCERNS
         opt Concerns found
             C->>PL: Fix plan
@@ -254,48 +256,35 @@ sequenceDiagram
     end
 
     rect rgb(230, 255, 230)
-        Note over C,CR: Implementation Phase
-        C->>IM: Scaffold project
-        IM-->>C: Files created
+        Note over C,CR: Implementation — per slice, tracer bullet first
+        C->>IM: Scaffold project (shared skeleton)
+        IM-->>C: Files created + Evidence
         C->>CR: Review scaffold
         CR-->>C: DONE or DONE_WITH_CONCERNS
-        opt Concerns found
-            C->>IM: Fix code
-            IM-->>C: Files updated
-        end
 
-        par Backend & Frontend
-            C->>BE: Build API
-            BE-->>C: Files created
-            C->>CR: Review backend
-            CR-->>C: DONE or DONE_WITH_CONCERNS
-            opt Concerns found
-                C->>BE: Fix code
-                BE-->>C: Files updated
-            end
-        and
-            C->>FE: Build UI
-            FE-->>C: Files created
-            C->>CR: Review frontend
-            CR-->>C: DONE or DONE_WITH_CONCERNS
-            opt Concerns found
-                C->>FE: Fix code
-                FE-->>C: Files updated
-            end
-        end
+        loop Each slice
+            C->>TE: Mode A — failing acceptance tests for slice AC-IDs
+            TE-->>C: expected-red evidence
 
-        C->>TE: Write & run tests
-        TE-->>C: Test files + results
-        C->>CR: Review tests
-        CR-->>C: DONE or DONE_WITH_CONCERNS
-        opt Concerns found
-            C->>TE: Fix tests
-            TE-->>C: Tests updated
+            par Backend & Frontend (disjoint scopes)
+                C->>BE: Build API (make acceptance tests green)
+                BE-->>C: Files + Evidence (build/lint/test output)
+            and
+                C->>FE: Build UI (make acceptance tests green)
+                FE-->>C: Files + Evidence (build/lint/test + E2E)
+            end
+
+            C->>TE: Mode B — full suite green, extend coverage
+            TE-->>C: Green run evidence + docs/test-plan.md
+            C->>CR: Review slice (incl. test integrity)
+            CR-->>C: DONE or DONE_WITH_CONCERNS
+            Note over C: Tracer bullet gate — slice AC tests must pass before next slice
         end
     end
 
     rect rgb(255, 245, 230)
-        Note over C,DR: Final Cross-Cutting Review
+        Note over C,DR: Final Review
+        Note over C: Criteria coverage: every AC-ID verified or listed UNVERIFIED
         opt Multiple code agents
             C->>CR: Cross-cutting code review
             CR-->>C: DONE or DONE_WITH_CONCERNS
@@ -306,7 +295,7 @@ sequenceDiagram
         end
     end
 
-    C->>U: Final report
+    C->>U: Final report (AC-IDs N/M verified, evidence, progress ledger)
 ```
 
 ## Status Handling
@@ -315,20 +304,21 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> AgentWorking
 
-    AgentWorking --> DONE: No issues
-    AgentWorking --> DONE_WITH_CONCERNS: Issues found
+    AgentWorking --> EvidenceCheck: Report received
+    EvidenceCheck --> DONE: Evidence present, checks green
+    EvidenceCheck --> DONE_WITH_CONCERNS: DONE without Evidence,\nor issues found
     AgentWorking --> BLOCKED: Cannot proceed
     AgentWorking --> NEEDS_CONTEXT: Missing info
 
-    DONE --> NextPhase
+    DONE --> NextPhase: Record in docs/progress.md
     DONE_WITH_CONCERNS --> ReviewerChecks
     ReviewerChecks --> Rework: Reviewer confirms issues
-    Rework --> NextPhase: max 1 rework
+    Rework --> NextPhase: max 2 reworks per gate
     ReviewerChecks --> NextPhase: No significant issues
 
     BLOCKED --> ReDispatch: Provide missing info
-    ReDispatch --> AgentWorking: max 2 attempts
-    ReDispatch --> EscalateToUser: Still blocked
+    ReDispatch --> AgentWorking: within rework limits
+    ReDispatch --> EscalateToUser: 3 identical failures
 
     NEEDS_CONTEXT --> AnswerQuestions
     AnswerQuestions --> AgentWorking: Re-dispatch with answers

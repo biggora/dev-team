@@ -5,29 +5,6 @@ description: >
   "/dev-team-node", "/dev-team-python", "/ask-backend", "/ask-frontend",
   "/ask-reviewer", or wants a coordinator that dispatches specialist agents with
   inline quality gates inside Codex.
-metadata:
-  priority: 8
-  promptSignals:
-    phrases:
-      - "dev-team"
-      - "/dev-team"
-      - "/dev-team-node"
-      - "/dev-team-python"
-      - "/ask-backend"
-      - "/ask-frontend"
-      - "/ask-reviewer"
-      - "inline quality gates"
-      - "specialized agents"
-      - "specialist workflow"
-      - "product-analyst"
-      - "code-reviewer"
-      - "doc-reviewer"
-    allOf:
-      - ["parallel", "agents"]
-      - ["multi-agent", "workflow"]
-      - ["review", "rework"]
-      - ["specialist", "agent"]
-    minScore: 6
 ---
 
 # dev-team for Codex
@@ -90,11 +67,13 @@ For `dev-team` requests:
 1. Analyze the task and decide whether multi-agent orchestration is warranted.
 2. Detect the stack with lightweight inspection first.
 3. Choose the relevant specialist prompts from `agents/`.
-4. Dispatch independent specialists in parallel when scopes do not overlap.
-5. After each document-producing agent, run `doc-reviewer`.
-6. After each code-producing agent, run `code-reviewer`.
-7. If a reviewer reports concerns, re-dispatch the original specialist once with the findings.
-8. Integrate results and report the final outcome succinctly.
+4. For multi-slice work, maintain `docs/progress.md` (goal, acceptance criterion IDs, task table with evidence summaries, decisions) and re-read it plus `docs/prd.md` before each dispatch round.
+5. Dispatch independent specialists in parallel when scopes do not overlap. The test directory belongs to the tester — implementation agents must not touch test files.
+6. After each document-producing agent, run `doc-reviewer`.
+7. After each code-producing agent, run `code-reviewer`.
+8. **Evidence gate**: a specialist report claiming DONE without an `Evidence` field (fresh command output, or file:line citations for read-only work), or with failing output in Evidence, is treated as DONE_WITH_CONCERNS — re-dispatch demanding verification.
+9. If a reviewer reports concerns, re-dispatch the original specialist with the findings. Maximum 2 rework dispatches per artifact per gate; after 3 identical failures change strategy once or escalate to the user.
+10. Integrate results and report the final outcome succinctly, including which acceptance criteria were verified with evidence.
 
 ## Direct specialist mode
 

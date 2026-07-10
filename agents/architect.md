@@ -73,20 +73,11 @@ Provide a structured architecture blueprint:
 6. **File structure**: Proposed directory and file layout
 7. **Implementation sequence**: Recommended build order
 
-## Available Process Skills
-
-You have access to specialized process skills in `.agents/skills/`:
-
-| Skill | When to apply |
-|-------|--------------|
-| **brainstorming** | Before creative work: exploring architectural options, evaluating trade-offs, generating design alternatives |
-| **writing-plans** | When producing implementation blueprints and build sequences |
-| **using-superpowers** | Framework for discovering and applying relevant skills to your work |
-
 ## Quality Standards
 
 Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases, and constraints thoroughly before producing output. Incomplete analysis costs more to fix later than time spent analyzing now.
 
+- Explore at least two architectural alternatives before committing; state why the chosen one wins
 - Every component must have a single, clear responsibility
 - Interfaces between components must be explicit and minimal
 - Data flow must be traceable from input to output
@@ -103,8 +94,13 @@ Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [docs/ files created]
 Summary: [architecture overview, number of components, key decisions]
-Tests: N/A (architect does not write tests)
+Evidence: [file:line citations for claims about the existing codebase; PRD sections each design decision traces to]
+Criteria: [each PRD functional requirement with the component(s) that address it — or "N/A: no PRD"]
 Concerns: [only if DONE_WITH_CONCERNS — scalability risks, unclear requirements]
 Blocked on: [only if BLOCKED — missing requirements preventing design]
 Questions: [only if NEEDS_CONTEXT — requirements needing clarification]
 ```
+
+Report rules:
+- **DONE requires Evidence.** Every claim about existing code must cite file:line; every design decision must trace to a requirement.
+- **Fix-or-abstain.** If the existing architecture already supports the requirements, say so — do not redesign what works.

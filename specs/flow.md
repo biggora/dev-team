@@ -1,3 +1,5 @@
+> **NOTE (2026-07)** — this walkthrough predates the evidence-gate revision: the `brainstorming`/`writing-plans`/`using-superpowers` skills mentioned below were removed, the report protocol now requires an `Evidence` field, the planner produces vertical slices, and the tester runs in Mode A (red) / Mode B (green). For current behavior see `specs/workflow.md` and `CLAUDE.md`.
+
 ## Процесс разработки приложения с нуля через `/dev-team`
 
 ### Шаг 0: Твой промпт

@@ -2,9 +2,11 @@
 
 Plugin toolkit for orchestrating a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
 
-The coordinator (`/dev-team`) decomposes tasks, dispatches specialist agents with isolated contexts, and enforces inline quality gates: every document is reviewed by `doc-reviewer`, every piece of code is reviewed by `code-reviewer`, and artifacts with concerns are automatically sent back for rework (max 1 rework cycle to prevent loops).
+The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches specialist agents with isolated contexts, and enforces inline quality gates: every document is reviewed by `doc-reviewer`, every piece of code is reviewed by `code-reviewer`, and artifacts with concerns are automatically sent back for rework (max 2 rework cycles per gate to prevent loops).
 
-Skills are injected dynamically based on file patterns, not loaded globally. This repository includes plugin manifests for Claude Code, Codex, and GitHub Copilot CLI.
+Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. The coordinator tracks state in `docs/progress.md`.
+
+Skills are surfaced by their descriptions. This repository includes plugin manifests for Claude Code, Codex, and GitHub Copilot CLI.
 
 ## Installation
 
@@ -190,11 +192,13 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
     +-- doc-reviewer     (opus)     ← inline after every doc agent
 ```
 
-**Context isolation**: each agent gets a clean context and does not inherit the coordinator's session. The coordinator includes the full task description, scope boundaries, and report protocol in every dispatch.
+**Context isolation**: each agent gets a clean context and does not inherit the coordinator's session. The coordinator includes the full task description, scope boundaries, and a report reminder in every dispatch (the full protocol lives in each agent's own prompt).
 
-**Dynamic skill injection**: skills are injected into agents based on file patterns (`pathPatterns`), command patterns (`bashPatterns`), import detection (`importPatterns`), and prompt signals (`promptSignals`) — not loaded globally.
+**Skill selection**: skills are surfaced by their descriptions; dispatch prompts include stack-specific phrases ("typescript", "nestjs", "django") to help agents pick the relevant ones.
 
-**Inline quality gates**: every artifact goes through a review-and-rework cycle. Documents are reviewed by `doc-reviewer`, code by `code-reviewer`. If concerns are found, the original agent is re-dispatched with findings (max 1 rework). See `specs/workflow.md` for full mermaid diagrams.
+**Inline quality gates**: every artifact goes through a review-and-rework cycle. Documents are reviewed by `doc-reviewer`, code by `code-reviewer`. If concerns are found, the original agent is re-dispatched with findings (max 2 reworks per gate; after 3 identical failures the coordinator changes strategy or escalates). See `specs/workflow.md` for full mermaid diagrams.
+
+**Evidence gate**: a DONE report without fresh verification output (command → exit code → key lines) is treated as unverified and sent back. Failing checks forbid DONE. "No change was needed" is a valid, evidence-backed outcome (fix-or-abstain).
 
 ## Plugin Structure
 
@@ -276,11 +280,11 @@ dev-team/
 
 | Phase | Goal | Details |
 |-------|------|---------|
-| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into subtasks |
-| 2. Dispatch | Launch agents with inline review | Each doc → doc-reviewer, each code → code-reviewer. Rework on concerns (max 1x) |
-| 3. Collection | Process results | Handle DONE / BLOCKED / NEEDS_CONTEXT statuses (max 2 re-dispatches) |
-| 4. Final Review | Cross-cutting review | Cross-module code consistency + cross-document consistency (if multi-agent) |
-| 5. Report | Summary | Files changed, tests, review findings, concerns, next steps |
+| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into vertical slices; create docs/progress.md after user confirms |
+| 2. Dispatch | Launch agents with inline review | Per slice: tester Mode A (red) → implementation (parallel, disjoint scopes) → tester Mode B (green) → code-reviewer. Each doc → doc-reviewer. Rework on concerns (max 2x per gate) |
+| 3. Collection | Process results | Evidence gate (DONE without Evidence = unverified), handle DONE / BLOCKED / NEEDS_CONTEXT, update docs/progress.md |
+| 4. Final Review | Cross-cutting review | Criteria coverage check (every AC-ID verified or listed UNVERIFIED) + cross-module code consistency + cross-document consistency (if multi-agent) |
+| 5. Report | Summary | AC-IDs verified N/M, files changed, test evidence, review findings, concerns, next steps |
 
 ## Report Protocol
 
@@ -289,13 +293,16 @@ Every agent ends with a structured report:
 ```
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
-Files changed: [list]
+Files changed: [files or "none"]
 Summary: [what was done]
-Tests: [tests and results]
+Evidence: [verification commands run JUST NOW: command → exit code → key output. Read-only agents cite file:line instead]
+Criteria: [each acceptance criterion in scope: PASS/FAIL + evidence — or "N/A: no PRD"]
 Concerns: [if DONE_WITH_CONCERNS]
 Blocked on: [if BLOCKED]
 Questions: [if NEEDS_CONTEXT]
 ```
+
+Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain** ("no change needed" is a valid, evidence-backed outcome). Canonical copy: `agents/_template.md`.
 
 ## Adding a New Agent
 
@@ -323,7 +330,7 @@ Questions: [if NEEDS_CONTEXT]
 ## Adding a New Skill
 
 1. Copy `skills/_template/` to `skills/<skill-name>/`
-2. Edit `SKILL.md`: set `name`, `description`, `metadata` (pathPatterns, promptSignals)
+2. Edit `SKILL.md`: set `name` and a specific trigger `description` (the description is the only triggering mechanism)
 3. Write skill content (keep under 2000 words)
 4. Put detailed documentation in `references/`
 5. Restart Claude Code — the skill is auto-discovered
@@ -332,10 +339,10 @@ Questions: [if NEEDS_CONTEXT]
 
 To add support for a new technology stack (e.g., Go, Rust, Java):
 
-1. Create `commands/dev-team-<stack>.md` — copy from an existing stack coordinator, adapt detection patterns, greenfield detection, and stack-specific dispatch phrases
-2. Create `skills/<stack>-stack/SKILL.md` — add `pathPatterns`, `importPatterns`, `promptSignals` for the stack's file types
+1. Create `commands/dev-team-<stack>.md` — copy `commands/dev-team.md` and replace only the `## Stack Profile` section (detection patterns, greenfield detection, stack-specific dispatch phrases); the rest must stay identical across coordinators (see the SYNC comment at the top)
+2. Create `skills/<stack>-stack/SKILL.md` with a trigger description covering the stack's file types and frameworks
 3. Create `skills/<stack>-stack/references/architecture-patterns.md` — stack-specific architecture patterns for the architect agent
-4. Update `commands/dev-team.md` to list the new stack coordinator
+4. Update the `## Stack Profile` section of `commands/dev-team.md` to list the new stack coordinator
 
 ## Verification
 
@@ -348,15 +355,15 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 | Shortcut commands (Claude Code) | Type `/ask-prd` | 10 shortcut commands available |
 | Agents available | Claude suggests agents | 10 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer, doc-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
-| Skill injection | Agent reads `.ts` file | nodejs-stack skill injected |
-| Coordinator isolation | `/dev-team` doesn't see skills | Clean coordinator context |
+| Skill selection | Dispatch agent with "typescript" phrases | Agent applies nodejs-stack skill |
+| Evidence gate | Dispatch implementor on a repo with tests | Report contains Evidence with command + exit code |
 
 For Codex specifically:
 
 - `dev-team-codex` should trigger when the prompt includes `dev-team`, `/dev-team`, or `/ask-*` phrases.
 - The skill should dispatch specialists through `spawn_agent` rather than claiming native slash-command support.
 
-For debugging: `claude --debug` shows skill injection and hook activity.
+For debugging: `claude --debug` shows plugin loading and agent dispatch activity.
 
 ## License
 

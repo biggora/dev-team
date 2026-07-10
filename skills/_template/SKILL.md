@@ -8,25 +8,13 @@
 # Required fields:
 #   name:        Skill display name
 #   description: Third-person trigger description ("This skill should be used when...")
-#
-# Optional metadata fields:
-#   metadata.priority:        4-8 (higher = injected earlier, default: 6)
-#   metadata.pathPatterns:    File globs that trigger injection via PreToolUse
-#   metadata.bashPatterns:    Command patterns that trigger injection
-#   metadata.importPatterns:  Import strings in code that trigger injection
-#   metadata.promptSignals:   Phrase-based triggers via UserPromptSubmit
-#     phrases:   ["+6 points per match"]
-#     allOf:     [[word groups], "+4 points per group if all words present"]
-#     noneOf:    ["hard suppression — blocks injection"]
-#     minScore:  Minimum score threshold (default: 6)
-#
-# Injection budget:
-#   PreToolUse:       <= 3 skills (~18KB)
-#   UserPromptSubmit: <= 2 skills (~8KB)
+#                This is the ONLY triggering mechanism — Claude Code surfaces
+#                skills to the model by description. Make it specific: name the
+#                exact phrases, file types, and situations that should trigger it.
 #
 # Progressive disclosure:
-#   SKILL.md    → Injected when triggered (~1500-2000 words max)
-#   references/ → Read by agent on demand (detailed docs, patterns, examples)
+#   SKILL.md    → Loaded when triggered (~1500-2000 words max)
+#   references/ → Read by the agent on demand (detailed docs, patterns, examples)
 # ==============================================================================
 
 name: Skill Name Here
@@ -34,24 +22,8 @@ description: >
   This skill should be used when the user asks to
   "specific phrase 1", "specific phrase 2", "specific phrase 3",
   or needs guidance on [topic area].
-metadata:
-  priority: 6
-  pathPatterns:
-    - "**/*.example"
-    - "**/example-dir/**"
-  bashPatterns:
-    - "example-command"
-  importPatterns:
-    - "example-package"
-  promptSignals:
-    phrases:
-      - "example phrase"
-    allOf:
-      - ["word1", "word2"]
-    noneOf:
-      - "unrelated topic"
-    minScore: 6
 ---
+
 
 <!-- TEMPLATE: Replace everything below with the skill content -->
 <!-- Keep under 2000 words. Move detailed docs to references/ -->
