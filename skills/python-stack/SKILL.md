@@ -1,5 +1,5 @@
 ---
-name: Python Stack Knowledge
+name: python-stack
 description: >
   This skill should be used when working with Python projects,
   including frameworks like Django, Flask, FastAPI, and related tooling.

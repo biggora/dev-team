@@ -69,7 +69,7 @@ Blocked on: [only if BLOCKED — what prevents completion]
 Questions: [only if NEEDS_CONTEXT — what information is needed]
 ```
 
-Report rules (canonical copy: `agents/_template.md`):
+Report rules (canonical copy: `templates/agent-template.md`):
 - **DONE requires Evidence.** No fresh command output (or citations) → the agent may not report DONE.
 - **Red means not DONE.** Any failing test, build, or lint in Evidence → BLOCKED or DONE_WITH_CONCERNS, never DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome backed by evidence; invented changes and unverified fixes are not.
@@ -126,7 +126,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 
 ## Adding New Agents
 
-1. Copy `agents/_template.md` to `agents/<agent-name>.md`
+1. Copy `templates/agent-template.md` to `agents/<agent-name>.md`
 2. Fill in frontmatter: name, description (with `<example>` blocks), model, color, tools
 3. Write the system prompt: role, responsibilities, process, output format
 4. Include the report protocol (with Evidence/Criteria fields and report rules) at the end of the system prompt — copy it from the template verbatim
@@ -134,7 +134,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 
 ## Adding New Skills
 
-1. Copy `skills/_template/` directory to `skills/<skill-name>/`
+1. Copy `templates/skill-template/` directory to `skills/<skill-name>/`
 2. Edit `SKILL.md`: set name and a specific trigger description (the description is the only triggering mechanism)
 3. Write skill content (keep under 2000 words)
 4. Put detailed docs in `references/` subdirectory

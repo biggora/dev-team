@@ -1,6 +1,8 @@
 ---
-description: Запустить implementor для скриптов, конфигов и утилит
-argument-hint: Описание задачи — скрипты, конфигурация, CI/CD, утилиты
+name: ask-implementor
+description: "Dispatches the implementor agent for general-purpose work: scripts, configuration, CI/CD, and utilities."
+argument-hint: task description — scripts, configuration, CI/CD, utilities
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: implementor

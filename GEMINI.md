@@ -130,7 +130,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 2. Fill in frontmatter: name, description (with `<example>` blocks), model, color, tools
 3. Write the system prompt: role, responsibilities, process, output format
 4. Include the report protocol (with Evidence/Criteria fields and report rules) at the end of the system prompt — copy it from the template verbatim
-5. Restart Codex — agent is auto-discovered
+5. Restart the CLI — agent is auto-discovered
 
 ## Adding New Skills
 
@@ -138,4 +138,4 @@ See `specs/workflow.md` for full mermaid diagrams.
 2. Edit `SKILL.md`: set name and a specific trigger description (the description is the only triggering mechanism)
 3. Write skill content (keep under 2000 words)
 4. Put detailed docs in `references/` subdirectory
-5. Restart Codex — skill is auto-discovered
+5. Restart the CLI — skill is auto-discovered

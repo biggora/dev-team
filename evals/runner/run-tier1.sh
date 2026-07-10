@@ -218,7 +218,6 @@ find_best_agent() {
   for agent_file in "$PLUGIN_DIR"/agents/*.md; do
     local name
     name=$(basename "$agent_file" .md)
-    [[ "$name" == "_template" ]] && continue
 
     local score
     score=$(match_agent "$agent_file" "$prompt")

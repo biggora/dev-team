@@ -6,16 +6,13 @@ description: |
   maximize/minimize a metric, run A/B variants automatically, find the best config/prompt/algorithm.
 
   Trigger phrases (EN): "optimize this", "make it faster", "improve the score", "auto-tune",
-  "run experiments", "find the best version", "benchmark and improve", "keep iterating until better",
-  "autonomous optimization", "self-improving loop".
+  "run experiments", "find the best version", "benchmark and improve", "keep iterating until better".
 
-  Trigger phrases (RU): "оптимизируй", "улучши показатель", "автоматически подбери параметры",
-  "прогони эксперименты", "найди лучший вариант", "итерируй пока не улучшится",
-  "настрой автоматически", "бенчмаркинг и улучшение".
+  Trigger phrases (RU): "оптимизируй", "улучши показатель", "найди лучший вариант",
+  "итерируй пока не улучшится".
 
-  Domain coverage: code performance, prompt engineering, email copy, config tuning, CSS/Lighthouse
-  scores, database queries, test coverage, text readability, business process throughput — anything
-  where "better" can be expressed as a single number.
+  Domain coverage: code performance, prompts, email copy, config tuning, Lighthouse scores,
+  database queries, test coverage — anything where "better" can be expressed as a single number.
 ---
 
 ## Overview

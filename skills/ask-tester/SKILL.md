@@ -1,6 +1,8 @@
 ---
-description: Запустить tester для написания и запуска тестов
-argument-hint: Описание задачи — что тестировать, какие файлы покрыть тестами
+name: ask-tester
+description: "Dispatches the tester agent to write and run tests: unit, integration, and end-to-end."
+argument-hint: what to test and which files to cover
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: tester

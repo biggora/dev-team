@@ -1,6 +1,8 @@
 ---
-description: Запустить architect для проектирования архитектуры
-argument-hint: Описание системы или фичи для проектирования
+name: ask-architect
+description: "Dispatches the architect agent to design system architecture: components, interfaces, data flow, and technical decisions."
+argument-hint: system or feature to design
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: architect

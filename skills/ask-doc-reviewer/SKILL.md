@@ -1,6 +1,8 @@
 ---
-description: Запустить doc-reviewer для ревью документации
-argument-hint: Описание задачи — какие документы проверить
+name: ask-doc-reviewer
+description: Dispatches the doc-reviewer agent to review documentation for completeness, clarity, and consistency.
+argument-hint: which documents to review
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: doc-reviewer

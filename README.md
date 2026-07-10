@@ -6,7 +6,7 @@ The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 
 
 Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. The coordinator tracks state in `docs/progress.md`.
 
-Skills are surfaced by their descriptions. This repository includes plugin manifests for Claude Code, Codex, and GitHub Copilot CLI.
+Skills are surfaced by their descriptions and follow the cross-platform [Agent Skills](https://agentskills.io) standard, so the same skill set installs into Claude Code, Codex CLI, GitHub Copilot CLI, and Gemini CLI.
 
 ## Installation
 
@@ -27,7 +27,7 @@ Skills are surfaced by their descriptions. This repository includes plugin manif
 /plugin install dev-team@dev-team --scope project
 ```
 
-### From local directory
+#### From local directory
 
 ```bash
 # Step 1: Add local marketplace
@@ -46,20 +46,25 @@ Skills are surfaced by their descriptions. This repository includes plugin manif
 claude --plugin-dir /path/to/dev-team
 ```
 
-### In Codex
+Verify: type `/dev-team` — the coordinator should be available. Manifests can be checked with `claude plugin validate /path/to/dev-team --strict`.
 
-This repository is structured as a Codex plugin directory repository. The installable plugin lives at `plugins/dev-team/`, and `.agents/plugins/marketplace.json` exposes it as marketplace `dev-team`.
+### In Codex CLI
 
-Codex uses the plugin through bundled skills. It does **not** expose the Claude-style slash commands from `commands/` as native commands.
+Codex discovers Agent Skills from `.agents/skills/` (project scope) and `~/.agents/skills/` or `~/.codex/skills/` (user scope). Symlinks are followed.
 
 ```bash
-# Git repo flow:
-# 1. Add this GitHub repository as a Codex Plugin Directory
-# 2. Codex reads .agents/plugins/marketplace.json from the cloned repo
-# 3. Install dev-team from marketplace "dev-team"
+git clone https://github.com/biggora/dev-team
+
+# User scope — available in every project:
+ln -s "$(pwd)/dev-team/skills" ~/.agents/skills
+# or copy selectively:
+cp -r dev-team/skills/* ~/.codex/skills/
+
+# Project scope — available in one repository:
+mkdir -p .agents && ln -s /path/to/dev-team/skills .agents/skills
 ```
 
-Once installed, invoke it with natural language such as:
+Codex does **not** register Claude-style slash commands or markdown agents natively. The `dev-team-codex` bridge skill covers that gap — invoke it with natural language:
 
 ```text
 Use dev-team to plan and implement this feature.
@@ -67,28 +72,56 @@ Use dev-team reviewer flow to inspect my recent changes.
 Use /ask-backend semantics for this API task.
 ```
 
-The Codex skill interprets those phrases, reads the plugin-bundled `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`.
+The skill interprets those phrases, reads the bundled coordinator skills and `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`, preserving the inline review gates.
 
-No user-specific `C:\Users\<you>\...` setup is required for the GitHub flow. This repository already contains:
+To disable an individual skill without deleting it, add to `~/.codex/config.toml` (restart Codex afterwards):
 
-1. `.agents/plugins/marketplace.json`
-2. `plugins/dev-team/.codex-plugin/plugin.json`
-3. `plugins/dev-team/skills/`, `plugins/dev-team/agents/`, and `plugins/dev-team/commands/`
-
-If Codex shows an old cached revision after a repository update, reinstall the plugin from the same Plugin Directory so Codex refreshes the cloned repo cache.
+```toml
+[[skills.config]]
+path = "/path/to/skill/SKILL.md"
+enabled = false
+```
 
 ### In GitHub Copilot CLI
 
+Copilot discovers Agent Skills from `.github/skills/`, `.claude/skills/`, `.agents/skills/` (project) and `~/.copilot/skills/`, `~/.agents/skills/` (personal).
+
 ```bash
-# Install from GitHub
-copilot plugin install https://github.com/biggora/dev-team
+# Add the whole skill set from a clone:
+git clone https://github.com/biggora/dev-team
+copilot skill add /path/to/dev-team/skills
 
-# Or from local directory
-copilot plugin install /path/to/dev-team
+# Or install individual skills straight from GitHub (requires gh >= 2.90):
+gh skill install biggora/dev-team dev-team --agent copilot --scope project
 
-# Verify
-copilot plugin list
+# Verify (inside a Copilot session):
+/skills list
 ```
+
+Copilot also reads `AGENTS.md` and `CLAUDE.md` custom instructions automatically when working inside a clone of this repository.
+
+### In Gemini CLI
+
+Gemini CLI (>= 0.26) supports Agent Skills natively. Note: it validates frontmatter strictly — the `---` block must be the very first content of `SKILL.md` (all skills in this repository comply).
+
+```bash
+# Install all skills from this repository:
+gemini skills install https://github.com/biggora/dev-team --path skills --scope user
+
+# Or per-workspace:
+gemini skills install https://github.com/biggora/dev-team --path skills --scope workspace
+
+# Verify:
+gemini skills list --all
+```
+
+Workspace-scope skills load only in trusted folders (`/trust`, then restart). The repository ships a `GEMINI.md` with the workflow context.
+
+### Portability notes
+
+- All skills use the portable Agent Skills core: `name` + `description` + markdown body. Claude-specific frontmatter (`disable-model-invocation`, `allowed-tools`, `argument-hint`) is silently ignored by other platforms.
+- The coordinator skills (`dev-team`, `dev-team-node`, `dev-team-python`, `ask-*`) are user-invoked slash commands in Claude Code; on other platforms they activate by description match or explicit mention.
+- Native subagents (`agents/*.md`), inline review gates, and parallel dispatch are fully supported in Claude Code; on other platforms the `dev-team-codex` bridge skill emulates the workflow.
 
 ## Usage
 
@@ -116,7 +149,7 @@ copilot plugin list
 # 5. Reports summary to user
 ```
 
-### In Codex
+### In Codex CLI
 
 Codex does not provide `/dev-team` or `/ask-*` as real slash commands from this plugin. Use the same names as prompt phrases instead:
 
@@ -127,10 +160,10 @@ Use dev-team-python semantics to create a Django model and DRF serializer.
 Use /ask-reviewer semantics to review my recent changes for security and correctness.
 ```
 
-When those phrases appear, the `dev-team Codex Orchestrator` skill acts as the coordinator bridge:
+When those phrases appear, the `dev-team-codex` skill acts as the coordinator bridge:
 
 1. It interprets the requested coordinator or specialist flow.
-2. It reads the matching prompt templates from `commands/` and `agents/`.
+2. It reads the matching coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` prompts.
 3. It dispatches Codex subagents with `spawn_agent`.
 4. It preserves the inline `code-reviewer` and `doc-reviewer` gates.
 5. It reports back using the same structured report protocol.
@@ -202,20 +235,6 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
 
 ## Plugin Structure
 
-For Codex, the canonical install root is `plugins/dev-team/`, and `.agents/plugins/marketplace.json` points to `./plugins/dev-team`.
-
-Canonical Codex subtree:
-
-```text
-dev-team/
-|-- .agents/plugins/marketplace.json
-`-- plugins/dev-team/
-    |-- .codex-plugin/plugin.json
-    |-- skills/
-    |-- agents/
-    `-- commands/
-```
-
 ```
 dev-team/
 ├── .claude-plugin/
@@ -229,22 +248,7 @@ dev-team/
 ├── .agents/
 │   └── plugins/
 │       └── marketplace.json     # Repo-local Codex marketplace entry
-├── commands/
-│   ├── dev-team.md              # Universal coordinator (auto-detect)
-│   ├── dev-team-node.md         # Node.js coordinator
-│   ├── dev-team-python.md       # Python coordinator
-│   ├── ask-prd.md               # Direct: product-analyst
-│   ├── ask-architect.md         # Direct: architect
-│   ├── ask-planner.md           # Direct: planner
-│   ├── ask-designer.md          # Direct: ui-ux-designer
-│   ├── ask-frontend.md          # Direct: frontend-dev
-│   ├── ask-backend.md           # Direct: backend-dev
-│   ├── ask-implementor.md       # Direct: implementor
-│   ├── ask-tester.md            # Direct: tester
-│   ├── ask-reviewer.md          # Direct: code-reviewer
-│   └── ask-doc-reviewer.md      # Direct: doc-reviewer
-├── agents/
-│   ├── _template.md             # Template for creating new agents
+├── agents/                      # 10 specialist subagents (Claude Code native)
 │   ├── product-analyst.md       # PRD creator (cyan, opus)
 │   ├── architect.md             # System designer (blue, opus)
 │   ├── planner.md               # Task decomposer (cyan, opus)
@@ -255,22 +259,25 @@ dev-team/
 │   ├── tester.md                # Test writer & runner (yellow, full tools)
 │   ├── code-reviewer.md         # Code reviewer (red, read-only)
 │   └── doc-reviewer.md          # Doc reviewer (cyan, read-only)
-├── skills/
-│   ├── dev-team-codex/
-│   │   └── SKILL.md             # Codex-native bridge for coordinator + specialists
-│   ├── nodejs-stack/
-│   │   ├── SKILL.md             # Node.js/TS patterns & conventions
-│   │   └── references/
-│   │       └── architecture-patterns.md  # NestJS, Next.js, monorepo
-│   ├── python-stack/
-│   │   ├── SKILL.md             # Python patterns & conventions
-│   │   └── references/
-│   │       └── architecture-patterns.md  # Django, Flask, FastAPI
-│   └── _template/
-│       ├── SKILL.md             # Skill template with metadata example
-│       └── references/
-│           └── _template.md     # Reference file template
-├── CLAUDE.md                    # Plugin instructions
+├── skills/                      # 40 skills (Agent Skills standard)
+│   ├── dev-team/                # /dev-team — universal coordinator (auto-detect)
+│   ├── dev-team-node/           # /dev-team-node — Node.js coordinator
+│   ├── dev-team-python/         # /dev-team-python — Python coordinator
+│   ├── ask-prd/ … ask-doc-reviewer/   # 10 direct-dispatch shortcuts (/ask-*)
+│   ├── dev-team-codex/          # Codex bridge: coordinator + specialists via spawn_agent
+│   ├── nodejs-stack/            # Node.js/TS patterns (+ references/architecture-patterns.md)
+│   ├── python-stack/            # Python patterns (+ references/architecture-patterns.md)
+│   └── …                        # Stack & quality skills: nest/next/vite/tailwindcss best
+│                                #   practices, typescript-expert, django-expert, security-review,
+│                                #   code-review, postgresql-*, redis-development, shadcn,
+│                                #   stripe-best-practices, ui-expert, prd, autoresearch, …
+├── templates/
+│   ├── agent-template.md        # Template for creating new agents
+│   └── skill-template/          # Template for creating new skills
+├── AGENTS.md                    # Workflow instructions for Codex / Copilot
+├── CLAUDE.md                    # Workflow instructions for Claude Code
+├── GEMINI.md                    # Workflow instructions for Gemini CLI
+├── skills-lock.json             # Provenance of vendored skills (source + hash)
 └── specs/
     ├── dev-team-architecture.md # Architecture specification
     └── workflow.md              # Workflow mermaid diagrams
@@ -302,11 +309,11 @@ Blocked on: [if BLOCKED]
 Questions: [if NEEDS_CONTEXT]
 ```
 
-Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain** ("no change needed" is a valid, evidence-backed outcome). Canonical copy: `agents/_template.md`.
+Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain** ("no change needed" is a valid, evidence-backed outcome). Canonical copy: `templates/agent-template.md`.
 
 ## Adding a New Agent
 
-1. Copy `agents/_template.md` to `agents/<agent-name>.md`
+1. Copy `templates/agent-template.md` to `agents/<agent-name>.md`
 2. Fill in frontmatter: `name`, `description` (with `<example>` blocks), `model`, `color`, `tools`
 3. Write the system prompt with role, responsibilities, process, and output format
 4. Include the report protocol at the end
@@ -329,8 +336,8 @@ Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain*
 
 ## Adding a New Skill
 
-1. Copy `skills/_template/` to `skills/<skill-name>/`
-2. Edit `SKILL.md`: set `name` and a specific trigger `description` (the description is the only triggering mechanism)
+1. Copy `templates/skill-template/` to `skills/<skill-name>/`
+2. Edit `SKILL.md`: set `name` (must equal the folder name — lowercase, digits, hyphens, max 64 chars) and a specific trigger `description` (max 1024 chars; the description is the only triggering mechanism)
 3. Write skill content (keep under 2000 words)
 4. Put detailed documentation in `references/`
 5. Restart Claude Code — the skill is auto-discovered
@@ -339,18 +346,20 @@ Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain*
 
 To add support for a new technology stack (e.g., Go, Rust, Java):
 
-1. Create `commands/dev-team-<stack>.md` — copy `commands/dev-team.md` and replace only the `## Stack Profile` section (detection patterns, greenfield detection, stack-specific dispatch phrases); the rest must stay identical across coordinators (see the SYNC comment at the top)
+1. Create `skills/dev-team-<stack>/SKILL.md` — copy `skills/dev-team/SKILL.md` and replace only the frontmatter and the `## Stack Profile` section (detection patterns, greenfield detection, stack-specific dispatch phrases); the rest must stay identical across coordinators (see the SYNC comment at the top)
 2. Create `skills/<stack>-stack/SKILL.md` with a trigger description covering the stack's file types and frameworks
 3. Create `skills/<stack>-stack/references/architecture-patterns.md` — stack-specific architecture patterns for the architect agent
-4. Update the `## Stack Profile` section of `commands/dev-team.md` to list the new stack coordinator
+4. Update the `## Stack Profile` section of `skills/dev-team/SKILL.md` to list the new stack coordinator
 
 ## Verification
 
 | Check | How | Expected |
 |-------|-----|----------|
 | Claude Code plugin | Type `/dev-team` | Command available |
-| Codex plugin | Add this GitHub repo as Plugin Directory, install `dev-team`, then prompt `Use dev-team ...` | Skill activates and orchestrates |
-| Copilot CLI plugin | `copilot plugin list` | dev-team listed |
+| Manifest validity | `claude plugin validate /path/to/dev-team --strict` | Validation passed |
+| Codex skills | Symlink/copy `skills/` into `~/.agents/skills/`, then prompt `Use dev-team ...` | `dev-team-codex` activates and orchestrates |
+| Copilot CLI skills | `copilot skill add /path/to/dev-team/skills`, then `/skills list` | dev-team skills listed |
+| Gemini CLI skills | `gemini skills install ... --path skills`, then `gemini skills list --all` | Skills listed, no frontmatter warnings |
 | Stack commands (Claude Code) | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
 | Shortcut commands (Claude Code) | Type `/ask-prd` | 10 shortcut commands available |
 | Agents available | Claude suggests agents | 10 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer, doc-reviewer |

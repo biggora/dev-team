@@ -1,5 +1,5 @@
 ---
-name: dev-team Codex Orchestrator
+name: dev-team-codex
 description: >
   This skill should be used when the user asks to use "dev-team", "/dev-team",
   "/dev-team-node", "/dev-team-python", "/ask-backend", "/ask-frontend",
@@ -14,10 +14,10 @@ Use this skill as the Codex-native bridge for the repository's coordinator + spe
 ## What Codex can and cannot do
 
 - Codex plugins bundle `skills`, `apps`, and `mcpServers`.
-- Codex plugins do **not** expose Claude-style slash commands from `commands/`.
+- Codex plugins do **not** expose Claude-style slash commands.
 - Codex plugins do **not** register markdown agents from `agents/` as native named agent types.
 
-Because of that, treat the repository's `commands/*.md` and `agents/*.md` files as **prompt templates** and execute the workflow with Codex tools.
+Because of that, treat the repository's coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` files as **prompt templates** and execute the workflow with Codex tools.
 
 ## Default operating mode
 
@@ -28,9 +28,9 @@ Because of that, treat the repository's `commands/*.md` and `agents/*.md` files 
 
 ## File mapping
 
-- Coordinator workflow source: `commands/dev-team.md`
-- Stack variants: `commands/dev-team-node.md`, `commands/dev-team-python.md`
-- Direct specialist flows: `commands/ask-*.md`
+- Coordinator workflow source: `skills/dev-team/SKILL.md`
+- Stack variants: `skills/dev-team-node/SKILL.md`, `skills/dev-team-python/SKILL.md`
+- Direct specialist flows: `skills/ask-*/SKILL.md`
 - Specialist prompts: `agents/*.md`
 
 Read only the files needed for the current task. Do not bulk-read the whole plugin.

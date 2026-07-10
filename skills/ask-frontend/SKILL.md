@@ -1,6 +1,8 @@
 ---
-description: Запустить frontend-dev для реализации UI компонентов
-argument-hint: Описание UI задачи — компоненты, страницы, стили
+name: ask-frontend
+description: "Dispatches the frontend-dev agent to build UI: components, pages, forms, styles, and client-side logic."
+argument-hint: UI task — components, pages, styles
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: frontend-dev

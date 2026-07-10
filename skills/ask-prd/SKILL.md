@@ -1,6 +1,8 @@
 ---
-description: Запустить product-analyst для создания PRD
-argument-hint: Описание продукта или фичи для формализации требований
+name: ask-prd
+description: Dispatches the product-analyst agent to formalize requirements into a PRD with user stories and acceptance criteria.
+argument-hint: product or feature to formalize requirements for
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: product-analyst

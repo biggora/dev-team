@@ -27,7 +27,6 @@ build_agent_list() {
   for agent_file in "$PLUGIN_DIR"/agents/*.md; do
     local name
     name=$(basename "$agent_file" .md)
-    [[ "$name" == "_template" ]] && continue
     # Extract full description including examples (everything between description: and model:)
     local desc
     desc=$(sed -n '/^description:/,/^model:/p' "$agent_file" | sed '1s/^description: *|//;/^model:/d' | sed 's/^  //' | tr '\n' ' ' | sed 's/  */ /g;s/^ *//;s/ *$//')

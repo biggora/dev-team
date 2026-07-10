@@ -3,3 +3,7 @@
 /.agents/
 /.claude/
 /.codex/
+/.junie/
+/.idea/
+/specs/
+/autoresearch/

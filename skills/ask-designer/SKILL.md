@@ -1,6 +1,8 @@
 ---
-description: Запустить ui-ux-designer для проектирования интерфейса
-argument-hint: Описание интерфейса или пользовательского потока для проектирования
+name: ask-designer
+description: "Dispatches the ui-ux-designer agent to design UI/UX: user flows, screen layouts, and component specifications."
+argument-hint: interface or user flow to design
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: ui-ux-designer

@@ -1,5 +1,5 @@
 ---
-name: Node.js Stack Knowledge
+name: nodejs-stack
 description: >
   This skill should be used when working with Node.js, TypeScript, or JavaScript projects,
   including frameworks like Next.js, NestJS, Express, Fastify, and Vite.

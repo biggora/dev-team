@@ -1,9 +1,11 @@
 ---
-description: Координирует Node.js разработку (Next.js, NestJS, Vite, Express)
-argument-hint: Описание задачи для Node.js проекта
+name: dev-team
+description: "Coordinates a team of specialized development agents for complex multi-step tasks: requirements, architecture, planning, implementation, tests, and inline review gates. Auto-detects the project stack. Use for features that need decomposition and multi-agent coordination."
+argument-hint: task or feature description
+disable-model-invocation: true
 ---
 
-<!-- SYNC: dev-team.md, dev-team-node.md, and dev-team-python.md are identical
+<!-- SYNC: skills/dev-team/SKILL.md, skills/dev-team-node/SKILL.md, and skills/dev-team-python/SKILL.md are identical
      except for the frontmatter and the "## Stack Profile" section.
      When editing shared sections, edit all three and verify with diff. -->
 
@@ -13,30 +15,27 @@ You coordinate specialized development agents to accomplish complex tasks. You d
 
 ## Stack Profile
 
-This coordinator is fixed to **Node.js/TypeScript** projects.
+This universal coordinator auto-detects the stack from project structure.
 
-**Stack**: Node.js, TypeScript, JavaScript
-**Frameworks**: Next.js, NestJS, Express, Fastify, Vite, Remix
-**Testing**: Jest, Vitest, Playwright, Supertest
-**Package managers**: npm, yarn, pnpm
+**Available stack-specific coordinators** (if the user knows their stack):
+- `/dev-team-node` — Node.js/TypeScript (Next.js, NestJS, Vite, Express)
+- `/dev-team-python` — Python (Django, Flask, FastAPI)
 
 **Stack detection** (run in Phase 1):
-- `Glob("**/package.json")` → dependencies, scripts, exact version numbers
-- `Glob("**/tsconfig*.json")` → TypeScript configuration
-- `Glob("**/next.config.*")` → Next.js
-- `Glob("**/nest-cli.json")` or `Glob("**/*.module.ts")` → NestJS
-- `Glob("**/vite.config.*")` → Vite
-- `Glob("**/vitest.config.*")` or `Glob("**/jest.config.*")` → test framework
+- `Glob("**/package.json")` → Node.js stack, dependencies, exact version numbers
+- `Glob("**/pyproject.toml")` or `Glob("**/requirements*.txt")` → Python stack, versions
+- `Glob("**/tsconfig*.json")` → TypeScript version
+- Identify framework: Next.js, NestJS, Vite, Django, Flask, FastAPI, etc.
 - **Store detected versions** — they will be passed to code-reviewer, tester, and implementation agents
 
-**Greenfield stack detection**: If Glob finds no `.ts`/`.js` files or no `package.json`, this is a new project — confirm the target framework with the user if not stated, then follow the greenfield pipeline in Phase 1.
+**Greenfield stack detection**: If Glob finds no source files and no package manifest (package.json, pyproject.toml), this is a new project — ask the user for the target stack if not stated, then follow the greenfield pipeline in Phase 1.
 
 **Stack-specific phrases for dispatch prompts** (helps agents pick relevant skills):
-- Frontend: "Work with react components and TypeScript in this Next.js project"
-- Backend: "Work with TypeScript controllers and services in this NestJS project"
-- General: "This is a Node.js TypeScript project using [framework]"
+- Frontend: "react components", "next.js", "tailwindcss", "typescript"
+- Backend: "nestjs services", "django views", "fastapi endpoints" — matching the detected stack
+- General: "This is a [Node.js TypeScript / Python] project using [framework]"
 
-**For architect on greenfield**: instruct it to "Read references/architecture-patterns.md from the nodejs-stack skill for Node.js/TypeScript architecture patterns", specify the target framework ("Design using NestJS module architecture" or "Design using Next.js App Router"), and "Save your architecture blueprint to docs/architecture.md".
+**For architect on greenfield**: instruct it to "Read references/architecture-patterns.md from the matching stack skill (nodejs-stack or python-stack) for architecture patterns", specify the target framework, and "Save your architecture blueprint to docs/architecture.md".
 
 ## Core Principles
 

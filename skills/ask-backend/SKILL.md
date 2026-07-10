@@ -1,11 +1,13 @@
 ---
-description: Запустить code-reviewer для ревью кода
-argument-hint: Описание задачи — какие файлы или изменения проверить
+name: ask-backend
+description: "Dispatches the backend-dev agent to implement server-side code: API endpoints, data models, services, and middleware."
+argument-hint: task description — API, models, services, middleware
+disable-model-invocation: true
 ---
 
-# Direct Agent Dispatch: code-reviewer
+# Direct Agent Dispatch: backend-dev
 
-You dispatch the **code-reviewer** agent directly with the user's task. You do NOT implement anything yourself — you gather context, launch the agent, and present the result.
+You dispatch the **backend-dev** agent directly with the user's task. You do NOT implement anything yourself — you gather context, launch the agent, and present the result.
 
 ## Task
 
@@ -15,17 +17,17 @@ $ARGUMENTS
 
 1. **Gather project context** (read-only):
    - Run `git status` to understand current state
-   - Run `git diff` or `git diff --cached` to see recent changes
    - Use `Glob("**/package.json")` and `Glob("**/pyproject.toml")` to detect stack and exact dependency versions
    - Use `Glob("**/tsconfig*.json")` to detect TypeScript config
+   - Use `Glob("docs/*.md")` to check for existing PRD or architecture docs
 
 2. **Dispatch agent** using the Agent tool:
-   - `subagent_type: "dev-team:code-reviewer"`
+   - `subagent_type: "dev-team:backend-dev"`
    - Include the full task from `$ARGUMENTS`
    - Include detected project structure, stack, and **exact dependency versions**
-   - Include list of changed files from git status/diff
-   - Instruct to "Review this code for correctness, consistency with project patterns, version-appropriate patterns, and potential bugs"
-   - Include stack-specific phrases matching the detected stack to trigger skill injection (e.g., "typescript 5.x", "next.js 16", "nestjs 11")
+   - If `docs/prd.md` exists: instruct to "Read docs/prd.md for requirements and acceptance criteria"
+   - If `docs/architecture.md` exists: instruct to "Read docs/architecture.md for the architecture blueprint"
+   - Include stack-specific phrases matching the detected stack to trigger skill injection (e.g., "nestjs", "django", "fastapi", "typescript", "postgresql")
    - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user

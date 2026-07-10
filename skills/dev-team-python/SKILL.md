@@ -1,9 +1,11 @@
 ---
-description: Координирует работу специализированных агентов для разработки
-argument-hint: Описание задачи или фичи
+name: dev-team-python
+description: Coordinates Python development (Django, Flask, FastAPI) with a team of specialized agents and inline quality gates. Use for multi-step Python tasks that need decomposition and multi-agent coordination.
+argument-hint: task description for a Python project
+disable-model-invocation: true
 ---
 
-<!-- SYNC: dev-team.md, dev-team-node.md, and dev-team-python.md are identical
+<!-- SYNC: skills/dev-team/SKILL.md, skills/dev-team-node/SKILL.md, and skills/dev-team-python/SKILL.md are identical
      except for the frontmatter and the "## Stack Profile" section.
      When editing shared sections, edit all three and verify with diff. -->
 
@@ -13,27 +15,31 @@ You coordinate specialized development agents to accomplish complex tasks. You d
 
 ## Stack Profile
 
-This universal coordinator auto-detects the stack from project structure.
+This coordinator is fixed to **Python** projects.
 
-**Available stack-specific coordinators** (if the user knows their stack):
-- `/dev-team-node` — Node.js/TypeScript (Next.js, NestJS, Vite, Express)
-- `/dev-team-python` — Python (Django, Flask, FastAPI)
+**Stack**: Python 3.x
+**Frameworks**: Django, Flask, FastAPI, aiohttp
+**Testing**: pytest, unittest, tox
+**Package managers**: pip, poetry, uv, pipenv
 
 **Stack detection** (run in Phase 1):
-- `Glob("**/package.json")` → Node.js stack, dependencies, exact version numbers
-- `Glob("**/pyproject.toml")` or `Glob("**/requirements*.txt")` → Python stack, versions
-- `Glob("**/tsconfig*.json")` → TypeScript version
-- Identify framework: Next.js, NestJS, Vite, Django, Flask, FastAPI, etc.
+- `Glob("**/pyproject.toml")` or `Glob("**/setup.py")` → project config, exact version numbers
+- `Glob("**/requirements*.txt")` → dependencies
+- `Glob("**/manage.py")` or `Glob("**/settings.py")` → Django
+- `Glob("**/wsgi.py")` or `Glob("**/asgi.py")` → WSGI/ASGI app
+- `Glob("**/*.py")` in `app/` or project root → Flask/FastAPI
+- `Glob("**/conftest.py")` or `Glob("**/pytest.ini")` → pytest
 - **Store detected versions** — they will be passed to code-reviewer, tester, and implementation agents
 
-**Greenfield stack detection**: If Glob finds no source files and no package manifest (package.json, pyproject.toml), this is a new project — ask the user for the target stack if not stated, then follow the greenfield pipeline in Phase 1.
+**Greenfield stack detection**: If Glob finds no `.py` files or no `pyproject.toml`/`requirements.txt`, this is a new project — confirm the target framework with the user if not stated, then follow the greenfield pipeline in Phase 1.
 
 **Stack-specific phrases for dispatch prompts** (helps agents pick relevant skills):
-- Frontend: "react components", "next.js", "tailwindcss", "typescript"
-- Backend: "nestjs services", "django views", "fastapi endpoints" — matching the detected stack
-- General: "This is a [Node.js TypeScript / Python] project using [framework]"
+- Django: "Work with django views, models and serializers in this Python project"
+- Flask: "Work with flask blueprints and routes in this Python project"
+- FastAPI: "Work with FastAPI endpoints and pydantic models in this Python project"
+- General: "This is a Python project using [framework]"
 
-**For architect on greenfield**: instruct it to "Read references/architecture-patterns.md from the matching stack skill (nodejs-stack or python-stack) for architecture patterns", specify the target framework, and "Save your architecture blueprint to docs/architecture.md".
+**For architect on greenfield**: instruct it to "Read references/architecture-patterns.md from the python-stack skill for Python architecture patterns", specify the target framework ("Design using Django app architecture" or "Design using FastAPI routers"), and "Save your architecture blueprint to docs/architecture.md".
 
 ## Core Principles
 

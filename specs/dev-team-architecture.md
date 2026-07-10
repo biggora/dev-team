@@ -27,16 +27,18 @@
 dev-team/
 ├── .claude-plugin/
 │   └── plugin.json                    # Манифест плагина
-├── commands/
-│   └── dev-team.md                    # Координатор (slash command /dev-team)
 ├── agents/
-│   ├── _template.md                   # Шаблон для создания новых агентов
 │   └── code-reviewer.md              # Пример: ревьюер (read-only)
 ├── skills/
-│   └── _template/
-│       ├── SKILL.md                   # Шаблон скилла с примером metadata
+│   ├── dev-team/
+│   │   └── SKILL.md                   # Координатор (slash command /dev-team)
+│   └── nodejs-stack/
+│       ├── SKILL.md                   # Пример скилла
 │       └── references/
-│           └── _template.md           # Шаблон reference-файла
+│           └── architecture-patterns.md
+├── templates/
+│   ├── agent-template.md              # Шаблон для создания новых агентов
+│   └── skill-template/                # Шаблон скилла (SKILL.md + references/)
 └── CLAUDE.md                          # Инструкции плагина
 ```
 
@@ -282,7 +284,7 @@ claude plugins add https://github.com/user/dev-team
 
 ### Добавление нового агента
 
-1. Скопировать `agents/_template.md` → `agents/my-specialist.md`
+1. Скопировать `templates/agent-template.md` → `agents/my-specialist.md`
 2. Заполнить frontmatter: name, description (с examples), model, color, tools
 3. Написать system prompt с экспертизой
 4. Добавить протокол отчёта в конец

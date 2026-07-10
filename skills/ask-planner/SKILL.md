@@ -1,6 +1,8 @@
 ---
-description: Запустить planner для декомпозиции задачи и создания плана
-argument-hint: Описание задачи для декомпозиции на подзадачи
+name: ask-planner
+description: Dispatches the planner agent to decompose a task into vertical slices and produce an execution plan.
+argument-hint: task to decompose into subtasks
+disable-model-invocation: true
 ---
 
 # Direct Agent Dispatch: planner

@@ -1,9 +1,11 @@
 ---
-description: Координирует Python разработку (Django, Flask, FastAPI)
-argument-hint: Описание задачи для Python проекта
+name: dev-team-node
+description: Coordinates Node.js/TypeScript development (Next.js, NestJS, Vite, Express) with a team of specialized agents and inline quality gates. Use for multi-step Node.js tasks that need decomposition and multi-agent coordination.
+argument-hint: task description for a Node.js project
+disable-model-invocation: true
 ---
 
-<!-- SYNC: dev-team.md, dev-team-node.md, and dev-team-python.md are identical
+<!-- SYNC: skills/dev-team/SKILL.md, skills/dev-team-node/SKILL.md, and skills/dev-team-python/SKILL.md are identical
      except for the frontmatter and the "## Stack Profile" section.
      When editing shared sections, edit all three and verify with diff. -->
 
@@ -13,31 +15,30 @@ You coordinate specialized development agents to accomplish complex tasks. You d
 
 ## Stack Profile
 
-This coordinator is fixed to **Python** projects.
+This coordinator is fixed to **Node.js/TypeScript** projects.
 
-**Stack**: Python 3.x
-**Frameworks**: Django, Flask, FastAPI, aiohttp
-**Testing**: pytest, unittest, tox
-**Package managers**: pip, poetry, uv, pipenv
+**Stack**: Node.js, TypeScript, JavaScript
+**Frameworks**: Next.js, NestJS, Express, Fastify, Vite, Remix
+**Testing**: Jest, Vitest, Playwright, Supertest
+**Package managers**: npm, yarn, pnpm
 
 **Stack detection** (run in Phase 1):
-- `Glob("**/pyproject.toml")` or `Glob("**/setup.py")` → project config, exact version numbers
-- `Glob("**/requirements*.txt")` → dependencies
-- `Glob("**/manage.py")` or `Glob("**/settings.py")` → Django
-- `Glob("**/wsgi.py")` or `Glob("**/asgi.py")` → WSGI/ASGI app
-- `Glob("**/*.py")` in `app/` or project root → Flask/FastAPI
-- `Glob("**/conftest.py")` or `Glob("**/pytest.ini")` → pytest
+- `Glob("**/package.json")` → dependencies, scripts, exact version numbers
+- `Glob("**/tsconfig*.json")` → TypeScript configuration
+- `Glob("**/next.config.*")` → Next.js
+- `Glob("**/nest-cli.json")` or `Glob("**/*.module.ts")` → NestJS
+- `Glob("**/vite.config.*")` → Vite
+- `Glob("**/vitest.config.*")` or `Glob("**/jest.config.*")` → test framework
 - **Store detected versions** — they will be passed to code-reviewer, tester, and implementation agents
 
-**Greenfield stack detection**: If Glob finds no `.py` files or no `pyproject.toml`/`requirements.txt`, this is a new project — confirm the target framework with the user if not stated, then follow the greenfield pipeline in Phase 1.
+**Greenfield stack detection**: If Glob finds no `.ts`/`.js` files or no `package.json`, this is a new project — confirm the target framework with the user if not stated, then follow the greenfield pipeline in Phase 1.
 
 **Stack-specific phrases for dispatch prompts** (helps agents pick relevant skills):
-- Django: "Work with django views, models and serializers in this Python project"
-- Flask: "Work with flask blueprints and routes in this Python project"
-- FastAPI: "Work with FastAPI endpoints and pydantic models in this Python project"
-- General: "This is a Python project using [framework]"
+- Frontend: "Work with react components and TypeScript in this Next.js project"
+- Backend: "Work with TypeScript controllers and services in this NestJS project"
+- General: "This is a Node.js TypeScript project using [framework]"
 
-**For architect on greenfield**: instruct it to "Read references/architecture-patterns.md from the python-stack skill for Python architecture patterns", specify the target framework ("Design using Django app architecture" or "Design using FastAPI routers"), and "Save your architecture blueprint to docs/architecture.md".
+**For architect on greenfield**: instruct it to "Read references/architecture-patterns.md from the nodejs-stack skill for Node.js/TypeScript architecture patterns", specify the target framework ("Design using NestJS module architecture" or "Design using Next.js App Router"), and "Save your architecture blueprint to docs/architecture.md".
 
 ## Core Principles
 

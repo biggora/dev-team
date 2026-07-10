@@ -17,6 +17,5 @@
     "software-development"
   ],
   "agents": "../agents",
-  "skills": ["../skills"],
-  "mcpServers": "../.mcp.json"
+  "skills": ["../skills"]
 }
