@@ -114,6 +114,8 @@ See `specs/workflow.md` for full mermaid diagrams.
 - Independent tasks → **multiple Agent tool calls in one message** (parallel dispatch); parallel agents must never share writable files
 - Include **stack-specific phrases** in prompts (e.g., "typescript", "nestjs", "django") to help agents pick relevant skills — critical for greenfield projects where no files exist yet
 - For architect on greenfield: explicitly instruct to "Read references/architecture-patterns.md" from the matching stack skill
+- For metric-optimization tasks: dispatch implementor instructed to apply the **autoresearch** skill (immutable evaluator, atomic mutations, keep/discard by metric)
+- For UI tasks: name the aesthetic explicitly so ui-ux-designer and frontend-dev pick the same **design-styles** preset
 
 ## Agent Guidelines
 

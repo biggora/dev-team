@@ -28,6 +28,7 @@ $ARGUMENTS
    - If `docs/prd.md` exists: instruct to "Read docs/prd.md for requirements"
    - If `docs/architecture.md` exists: instruct to "Read docs/architecture.md for the architecture blueprint"
    - For refactoring tasks: remind the agent to "run the test suite BEFORE and AFTER your changes and show both runs in Evidence to prove behavior preservation"
+   - For metric-optimization tasks ("make it faster", "improve the score"): instruct to "apply the autoresearch skill — immutable evaluator, one atomic mutation per experiment, keep/discard by metric"
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 

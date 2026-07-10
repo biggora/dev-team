@@ -1,6 +1,6 @@
 {
   "name": "dev-team",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
   "owner": {
     "name": "Aleksejs Gordejevs"

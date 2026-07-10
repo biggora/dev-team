@@ -76,7 +76,7 @@ Initial request: $ARGUMENTS
 
 **Actions**:
 1. Parse the task description to identify:
-   - Type of work (implementation, refactoring, bug fix, testing, research, review)
+   - Type of work (implementation, refactoring, bug fix, testing, research, review, metric optimization)
    - Which areas of the codebase are likely involved
    - Whether subtasks are independent (can parallel) or dependent (must sequence)
 2. **Detect project stack and versions** using the Stack Profile section above
@@ -92,6 +92,7 @@ Initial request: $ARGUMENTS
    - Testing → tester agent (full tools; Mode A = failing acceptance tests before implementation, Mode B = verify and extend after)
    - Code review → code-reviewer agent (read-only)
    - Document review → doc-reviewer agent (read-only)
+   - Metric optimization ("make it faster", "improve the score", tune a measurable number) → implementor agent instructed to apply the `autoresearch` skill (Agent-Optimizer loop: immutable evaluator, one atomic mutation per experiment, keep/discard by metric)
 5. Decompose into concrete subtasks with clear scope boundaries
 6. Present the decomposition plan to the user:
    - List of subtasks with assigned agents
@@ -131,7 +132,8 @@ Initial request: $ARGUMENTS
      - If existing project: "Read the codebase to understand current state and derive requirements for the new feature"
    - **For ui-ux-designer**: Include design context:
      - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
-     - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc.
+     - Specify the aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc. — name it explicitly so the designer can pick the matching `design-styles` preset
+     - Pass the same aesthetic name to frontend-dev later so implementation applies the same preset
      - "Include a color palette with hex values and ASCII wireframes for each screen so the design can be reviewed before implementation."
      - "Save your design specification to docs/design.md"
    - **For tester**: State the mode explicitly:
