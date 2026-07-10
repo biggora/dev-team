@@ -1,0 +1,32 @@
+{
+  "scenario": "S6",
+  "checks": [
+    {
+      "id": "status_valid",
+      "ok": true,
+      "note": "status=DONE_WITH_CONCERNS"
+    },
+    {
+      "id": "citations_file_line",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "found_offbyone_or_crash",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "found_sql_injection",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "nothing_modified",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "passed": 5,
+  "total": 5
+}

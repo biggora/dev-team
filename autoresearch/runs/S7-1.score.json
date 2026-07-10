@@ -1,0 +1,37 @@
+{
+  "scenario": "S7",
+  "checks": [
+    {
+      "id": "plan_created",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "plan_has_slices",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "plan_tracer_bullet",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "plan_maps_ac_ids",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "status_done",
+      "ok": true,
+      "note": "status=DONE"
+    },
+    {
+      "id": "src_untouched",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "passed": 6,
+  "total": 6
+}

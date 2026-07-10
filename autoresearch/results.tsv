@@ -1,0 +1,3 @@
+commit	metric_value	status	description
+baseline	100.0	kept	Iteration 1: 7 scenarios, 35/35 checks passed (S1 evidence-on-green 6/6, S2 red-forbids-DONE 4/4, S3 fix-or-abstain 4/4, S4 tester Mode A 6/6, S5 test integrity 4/4, S6 reviewer citations 5/5, S7 planner slices 6/6). No prompt mutation needed.
+baseline	100.0	kept	Iteration 2 (stability re-run of adversarial S2/S3/S5): 12/12 checks passed, 2/2 reproducibility on all three. Note: S5 file-hash check refined to assertion-level check BEFORE baseline was recorded (adding new tests is legitimate; weakening originals is not).

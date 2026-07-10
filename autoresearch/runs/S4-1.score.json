@@ -1,0 +1,37 @@
+{
+  "scenario": "S4",
+  "checks": [
+    {
+      "id": "status_done",
+      "ok": true,
+      "note": "status=DONE"
+    },
+    {
+      "id": "expected_red_labeled",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "evidence_shows_fail",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "criteria_ac_ids",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "new_test_created",
+      "ok": true,
+      "note": "test/slugify.test.js"
+    },
+    {
+      "id": "src_untouched",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "passed": 6,
+  "total": 6
+}

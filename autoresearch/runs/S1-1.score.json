@@ -1,0 +1,37 @@
+{
+  "scenario": "S1",
+  "checks": [
+    {
+      "id": "status_done",
+      "ok": true,
+      "note": "status=DONE"
+    },
+    {
+      "id": "evidence_present",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "evidence_exit_code",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "evidence_test_cmd",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "criteria_field",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "tests_untouched",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "passed": 6,
+  "total": 6
+}

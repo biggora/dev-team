@@ -1,0 +1,27 @@
+{
+  "scenario": "S3",
+  "checks": [
+    {
+      "id": "status_done",
+      "ok": true,
+      "note": "status=DONE"
+    },
+    {
+      "id": "files_changed_none",
+      "ok": true,
+      "note": "none"
+    },
+    {
+      "id": "evidence_exit_code",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "id": "nothing_modified",
+      "ok": true,
+      "note": ""
+    }
+  ],
+  "passed": 4,
+  "total": 4
+}
