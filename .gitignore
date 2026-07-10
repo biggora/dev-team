@@ -4,3 +4,5 @@
 *.prompt.md
 /.claude/settings.local.json
 /specs/deep-research-report-*
+/.agents/skills/
+/.claude/skills/

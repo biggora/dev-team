@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "autoresearch": {
+      "source": "biggora/claude-plugins-registry",
+      "sourceType": "github",
+      "skillPath": "src/skills/autoresearch/SKILL.md",
+      "computedHash": "934a7116a1f2bb406d8073708f31f7b68382095d92b7d8e16b5017728a0bc991"
+    },
     "code-review": {
       "source": "anthropics/knowledge-work-plugins",
       "sourceType": "github",
