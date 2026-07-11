@@ -1,6 +1,6 @@
 ---
 name: prd
-description: 'Generate high-quality Product Requirements Documents (PRDs) for software systems and AI-powered features. Includes executive summaries, user stories, technical specifications, and risk analysis.'
+description: 'Generate high-quality Product Requirements Documents (PRDs) for software systems and AI-powered features. Includes executive summaries, user stories, technical constraints, and risk analysis.'
 license: MIT
 ---
 
@@ -40,6 +40,9 @@ Synthesize the user's input. Identify dependencies and hidden complexities.
 
 - Map out the **User Flow**.
 - Define **Non-Goals** to protect the timeline.
+- Record assumptions and uncertainties with their source, impact, confidence, owner, and validation method.
+- Compare at least two plausible scope alternatives and state the selected trade-off.
+- Test negative scenarios, dependency failures, conflicting stakeholder needs, and missing NFRs.
 
 ### Phase 3: Technical Drafting
 
@@ -52,6 +55,8 @@ Generate the document using the **Strict PRD Schema** below.
 ### Requirements Quality
 
 Use concrete, measurable criteria. Avoid "fast", "easy", or "intuitive".
+
+Every requirement and decision must trace to the user's request or cited project code. Label unsupported candidates as assumptions or questions. Give every acceptance criterion a stable `AC-###` ID; once assigned, never renumber, reuse, or transfer it to another criterion. Retire obsolete IDs explicitly.
 
 ```diff
 # Vague (BAD)
@@ -81,6 +86,7 @@ You **MUST** follow this exact structure for the output:
 - **User Personas**: Who is this for?
 - **User Stories**: `As a [user], I want to [action] so that [benefit].`
 - **Acceptance Criteria**: Bulleted list of "Done" definitions for each story.
+- **Requirement IDs**: Number functional requirements as `FR-###` and acceptance criteria as executable `AC-###` statements.
 - **Non-Goals**: What are we NOT building?
 
 ### 3. AI System Requirements (If Applicable)
@@ -88,13 +94,33 @@ You **MUST** follow this exact structure for the output:
 - **Tool Requirements**: What tools and APIs are needed?
 - **Evaluation Strategy**: How to measure output quality and accuracy.
 
-### 4. Technical Specifications
+### 4. Technical Constraints & Known Integrations
 
-- **Architecture Overview**: Data flow and component interaction.
-- **Integration Points**: APIs, DBs, and Auth.
-- **Security & Privacy**: Data handling and compliance.
+- **Technical Constraints**: Only constraints stated by the user or derived from cited project code.
+- **Known Integrations**: Existing APIs, data stores, and authentication boundaries observed in cited code; do not design replacements or new interactions.
+- **Security & Privacy Requirements**: Required outcomes, data-handling rules, and compliance constraints without prescribing implementation.
+- **No HOW Decisions**: Leave architecture, data flow, API shape, storage design, and authentication design to downstream architecture work.
 
-### 5. Risks & Roadmap
+### 5. Assumptions & Uncertainties
+
+- **Register**: Statement, source/evidence, impact, categorical confidence (`low`, `medium`, `high`, or `unknown`), owner, and validation method.
+
+### 6. Scope Alternatives & Trade-offs
+
+- **Alternatives**: At least two plausible boundaries.
+- **Decision**: Selected alternative, evidence-backed reason, and what is traded away.
+
+### 7. Negative Scenarios
+
+- **Failure Cases**: Invalid, conflicting, unavailable, dependency-failure, and relevant NFR scenarios.
+- **Expected Behavior**: Product response and affected FR/AC-IDs.
+
+### 8. Decisions & Residual Risks
+
+- **Decision Record**: Decision, source/evidence, and affected requirements.
+- **Residual Risk**: Mitigation, verification, or explicit acceptance.
+
+### 9. Risks & Roadmap
 
 - **Phased Rollout**: MVP -> v1.1 -> v2.0.
 - **Technical Risks**: Latency, cost, or dependency failures.
@@ -107,11 +133,16 @@ You **MUST** follow this exact structure for the output:
 
 - **Define Testing**: For AI systems, specify how to test and validate output quality.
 - **Iterate**: Present a draft and ask for feedback on specific sections.
+- **Keep one normative artifact**: The PRD creator updates the same PRD and never creates a separate adversarial challenge document.
+- **Disposition every challenge**: On a `CH-PRD-*` revision, return exactly one of `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`, with citations.
+- **Make residual risk explicit**: Record mitigation, verification, or acceptance in the PRD.
 
 ### DON'T (Avoid)
 
 - **Skip Discovery**: Never write a PRD without asking at least 2 clarifying questions first.
 - **Hallucinate Constraints**: If the user didn't specify a tech stack, ask or label it as `TBD`.
+- **Invent probabilities**: Use categorical impact and confidence or `unknown`.
+- **Rewrite IDs**: Never renumber or reuse an assigned AC-ID.
 
 ---
 

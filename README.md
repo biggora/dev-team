@@ -2,7 +2,7 @@
 
 Plugin toolkit for orchestrating a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
 
-The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches specialist agents with isolated contexts, and enforces inline quality gates: every document is reviewed by `doc-reviewer`, every piece of code is reviewed by `code-reviewer`, and artifacts with concerns are automatically sent back for rework (max 2 rework cycles per gate to prevent loops).
+The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 11 specialist agents with isolated contexts, and enforces inline quality gates. Every PRD and execution plan passes a mandatory adversarial debate before ordinary `doc-reviewer` review; code passes `code-reviewer` review.
 
 Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. The coordinator tracks state in `docs/progress.md`.
 
@@ -142,7 +142,8 @@ Workspace-scope skills load only in trusted folders (`/trust`, then restart). Th
 # The coordinator automatically:
 # 1. Analyzes the task (detects greenfield vs existing project)
 # 2. Dispatches agents with inline quality gates:
-#    - Each document → doc-reviewer → rework if needed
+#    - PRD and plan → debate → consensus + ordinary review, or combined arbitration/full review
+#    - Other documents → doc-reviewer → rework if needed
 #    - Each code change → code-reviewer → rework if needed
 # 3. Dispatches implementor/tester (parallel when independent)
 # 4. Final cross-cutting review (multi-agent tasks)
@@ -165,12 +166,12 @@ When those phrases appear, the `dev-team-codex` skill acts as the coordinator br
 1. It interprets the requested coordinator or specialist flow.
 2. It reads the matching coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` prompts.
 3. It dispatches Codex subagents with `spawn_agent`.
-4. It preserves the inline `code-reviewer` and `doc-reviewer` gates.
+4. It preserves adversarial PRD/plan debate and the inline `code-reviewer` and `doc-reviewer` gates.
 5. It reports back using the same structured report protocol.
 
 ### In Claude Code: Shortcut Commands (direct agent dispatch)
 
-Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordinator. Ideal for single-agent tasks with clear scope.
+Use `ask-*` commands for focused workflows that bypass the full coordinator. Most dispatch one specialist. `/ask-prd` and `/ask-planner` run creator → adversarial debate, then either consensus + ordinary doc-review or combined arbitration/full review.
 
 ```bash
 # Requirements & planning:
@@ -194,9 +195,9 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 
 | Command | Agent | Model |
 |---------|-------|-------|
-| `/ask-prd` | product-analyst | opus |
+| `/ask-prd` | product-analyst + adversarial-reviewer + doc-reviewer | opus |
 | `/ask-architect` | architect | opus |
-| `/ask-planner` | planner | opus |
+| `/ask-planner` | planner + adversarial-reviewer + doc-reviewer | opus |
 | `/ask-designer` | ui-ux-designer | sonnet |
 | `/ask-frontend` | frontend-dev | sonnet |
 | `/ask-backend` | backend-dev | sonnet |
@@ -208,12 +209,13 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 ## Architecture
 
 ```
-Coordinators (multi-agent)          Shortcuts (single-agent)
+Coordinators (multi-agent)          Focused shortcuts
 ├── /dev-team                       ├── /ask-prd
 ├── /dev-team-node                  ├── /ask-architect
 └── /dev-team-python                ├── /ask-planner
     |                               ├── /ask-designer
     +-- product-analyst  (opus)     ├── /ask-frontend
+    +-- adversarial-reviewer (opus)  │   (internal; no shortcut)
     +-- architect        (opus)     ├── /ask-backend
     +-- planner          (opus)     ├── /ask-implementor
     +-- ui-ux-designer   (sonnet)   ├── /ask-tester
@@ -229,9 +231,11 @@ Coordinators (multi-agent)          Shortcuts (single-agent)
 
 **Skill selection**: skills are surfaced by their descriptions; dispatch prompts include stack-specific phrases ("typescript", "nestjs", "django") to help agents pick the relevant ones.
 
-**Inline quality gates**: every artifact goes through a review-and-rework cycle. Documents are reviewed by `doc-reviewer`, code by `code-reviewer`. If concerns are found, the original agent is re-dispatched with findings (max 2 reworks per gate; after 3 identical failures the coordinator changes strategy or escalates). See `specs/workflow.md` for full mermaid diagrams.
+**Inline quality gates**: `adversarial-reviewer` attacks assumptions and plausible failure scenarios in every PRD and plan; the creator resolves stable `CH-*` items for at most 3 debate cycles. Consensus proceeds to ordinary `doc-reviewer` review with a separate 2-rework budget. After an unresolved third recheck, `doc-reviewer` arbitrates and performs the full review in one dispatch; successful arbitration needs no second ordinary review. Product intent or unavailable evidence is escalated to the user, then the creator updates and `doc-reviewer` resumes the combined review. Code uses `code-reviewer`. Downstream waits for either successful path. See `specs/workflow.md` for full diagrams.
 
 **Evidence gate**: a DONE report without fresh verification output (command → exit code → key lines) is treated as unverified and sent back. Failing checks forbid DONE. "No change was needed" is a valid, evidence-backed outcome (fix-or-abstain).
+
+**Cost and latency**: PRD and plan creation now require at least one challenger pass and one document review pass: ordinary doc-review on the consensus path, or combined arbitration/full review on the unresolved cycle-3 path. Revisions add creator and challenger dispatches, up to 3 debate cycles; unresolved cycle-3 items may pause for a user decision. Simple documents can reach consensus after the first challenge pass.
 
 ## Plugin Structure
 
@@ -248,8 +252,9 @@ dev-team/
 ├── .agents/
 │   └── plugins/
 │       └── marketplace.json     # Repo-local Codex marketplace entry
-├── agents/                      # 10 specialist subagents (Claude Code native)
+├── agents/                      # 11 specialist subagents (Claude Code native)
 │   ├── product-analyst.md       # PRD creator (cyan, opus)
+│   ├── adversarial-reviewer.md  # PRD/plan challenger (red, read-only)
 │   ├── architect.md             # System designer (blue, opus)
 │   ├── planner.md               # Task decomposer (cyan, opus)
 │   ├── ui-ux-designer.md        # UI/UX designer (magenta, read-only)
@@ -263,7 +268,7 @@ dev-team/
 │   ├── dev-team/                # /dev-team — universal coordinator (auto-detect)
 │   ├── dev-team-node/           # /dev-team-node — Node.js coordinator
 │   ├── dev-team-python/         # /dev-team-python — Python coordinator
-│   ├── ask-prd/ … ask-doc-reviewer/   # 10 direct-dispatch shortcuts (/ask-*)
+│   ├── ask-prd/ … ask-doc-reviewer/   # 10 focused workflow shortcuts (/ask-*)
 │   ├── dev-team-codex/          # Codex bridge: coordinator + specialists via spawn_agent
 │   ├── nodejs-stack/            # Node.js/TS patterns (+ references/architecture-patterns.md)
 │   ├── python-stack/            # Python patterns (+ references/architecture-patterns.md)
@@ -288,7 +293,7 @@ dev-team/
 | Phase | Goal | Details |
 |-------|------|---------|
 | 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into vertical slices; create docs/progress.md after user confirms |
-| 2. Dispatch | Launch agents with inline review | Per slice: tester Mode A (red) → implementation (parallel, disjoint scopes) → tester Mode B (green) → code-reviewer. Each doc → doc-reviewer. Rework on concerns (max 2x per gate) |
+| 2. Dispatch | Launch agents with inline review | PRD/plan: creator → debate (max 3 cycles) → consensus + ordinary review (max 2 reworks), or combined arbitration/full review after the third unresolved recheck. Other docs go directly to doc-review. Per slice: tester Mode A → implementation → tester Mode B → code-reviewer. |
 | 3. Collection | Process results | Evidence gate (DONE without Evidence = unverified), handle DONE / BLOCKED / NEEDS_CONTEXT, update docs/progress.md |
 | 4. Final Review | Cross-cutting review | Criteria coverage check (every AC-ID verified or listed UNVERIFIED) + cross-module code consistency + cross-document consistency (if multi-agent) |
 | 5. Report | Summary | AC-IDs verified N/M, files changed, test evidence, review findings, concerns, next steps |
@@ -324,6 +329,7 @@ Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain*
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
 | product-analyst | Requirements analysis, PRD | Read, Write, Grep, Glob | opus | cyan |
+| adversarial-reviewer | Read-only PRD/plan challenge in explicit modes | Read, Grep, Glob | opus | red |
 | architect | System design, blueprints | Read, Write, Grep, Glob | opus | blue |
 | planner | Task decomposition, execution plans | Read, Write, Grep, Glob | opus | cyan |
 | ui-ux-designer | UI/UX: user flows, layouts, specs | Read, Write, Grep, Glob | sonnet | magenta |
@@ -362,10 +368,12 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 | Gemini CLI skills | `gemini skills install ... --path skills`, then `gemini skills list --all` | Skills listed, no frontmatter warnings |
 | Stack commands (Claude Code) | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
 | Shortcut commands (Claude Code) | Type `/ask-prd` | 10 shortcut commands available |
-| Agents available | Claude suggests agents | 10 agents: product-analyst, architect, planner, ui-ux-designer, frontend-dev, backend-dev, implementor, tester, code-reviewer, doc-reviewer |
+| Agents available | Claude suggests agents | 11 agents, including internal read-only adversarial-reviewer |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
+| Challenger isolation | Dispatch adversarial-reviewer in `prd` or `plan` mode | Read/Grep/Glob only; no challenge artifact or public shortcut |
 | Skill selection | Dispatch agent with "typescript" phrases | Agent applies nodejs-stack skill |
 | Evidence gate | Dispatch implementor on a repo with tests | Report contains Evidence with command + exit code |
+| PRD/plan lifecycle | Run `/ask-prd` or `/ask-planner` in Claude Code | Creator, adversarial-reviewer, and doc-reviewer run in order; downstream waits for both gates |
 
 For Codex specifically:
 

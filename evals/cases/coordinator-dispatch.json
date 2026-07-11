@@ -35,9 +35,10 @@
       "context": { "fixture": "greenfield" },
       "expected": {
         "stack": "greenfield",
-        "agents": ["product-analyst", "architect", "ui-ux-designer", "planner", "implementor", "backend-dev", "frontend-dev", "tester", "code-reviewer"],
+        "agents": ["product-analyst", "adversarial-reviewer", "doc-reviewer", "architect", "ui-ux-designer", "planner", "implementor", "backend-dev", "frontend-dev", "tester", "code-reviewer"],
         "phases": ["analysis", "dispatch", "collection", "review", "report"],
-        "dispatch_order": "sequential_then_parallel"
+        "dispatch_order": "sequential_then_parallel",
+        "document_gate_order": ["product-analyst", "adversarial-reviewer:prd", "doc-reviewer:prd", "architect", "ui-ux-designer", "planner", "adversarial-reviewer:plan", "doc-reviewer:plan"]
       },
       "tags": ["greenfield", "full-flow"]
     },

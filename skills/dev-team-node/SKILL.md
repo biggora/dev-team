@@ -47,6 +47,7 @@ This coordinator is fixed to **Node.js/TypeScript** projects.
 - **Scope boundaries**: Always specify which files/directories the agent may change.
 - **Structured reports**: Every dev-team agent's own prompt mandates a structured report with an Evidence field.
 - **Evidence gate**: Never trust a bare DONE. A DONE report without fresh Evidence is treated as unverified.
+- **Internal adversarial gate**: `adversarial-reviewer` is internal and read-only. Every PRD and execution plan must pass creator → adversarial debate → ordinary doc-review before downstream use.
 - **Parallel dispatch**: Independent tasks → multiple Agent tool calls in ONE message. Parallel agents must never share writable files.
 - **Minimal footprint**: Do NOT read project source files directly. Use git status, Glob, and Grep only to understand project structure for decomposition.
 
@@ -59,11 +60,29 @@ After the user confirms the plan, create `docs/progress.md`:
 - **Decisions log**: key decisions and why
 - **Open questions**
 
-Update it after processing every agent report — copy the report's Status and a one-line Evidence summary into the table. **At the start of every phase (and every slice), re-read `docs/prd.md` and `docs/progress.md` before dispatching.** This file — not your memory — is the source of truth for what is done. `docs/progress.md` is the one file you edit yourself; everything else is written by agents.
+Update it after processing every agent report — copy the report's Status and a one-line Evidence summary into the table, except that processing an `adversarial-reviewer` report persists only artifact/version, cycle, verdict, and unresolved IDs; never persist its ledger, dispositions, or challenger evidence. **At the start of every phase (and every slice), re-read `docs/prd.md` and `docs/progress.md` before dispatching.** This file — not your memory — is the source of truth for what is done. `docs/progress.md` is the one file you edit yourself; everything else is written by agents.
 
-## Rework Limits (apply everywhere)
+## Review and Debate Limits
 
-**Maximum 2 rework dispatches per artifact per gate.** If the same failure signature appears 3 times, stop retrying the same approach: change strategy ONCE (different agent, narrower scope, split the task), or escalate to the user with the full history of attempts. Never loop.
+**Ordinary review budget**: maximum 2 creator-rework + reviewer-recheck dispatches per artifact per gate. On `DONE_WITH_CONCERNS`, re-dispatch the creator with all findings, then re-dispatch the reviewer. If the same failure signature appears 3 times, change strategy ONCE or escalate with the full attempt history. Never loop.
+
+**Adversarial debate budget**: independent of ordinary review. The initial challenge is cycle 0 and consumes no debate cycle. Each creator disposition/revision plus challenger recheck consumes one of cycles 1–3; cycle 4 is forbidden.
+
+## Mandatory PRD and Plan Debate Gate
+
+Apply this gate to every product-analyst PRD and planner execution plan:
+
+1. **Creator draft**: dispatch the creator for a versioned normative artifact and structured report.
+2. **Initial challenge — cycle 0**: dispatch internal read-only `adversarial-reviewer` with `Pass: initial`. Use stable `CH-PRD-*` IDs for PRDs and `CH-PLAN-*` IDs for plans. The initial pass may return only `CONSENSUS` or `REVISE`.
+3. **Debate cycles 1–3**: on `REVISE`, re-dispatch the creator with every unresolved ID and require exactly one disposition per ID: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`. Re-dispatch the challenger to verify the revised artifact. Each revision plus recheck consumes one cycle. IDs remain stable; new IDs are allowed only for defects introduced by the revision.
+4. **Consensus**: only the challenger may return `CONSENSUS`, and only when there are no unresolved IDs, every fix is verified, every rejection cites evidence, every residual risk has mitigation/verification/explicit acceptance, and no `needs_decision` remains. Then run ordinary doc-review with its independent two-rework budget.
+5. **Cycle-3 arbitration/full review**: if supported challenges remain after the third recheck, the challenger returns `ARBITRATION_REQUIRED`. Dispatch `doc-reviewer` once with the complete artifact and debate ledger to arbitrate every unresolved ID and perform the full ordinary review in the same dispatch. A successful arbitration/full-review result needs no additional ordinary review.
+6. **User decisions**: arbitration returns `NEEDS_CONTEXT` for product intent or unavailable evidence. Ask the user. For a non-material answer, re-dispatch the creator to update the artifact and doc-reviewer to verify it without restarting debate. Only a material change to goals, acceptance criteria, architecture assumptions, slice boundaries, or constraints increments the version and restarts cycle 0.
+7. **Downstream gate**: do not dispatch consumers until either `CONSENSUS` plus successful ordinary review, or successful cycle-3 arbitration/full review. Unresolved user decisions block progress.
+
+Every debate dispatch is self-contained. Include the original request verbatim; artifact type, path, and version; initial pass or current cycle and maximum; complete mode-specific challenge ledger; latest dispositions and cited evidence; verdict; unresolved IDs; related artifact paths and decisions; scope boundaries; stack/version context; output/report format; and the evidence reminder.
+
+In `docs/progress.md` store only artifact/version, cycle, verdict (`CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`), and unresolved mode-specific IDs. Do not create a challenge file.
 
 ---
 
@@ -91,6 +110,7 @@ Initial request: $ARGUMENTS
    - Testing → tester agent (full tools; Mode A = failing acceptance tests before implementation, Mode B = verify and extend after)
    - Code review → code-reviewer agent (read-only)
    - Document review → doc-reviewer agent (read-only)
+   - PRD/plan challenge → adversarial-reviewer agent (internal, read-only)
    - Metric optimization ("make it faster", "improve the score", tune a measurable number) → implementor agent instructed to apply the `autoresearch` skill (Agent-Optimizer loop: immutable evaluator, one atomic mutation per experiment, keep/discard by metric)
 5. Decompose into concrete subtasks with clear scope boundaries
 6. Present the decomposition plan to the user:
@@ -100,10 +120,10 @@ Initial request: $ARGUMENTS
 7. After confirmation, create `docs/progress.md` (see Progress Ledger)
 
 **Greenfield pipeline** (new project, slice-driven):
-1. product-analyst → PRD with AC-IDs (`docs/prd.md`), reviewed by doc-reviewer
+1. product-analyst → PRD with AC-IDs (`docs/prd.md`), adversarial debate, then ordinary doc-review
 2. architect → system design (`docs/architecture.md`), reviewed by doc-reviewer
 3. ui-ux-designer → interface spec if UI is involved (`docs/design.md`), reviewed by doc-reviewer
-4. planner → vertical slices, tracer bullet first (`docs/plan.md`), reviewed by doc-reviewer
+4. planner → vertical slices, tracer bullet first (`docs/plan.md`), adversarial debate, then ordinary doc-review
 5. implementor → shared scaffolding the slices depend on (project skeleton, config, shared types), reviewed by code-reviewer
 6. Then **per slice**, in order:
    a. tester (Mode A) → failing acceptance tests for the slice's AC-IDs (expected-red)
@@ -148,10 +168,10 @@ Initial request: $ARGUMENTS
 ### Inter-agent context passing
 
 When dispatching an agent that depends on a previous agent's output (rework limits: see Rework Limits section):
-- **After product-analyst**: Dispatch doc-reviewer: "Review docs/prd.md for completeness, executable acceptance criteria with AC-IDs, measurable NFRs, requirement IDs, and MoSCoW priorities." If DONE_WITH_CONCERNS → re-dispatch product-analyst with all findings to fix the document. Then pass "Read docs/prd.md" to architect, ui-ux-designer, planner, and tester.
+- **After product-analyst**: Run the Mandatory PRD and Plan Debate Gate for `docs/prd.md`. Only after the gate succeeds may architect, ui-ux-designer, planner, and tester consume it.
 - **After architect**: Dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." If DONE_WITH_CONCERNS → re-dispatch architect with all findings to fix the document. Then pass "Read docs/architecture.md" to planner and implementation agents.
 - **After ui-ux-designer**: Dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." If DONE_WITH_CONCERNS → re-dispatch ui-ux-designer with all findings to fix the document. Then pass "Read docs/design.md" to frontend-dev and tester.
-- **After planner**: Dispatch doc-reviewer: "Review docs/plan.md for vertical slicing (tracer bullet first, slices mapped to AC-IDs), consistency with docs/architecture.md, concrete subtasks with scope boundaries, explicit dependencies, and agent assignments." If DONE_WITH_CONCERNS → re-dispatch planner with all findings to fix the document. Then use the plan for dispatch order.
+- **After planner**: Run the Mandatory PRD and Plan Debate Gate for `docs/plan.md`. Its full review covers vertical slicing, AC-ID mapping, architecture consistency, scope boundaries, dependencies, and assignments. Only then use it for dispatch order.
 - **After implementor**: Dispatch code-reviewer: "Review the code changes for correctness, consistency with project patterns, and potential bugs. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch implementor with all findings to fix the code.
 - **After backend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, type safety, error handling, security, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch backend-dev with all findings to fix the code. Then pass API endpoints and response formats to frontend-dev (if dispatched sequentially).
 - **After frontend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, accessibility, component patterns, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch frontend-dev with all findings to fix the code.

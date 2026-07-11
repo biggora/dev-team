@@ -133,6 +133,39 @@
         "not_agents": ["backend-dev", "ui-ux-designer"]
       },
       "tags": ["frontend", "styling", "clear-signal"]
+    },
+    {
+      "id": "AT-013",
+      "tier": 1,
+      "prompt": "Create a PRD and formalize requirements with executable acceptance criteria for a notification feature",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["product-analyst"],
+        "not_agents": ["adversarial-reviewer", "planner", "doc-reviewer"]
+      },
+      "tags": ["prd", "routing-regression", "internal-challenger"]
+    },
+    {
+      "id": "AT-014",
+      "tier": 1,
+      "prompt": "Analyze and decompose this migration into a vertical-slice execution plan with explicit dependencies",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["planner"],
+        "not_agents": ["adversarial-reviewer", "product-analyst", "doc-reviewer"]
+      },
+      "tags": ["planning", "routing-regression", "internal-challenger"]
+    },
+    {
+      "id": "AT-015",
+      "tier": 1,
+      "prompt": "Review docs/prd.md for documentation completeness, clarity, internal consistency, and actionability",
+      "context": { "fixture": "nextjs-project" },
+      "expected": {
+        "agents": ["doc-reviewer"],
+        "not_agents": ["adversarial-reviewer", "product-analyst", "planner"]
+      },
+      "tags": ["doc-review", "routing-regression", "internal-challenger"]
     }
   ]
 }

@@ -1,0 +1,313 @@
+{
+  "category": "adversarial-planning",
+  "version": 1,
+  "baseline_status": "unrecorded",
+  "evals": [
+    {
+      "id": "AP-001",
+      "kind": "coordinator-contract",
+      "target": "skills/dev-team/SKILL.md",
+      "expected": {
+        "static": {
+          "required_tokens": ["Initial challenge — cycle 0", "Debate cycles 1–3", "Cycle-3 arbitration/full review", "needs no additional ordinary review", "Only after the gate succeeds"],
+          "ordered_tokens": ["Creator draft", "Initial challenge — cycle 0", "Debate cycles 1–3", "Consensus", "Cycle-3 arbitration/full review", "Downstream gate"]
+        }
+      },
+      "tags": ["universal", "greenfield", "ordering"]
+    },
+    {
+      "id": "AP-002",
+      "kind": "coordinator-contract",
+      "target": "skills/dev-team-node/SKILL.md",
+      "expected": {"static": {"required_tokens": ["Initial challenge — cycle 0", "Debate cycles 1–3", "Cycle-3 arbitration/full review", "Only after the gate succeeds"], "ordered_tokens": ["Creator draft", "Initial challenge — cycle 0", "Debate cycles 1–3", "Consensus", "Cycle-3 arbitration/full review", "Downstream gate"]}},
+      "tags": ["node", "greenfield", "parity"]
+    },
+    {
+      "id": "AP-003",
+      "kind": "coordinator-contract",
+      "target": "skills/dev-team-python/SKILL.md",
+      "expected": {"static": {"required_tokens": ["Initial challenge — cycle 0", "Debate cycles 1–3", "Cycle-3 arbitration/full review", "Only after the gate succeeds"], "ordered_tokens": ["Creator draft", "Initial challenge — cycle 0", "Debate cycles 1–3", "Consensus", "Cycle-3 arbitration/full review", "Downstream gate"]}},
+      "tags": ["python", "greenfield", "parity"]
+    },
+    {
+      "id": "AP-004",
+      "kind": "shortcut-contract",
+      "target": "skills/ask-prd/SKILL.md",
+      "expected": {"static": {"required_tokens": ["Initial challenge", "Debate cycles 1–3", "maximum 2 ordinary reworks", "create neither `docs/progress.md` nor a challenge file"], "ordered_tokens": ["Dispatch creator", "Initial challenge", "Debate cycles 1–3", "Ordinary review or arbitration", "Present the result"]}},
+      "tags": ["ask-prd", "mini-orchestrator"]
+    },
+    {
+      "id": "AP-005",
+      "kind": "shortcut-contract",
+      "target": "skills/ask-planner/SKILL.md",
+      "expected": {"static": {"required_tokens": ["Initial challenge", "Debate cycles 1–3", "maximum 2 ordinary reworks", "create neither `docs/progress.md` nor a challenge file"], "ordered_tokens": ["Dispatch creator", "Initial challenge", "Debate cycles 1–3", "Ordinary review or arbitration", "Present the result"]}},
+      "tags": ["ask-planner", "mini-orchestrator"]
+    },
+    {
+      "id": "AP-006",
+      "kind": "bridge-contract",
+      "target": "skills/dev-team-codex/SKILL.md",
+      "expected": {"static": {"required_tokens": ["initial pass may return only `CONSENSUS` or `REVISE`", "cycles 1–3", "ARBITRATION_REQUIRED", "without restarting debate", "restarts the initial pass", "create neither `docs/progress.md` nor challenge files"], "ordered_tokens": ["Spawn the creator", "Spawn internal read-only `adversarial-reviewer`", "On `REVISE`", "Challenger `CONSENSUS`", "After an unresolved third recheck", "Block downstream consumers"]}},
+      "tags": ["codex", "parity", "resume"]
+    },
+    {
+      "id": "AP-007",
+      "kind": "reviewer-behavior",
+      "target": "agents/adversarial-reviewer.md",
+      "expected": {"static": {"required_tokens": ["outside the debate-cycle budget", "may return only `CONSENSUS` or `REVISE`", "DONE requires CONSENSUS and Evidence"]}},
+      "tags": ["initial", "consensus", "cycle-zero"]
+    },
+    {
+      "id": "AP-008",
+      "kind": "reviewer-behavior",
+      "target": "agents/adversarial-reviewer.md",
+      "expected": {"static": {"required_tokens": ["complete prior challenge set", "every resolved and unresolved ID", "Add a new ID during recheck only when the revision creates a new defect", "accepted_and_fixed", "rejected_with_evidence", "needs_decision"]}},
+      "tags": ["stable-ids", "recheck", "dispositions"]
+    },
+    {
+      "id": "AP-009",
+      "kind": "arbitration-behavior",
+      "target": "agents/doc-reviewer.md",
+      "expected": {"static": {"required_tokens": ["After debate cycle 3 only", "Decide each item", "Review the whole document with the normal checklist in the same dispatch", "before allowing the artifact downstream"]}},
+      "tags": ["cycle-3", "arbitration", "full-review"]
+    },
+    {
+      "id": "AP-010",
+      "kind": "resume-behavior",
+      "target": "skills/dev-team/SKILL.md",
+      "expected": {"static": {"required_tokens": ["arbitration returns `NEEDS_CONTEXT`", "non-material answer", "without restarting debate", "material change", "restarts cycle 0"]}},
+      "tags": ["user-intent", "resume", "material-change"]
+    },
+    {
+      "id": "AP-011",
+      "kind": "ownership",
+      "target": "agents/adversarial-reviewer.md",
+      "expected": {"static": {"required_tokens": ["never create, edit, or propose a separate challenge artifact"], "exact_frontmatter_tools": ["Read", "Grep", "Glob"], "glob_absent": ["docs/*challenge*"]}},
+      "tags": ["read-only", "creator-ownership", "no-sidecar"]
+    },
+    {
+      "id": "AP-012",
+      "kind": "seeded-defects",
+      "target": "evals/fixtures/adversarial-prd/docs/prd.md",
+      "expected": {"static": {"required_tokens": ["DEFECT: contradiction", "DEFECT: invented-requirement", "DEFECT: missing-nfr", "DEFECT: unexecutable-ac", "DEFECT: unknown-dependency", "DEFECT: stakeholder-conflict"]}},
+      "tags": ["prd", "critical-defects"]
+    },
+    {
+      "id": "AP-013",
+      "kind": "seeded-defects",
+      "target": "evals/fixtures/adversarial-plan/docs/plan.md",
+      "expected": {"static": {"required_tokens": ["DEFECT: uncovered-ac", "DEFECT: horizontal-slices", "DEFECT: missing-tracer-bullet", "DEFECT: overlapping-scopes", "DEFECT: bad-dependency-order", "DEFECT: unconditional-branch", "DEFECT: missing-fallback"]}},
+      "tags": ["plan", "critical-defects", "S7-preserved"]
+    },
+    {
+      "id": "AP-014",
+      "kind": "ownership",
+      "target": "agents/doc-reviewer.md",
+      "expected": {"static": {"exact_frontmatter_tools": ["Read", "Grep", "Glob"]}},
+      "tags": ["read-only", "doc-reviewer"]
+    },
+    {
+      "id": "AP-015",
+      "kind": "ownership",
+      "target": "agents/product-analyst.md",
+      "expected": {"static": {"required_tokens": ["You are the only writer", "never create a separate challenge artifact"], "exact_frontmatter_tools": ["Read", "Write", "Grep", "Glob"]}},
+      "tags": ["creator-only", "prd"]
+    },
+    {
+      "id": "AP-016",
+      "kind": "ownership",
+      "target": "agents/planner.md",
+      "expected": {"static": {"required_tokens": ["You are the only writer", "never create a separate challenge artifact"], "exact_frontmatter_tools": ["Read", "Write", "Grep", "Glob"]}},
+      "tags": ["creator-only", "plan"]
+    },
+    {
+      "id": "AP-M001",
+      "kind": "reviewer-behavior",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Review the supplied PRD in Mode: prd, Pass: initial. Return only the required structured report.",
+      "context": {
+        "fixture": "adversarial-prd-clean",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v1",
+        "mode": "prd",
+        "pass": "initial",
+        "original_request": "Add email reminders to a single-tenant internal task list. Exclude SMS. Require explicit approval before delivery, measurable reliability, latency, security, and privacy outcomes.",
+        "prior_challenge_transcript": "None: this is the initial pass."
+      },
+      "expected": {
+        "status": "DONE",
+        "debate_verdict": "CONSENSUS",
+        "required_dispositions": {},
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "clean", "initial-consensus"]
+    },
+    {
+      "id": "AP-M002",
+      "kind": "reviewer-behavior",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Recheck the supplied PRD in Mode: prd, Cycle: 2. Carry every prior challenge ID, verify all dispositions against the artifact and evidence, and return only the structured report.",
+      "context": {
+        "fixture": "adversarial-prd-clean",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v2",
+        "mode": "prd",
+        "cycle": 2,
+        "original_request": "Add approved email reminders; SMS remains out of scope.",
+        "prior_challenge_transcript": "CH-PRD-001 accepted_and_fixed: contradictory immediate delivery removed in docs/prd.md. CH-PRD-002 rejected_with_evidence: SMS remains excluded by the original request. CH-PRD-003 needs_decision: the user has not selected the retention period."
+      },
+      "expected": {
+        "status": "DONE_WITH_CONCERNS",
+        "debate_verdict": "REVISE",
+        "carried_challenge_ids": ["CH-PRD-001", "CH-PRD-002", "CH-PRD-003"],
+        "required_dispositions": {"CH-PRD-001": "accepted_and_fixed", "CH-PRD-002": "rejected_with_evidence", "CH-PRD-003": "needs_decision"},
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "stable-ids", "all-dispositions"]
+    },
+    {
+      "id": "AP-M003",
+      "kind": "reviewer-behavior",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Perform the Cycle: 3 recheck in Mode: plan. Supported challenges remain unresolved. Return the required structured report and the mandated next action.",
+      "context": {
+        "fixture": "adversarial-plan",
+        "artifact": "docs/plan.md",
+        "artifact_version": "v3",
+        "mode": "plan",
+        "cycle": 3,
+        "original_request": "Produce an executable vertical-slice plan mapped to every PRD AC-ID.",
+        "prior_challenge_transcript": "CH-PLAN-001 and CH-PLAN-002 remain supported after two creator revisions; both have rejected_with_evidence dispositions that cite no evidence."
+      },
+      "expected": {
+        "status": "DONE_WITH_CONCERNS",
+        "debate_verdict": "ARBITRATION_REQUIRED",
+        "carried_challenge_ids": ["CH-PLAN-001", "CH-PLAN-002"],
+        "next_action": "doc-reviewer combined arbitration/full review",
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "cycle-3", "arbitration"]
+    },
+    {
+      "id": "AP-M004",
+      "kind": "arbitration-behavior",
+      "execution": "model-backed",
+      "target": "agents/doc-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Run Review mode: arbitration after Cycle: 3. Resolve evidence-governed items, distinguish the product-intent item, perform the full PRD review, and return only the structured report.",
+      "context": {
+        "fixture": "adversarial-prd",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v3",
+        "mode": "prd",
+        "cycle": 3,
+        "original_request": "Email only; the user did not choose immediate delivery versus a 24-hour approval hold.",
+        "prior_challenge_transcript": "CH-PRD-001 evidence_resolvable: SMS conflicts with the explicit email-only scope. CH-PRD-002 product_intent: Operations requests immediate delivery while Compliance requests a 24-hour hold and no decision owner exists."
+      },
+      "expected": {
+        "status": "NEEDS_CONTEXT",
+        "review_mode": "arbitration",
+        "arbitration_decisions": {"CH-PRD-001": "upheld", "CH-PRD-002": "user_decision_required"},
+        "full_review_performed": true,
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "evidence-vs-intent", "needs-context"]
+    },
+    {
+      "id": "AP-M005",
+      "kind": "resume-behavior",
+      "execution": "model-backed",
+      "target": "agents/doc-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Resume Review mode: arbitration after the creator applied a non-material user answer. Verify the same artifact version and complete the combined arbitration/full review without restarting debate.",
+      "context": {
+        "fixture": "adversarial-prd-clean",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v3",
+        "mode": "prd",
+        "cycle": 3,
+        "original_request": "Add approved email reminders; SMS remains excluded.",
+        "prior_challenge_transcript": "Arbitration paused on CH-PRD-003 for a retention-period decision. User answered 30 days without changing goals, ACs, constraints, or scope. Creator applied the answer to v3."
+      },
+      "expected": {
+        "status": "DONE",
+        "review_mode": "arbitration",
+        "full_review_performed": true,
+        "restart_policy": "resume_without_restart",
+        "next_action": "downstream_allowed",
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "non-material", "resume"]
+    },
+    {
+      "id": "AP-M006",
+      "kind": "resume-behavior",
+      "execution": "model-backed",
+      "target": "skills/dev-team-codex/SKILL.md",
+      "prompt": "Adopt the target coordinator instructions. Given the material user decision, describe only the next dispatches and lifecycle state; do not execute or edit files.",
+      "context": {
+        "fixture": "adversarial-prd-clean",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v3",
+        "mode": "prd",
+        "cycle": 3,
+        "original_request": "Add approved email reminders.",
+        "prior_challenge_transcript": "Arbitration paused for a retention answer. The user instead adds SMS delivery and removes approval, changing scope, acceptance criteria, and constraints."
+      },
+      "expected": {
+        "restart_policy": "increment_version_and_restart_initial_pass",
+        "ordered_agents": ["product-analyst", "adversarial-reviewer"],
+        "next_action": "restart_cycle_0_and_block_downstream",
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "material-change", "restart"]
+    },
+    {
+      "id": "AP-M007",
+      "kind": "seeded-defects",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Review the seeded PRD in Mode: prd, Pass: initial. Find every evidence-supported defect category and return only the required structured report.",
+      "context": {
+        "fixture": "adversarial-prd",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v1",
+        "mode": "prd",
+        "pass": "initial",
+        "original_request": "Provide email reminders for a single-tenant internal task list. SMS is explicitly excluded. Operations requests immediate delivery while Compliance requires a 24-hour approval hold.",
+        "prior_challenge_transcript": "None: this is the initial pass."
+      },
+      "expected": {
+        "status": "DONE_WITH_CONCERNS",
+        "debate_verdict": "REVISE",
+        "required_challenge_categories": ["contradiction", "invented-requirement", "missing-nfr", "unexecutable-ac", "unknown-dependency", "stakeholder-conflict"],
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "prd", "seeded-defects"]
+    },
+    {
+      "id": "AP-M008",
+      "kind": "seeded-defects",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Review the seeded execution plan in Mode: plan, Pass: initial. Find every evidence-supported defect category and return only the required structured report.",
+      "context": {
+        "fixture": "adversarial-plan",
+        "artifact": "docs/plan.md",
+        "artifact_version": "v1",
+        "mode": "plan",
+        "pass": "initial",
+        "original_request": "Create an executable vertical-slice plan with a tracer bullet, complete AC-ID coverage, isolated writable scopes, valid dependency order, and bounded contingency branches.",
+        "prior_challenge_transcript": "None: this is the initial pass."
+      },
+      "expected": {
+        "status": "DONE_WITH_CONCERNS",
+        "debate_verdict": "REVISE",
+        "required_challenge_categories": ["uncovered-ac", "horizontal-slices", "missing-tracer-bullet", "overlapping-scopes", "bad-dependency-order", "unconditional-branch", "missing-fallback"],
+        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+      },
+      "tags": ["model-backed", "plan", "seeded-defects", "S7-preserved"]
+    }
+  ]
+}

@@ -11,6 +11,7 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - Skills are surfaced by their descriptions; dispatch prompts include stack phrases to help agents pick the relevant ones
 - The coordinator does NOT read project source files — only git status, Glob, and Grep for structure analysis
 - **Every artifact is reviewed inline**: doc-reviewer after each document, code-reviewer after each code agent
+- **Mandatory adversarial debate**: every PRD and execution plan is challenged by the read-only `adversarial-reviewer` before ordinary doc-review; downstream agents see only consensus or arbitrated documents
 - **Review-and-rework pattern**: if reviewer finds concerns → original agent is re-dispatched with findings
 - **Evidence gate**: DONE is only accepted with fresh verification output (see Report Protocol)
 - **Vertical slices**: the planner decomposes by end-to-end user paths (tracer bullet first), not by layers
@@ -19,9 +20,12 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 
 ## Available Agents
 
+The plugin exposes 11 agents. `adversarial-reviewer` is internal and has no public shortcut.
+
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
 | product-analyst | Formalizes requirements into PRD | Read, Write, Grep, Glob | opus | cyan |
+| adversarial-reviewer | Challenges PRDs and plans; never edits artifacts | Read, Grep, Glob | opus | red |
 | architect | Designs system architecture and blueprints | Read, Write, Grep, Glob | opus | blue |
 | planner | Decomposes tasks into vertical slices | Read, Write, Grep, Glob | opus | cyan |
 | ui-ux-designer | Designs UI/UX: flows, layouts, specs | Read, Write, Grep, Glob | sonnet | magenta |
@@ -34,13 +38,13 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 
 ## Shortcut Commands (Direct Agent Dispatch)
 
-Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordinator:
+Use `ask-*` commands for focused workflows that bypass the full coordinator. Most shortcuts dispatch one specialist; `/ask-prd` and `/ask-planner` run creator → adversarial debate → arbitration when needed → ordinary doc-review:
 
 | Command | Agent | Use case |
 |---------|-------|----------|
-| `/ask-prd` | product-analyst | Create PRD, formalize requirements |
+| `/ask-prd` | product-analyst + review agents | Create PRD through debate and final doc-review |
 | `/ask-architect` | architect | Design system architecture |
-| `/ask-planner` | planner | Decompose task into vertical slices |
+| `/ask-planner` | planner + review agents | Create slice plan through debate and final doc-review |
 | `/ask-designer` | ui-ux-designer | Design UI/UX flows and layouts |
 | `/ask-frontend` | frontend-dev | Build UI components, pages, styles |
 | `/ask-backend` | backend-dev | Build API, models, services |
@@ -50,7 +54,7 @@ Use `ask-*` commands to dispatch a specific agent directly, bypassing the coordi
 | `/ask-doc-reviewer` | doc-reviewer | Review documentation quality |
 
 **When to use shortcuts vs coordinator:**
-- `/ask-*` — single-agent tasks with clear scope (e.g., "write a PRD", "review this code")
+- `/ask-*` — focused tasks with clear scope; PRD and plan shortcuts still enforce their multi-agent document gates
 - `/dev-team` — complex tasks requiring multiple agents, decomposition, and coordination
 
 ## Report Protocol
@@ -84,18 +88,18 @@ Report rules (canonical copy: `templates/agent-template.md`):
 | BLOCKED | Provide missing info, re-dispatch agent |
 | NEEDS_CONTEXT | Answer questions or ask user, re-dispatch |
 
-**Rework limits (everywhere)**: maximum 2 rework dispatches per artifact per gate. If the same failure signature appears 3 times — change strategy once (different agent, narrower scope, split the task) or escalate to the user with the full attempt history. Never loop.
+**Independent limits**: PRD/plan debate allows at most 3 creator-response/challenger-recheck cycles. The subsequent ordinary doc-review keeps its separate limit of 2 rework dispatches. Other artifact gates allow 2 reworks. If the same ordinary-review failure signature appears 3 times, change strategy once or escalate with the attempt history. Never loop.
 
 ## Inline Review Workflow
 
-Every artifact produced in Phase 2 goes through an inline review gate before the next agent consumes it:
+Every artifact produced in Phase 2 goes through an inline gate before the next agent consumes it. For PRDs and plans, `adversarial-reviewer` attacks assumptions and failure scenarios; `doc-reviewer` then validates completeness, consistency, and actionability. After debate cycle 3, `doc-reviewer` first arbitrates unresolved `CH-*` items and escalates product intent or unavailable evidence to the user.
 
 | Artifact | Creator | Reviewer | On concerns |
 |----------|---------|----------|-------------|
-| PRD | product-analyst | doc-reviewer | Re-dispatch product-analyst |
+| PRD | product-analyst | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks |
 | Architecture | architect | doc-reviewer | Re-dispatch architect |
 | Design spec | ui-ux-designer | doc-reviewer | Re-dispatch ui-ux-designer |
-| Execution plan | planner | doc-reviewer | Re-dispatch planner |
+| Execution plan | planner | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks |
 | Scaffold code | implementor | code-reviewer | Re-dispatch implementor |
 | Backend code | backend-dev | code-reviewer | Re-dispatch backend-dev |
 | Frontend code | frontend-dev | code-reviewer | Re-dispatch frontend-dev |
@@ -110,6 +114,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 - Include the **full task description** — agents cannot see coordinator context
 - Specify **scope boundaries** — which files/directories can be changed; the test directory belongs to the tester
 - Include **context** about what other agents have done
+- For PRD/plan debate, include the original request, artifact path and version, cycle number, unresolved `CH-*`, latest dispositions/evidence, and related documents; store only cycle, verdict, and unresolved IDs in `docs/progress.md`
 - Add the **report reminder line** to every dispatch: "Reminder: Status DONE requires the Evidence field with fresh command output; failing checks forbid DONE" (the full protocol lives in each agent's own prompt)
 - Independent tasks → **multiple Agent tool calls in one message** (parallel dispatch); parallel agents must never share writable files
 - Include **stack-specific phrases** in prompts (e.g., "typescript", "nestjs", "django") to help agents pick relevant skills — critical for greenfield projects where no files exist yet
