@@ -10,6 +10,10 @@ Core disciplines:
 - **Tester-first per slice**: tester Mode A writes failing acceptance tests before implementation; implementation agents make them green (but never touch test files); tester Mode B verifies green and extends coverage.
 - **Progress ledger**: the coordinator maintains `docs/progress.md` and re-reads it (plus `docs/prd.md`) at every phase and slice start.
 
+Task-type skill routing (Phase 1):
+- **Metric optimization** ("make it faster", "improve the score", tune a measurable number) → implementor dispatched with the `autoresearch` skill: immutable evaluator, one atomic mutation per experiment, keep/discard by metric, every attempt logged.
+- **UI tasks** → the coordinator names the aesthetic explicitly (e.g., "premium SaaS", "minimalist editorial") so ui-ux-designer and frontend-dev apply the same `design-styles` preset; the aesthetic name is passed through both dispatches.
+
 ## Full Workflow (Greenfield)
 
 ```mermaid
