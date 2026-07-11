@@ -1,6 +1,7 @@
 #!/bin/bash
 # Deterministic contract checks for the isolated adversarial-planning v1 suite.
 # This suite is intentionally not included in run-all.sh until a behavioral baseline exists.
+# Keep this runner LF-only; .gitattributes enforces LF for Windows checkouts.
 
 set -euo pipefail
 
