@@ -6,3 +6,4 @@
 /specs/deep-research-report-*
 /.agents/skills/
 /.claude/skills/
+/.codex/config.toml
