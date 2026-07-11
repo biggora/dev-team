@@ -2,10 +2,12 @@
 
 ## Overview
 
-The dev-team plugin follows a 5-phase coordinator + specialists architecture. Documents and code are reviewed inline — every artifact is validated immediately after creation, and reworked if issues are found (max 2 rework cycles per artifact per gate; after 3 identical failures the coordinator changes strategy once or escalates to the user).
+The dev-team plugin follows a 5-phase coordinator + specialists architecture. Documents and code are reviewed inline. PRDs and execution plans first pass a mandatory adversarial debate, then either consensus plus ordinary document review or a combined arbitration/full review after an unresolved third recheck. Other artifacts enter their ordinary review gate immediately after creation.
 
 Core disciplines:
 - **Evidence gate**: every agent report must contain an `Evidence` field with fresh command output (or file:line citations for read-only agents). A DONE without Evidence is treated as DONE_WITH_CONCERNS.
+- **Adversarial planning gate**: `adversarial-reviewer` attacks PRD and plan assumptions, trade-offs, and plausible failure scenarios. The document creator resolves stable `CH-*` challenges; downstream agents receive the document only after consensus plus ordinary review or successful combined arbitration/full review.
+- **Separated review duties**: `adversarial-reviewer` performs risk-oriented challenge. `doc-reviewer` checks completeness, consistency, and actionability; after debate cycle 3, it also arbitrates unresolved challenges.
 - **Vertical slices**: the planner decomposes into end-to-end user paths (tracer bullet first), mapped to PRD acceptance criterion IDs (AC-001...).
 - **Tester-first per slice**: tester Mode A writes failing acceptance tests before implementation; implementation agents make them green (but never touch test files); tester Mode B verifies green and extends coverage.
 - **Progress ledger**: the coordinator maintains `docs/progress.md` and re-reads it (plus `docs/prd.md`) at every phase and slice start.
@@ -38,13 +40,14 @@ flowchart TD
         subgraph DOC_PHASE["Documentation Phase"]
             direction TB
 
-            PA[product-analyst] -->|docs/prd.md with AC-IDs| DR1
+            PA[product-analyst] -->|docs/prd.md with AC-IDs| ADV1["PRD initial challenge<br/>then max 3 creator/recheck cycles"]
+            ADV1 -->|Consensus or arbitration| DR1
             subgraph DR1["Doc Review: PRD"]
                 DR1_R[doc-reviewer]
                 DR1_D{Concerns?}
                 DR1_R --> DR1_D
                 DR1_D -- Yes --> DR1_FIX[re-dispatch product-analyst]
-                DR1_FIX --> DR1_OK[PRD ready]
+                DR1_FIX -->|recheck, max 2 reworks| DR1_R
                 DR1_D -- No --> DR1_OK
             end
 
@@ -55,7 +58,7 @@ flowchart TD
                 DR2_D{Concerns?}
                 DR2_R --> DR2_D
                 DR2_D -- Yes --> DR2_FIX[re-dispatch architect]
-                DR2_FIX --> DR2_OK[Architecture ready]
+                DR2_FIX -->|recheck, max 2 reworks| DR2_R
                 DR2_D -- No --> DR2_OK
             end
 
@@ -66,18 +69,19 @@ flowchart TD
                 DR3_D{Concerns?}
                 DR3_R --> DR3_D
                 DR3_D -- Yes --> DR3_FIX[re-dispatch ui-ux-designer]
-                DR3_FIX --> DR3_OK[Design ready]
+                DR3_FIX -->|recheck, max 2 reworks| DR3_R
                 DR3_D -- No --> DR3_OK
             end
 
             DR3 --> PL[planner]
-            PL -->|docs/plan.md: vertical slices| DR4
+            PL -->|docs/plan.md: vertical slices| ADV4["Plan initial challenge<br/>then max 3 creator/recheck cycles"]
+            ADV4 -->|Consensus or arbitration| DR4
             subgraph DR4["Doc Review: Plan"]
                 DR4_R[doc-reviewer]
                 DR4_D{Concerns?}
                 DR4_R --> DR4_D
                 DR4_D -- Yes --> DR4_FIX[re-dispatch planner]
-                DR4_FIX --> DR4_OK[Plan ready]
+                DR4_FIX -->|recheck, max 2 reworks| DR4_R
                 DR4_D -- No --> DR4_OK
             end
         end
@@ -171,32 +175,88 @@ flowchart TD
     P5 --> DONE([Done])
 ```
 
-## Review Loop Pattern
+## Adversarial Debate Loop
 
-Every artifact (document or code) follows the same review-and-rework pattern:
+The PRD and execution plan use this gate before downstream work. On the consensus path, the artifact then enters ordinary document review. After an unresolved third recheck, the combined arbitration/full-review dispatch replaces that ordinary review; it is not followed by a duplicate review. The creator remains the only writer. The read-only challenger reports stable `CH-*` items with severity, affected requirement or slice, counter-scenario, evidence, impact, and required resolution. The creator records one disposition for every item: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`.
+This workflow applies adversarial planning as risk-oriented challenge, not literal competition: trade-off analysis replaces zero-sum scoring; a qualitative maximin check tests the worst plausible outcome; contingency branches are allowed only for high-impact uncertainty and must define a trigger, fallback, verification, and return point. Agents never hide intent. Assumptions, evidence, and residual risks make limited information explicit; likelihood, impact, and confidence stay categorical or `unknown`, never invented probabilities.
+
+```mermaid
+flowchart TD
+    DRAFT["Creator writes PRD or plan"] --> CHALLENGE["adversarial-reviewer challenges artifact"]
+    CHALLENGE --> VERDICT{"Debate verdict"}
+    VERDICT -- CONSENSUS --> ORDINARY["Ordinary doc-review gate"]
+    VERDICT -- REVISE before cycle 3 --> CREATOR["Creator updates same artifact<br/>and dispositions CH-* items"]
+    CREATOR --> RECHECK["adversarial-reviewer rechecks<br/>carried CH-* items"]
+    RECHECK --> VERDICT
+    VERDICT -- ARBITRATION_REQUIRED after third recheck --> ARBITRATE["doc-reviewer arbitrates unresolved CH-*<br/>and performs the full review"]
+    ARBITRATE --> RESULT{"doc-reviewer status"}
+    RESULT -- NEEDS_CONTEXT --> USER["Ask user for decision"]
+    USER --> CREATOR2["Creator updates artifact"]
+    CREATOR2 --> CONFIRM["doc-reviewer resumes and verifies<br/>combined arbitration/full review"]
+    CONFIRM --> RESULT
+    RESULT -- DONE_WITH_CONCERNS --> REWORK2["Creator/reviewer rework loop<br/>maximum 2"]
+    REWORK2 --> RESULT
+    RESULT -- BLOCKED --> STOP["Stop; report blocker"]
+    RESULT -- DONE with Evidence --> READY["Arbitrated and fully reviewed document<br/>ready for downstream agents"]
+    ORDINARY --> ORESULT{"doc-reviewer status"}
+    ORESULT -- DONE_WITH_CONCERNS --> OREWORK["Creator/reviewer rework loop<br/>maximum 2"]
+    OREWORK --> ORESULT
+    ORESULT -- NEEDS_CONTEXT --> OCONTEXT["Obtain context, then re-review"]
+    OCONTEXT --> ORESULT
+    ORESULT -- BLOCKED --> STOP
+    ORESULT -- DONE with Evidence --> READY2["Consensus document passes ordinary review<br/>then becomes ready for downstream agents"]
+```
+
+One debate cycle consists of a creator response followed by a challenger recheck. The first challenge pass establishes the initial `CH-*` set. Rechecks carry those IDs forward; they may add an ID only when the revision creates a new defect. Consensus requires no open challenges, no `needs_decision` dispositions, and explicit treatment of residual risks.
+
+Each dispatch includes the original request, artifact path and version, cycle number, unresolved `CH-*` items, latest dispositions and evidence, and related documents. The coordinator stores only the current cycle, debate verdict, and unresolved IDs in `docs/progress.md`; `/ask-prd` and `/ask-planner` retain the same state in their mini-orchestration context. No separate challenge artifact is created.
+
+## Ordinary Review Loop
+
+Artifacts without an adversarial gate, and PRDs/plans whose challenger reaches consensus, follow the ordinary review-and-rework pattern below. A cycle-3 combined arbitration/full-review result follows the same status discipline and rework limit, but substitutes for the ordinary PRD/plan review rather than preceding it. Only `DONE` with Evidence permits acceptance or downstream dispatch.
 
 ```mermaid
 flowchart LR
     AGENT[Agent creates artifact] --> REVIEWER[Reviewer checks]
-    REVIEWER --> D{DONE_WITH_CONCERNS?}
-    D -- Yes --> REWORK[Re-dispatch original agent\nwith all findings]
-    REWORK --> PASS[Artifact accepted\nmax 2 reworks per gate]
-    D -- No --> PASS
+    REVIEWER --> STATUS{Report status and Evidence}
+    STATUS -- DONE with Evidence --> PASS[Artifact accepted]
+    STATUS -- DONE_WITH_CONCERNS or DONE without Evidence --> REWORK[Re-dispatch original agent\nwith all findings]
+    REWORK -->|fewer than 2 reworks| REVIEWER
+    REWORK -->|2 reworks exhausted| ESCALATE[Change strategy once or escalate]
+    STATUS -- NEEDS_CONTEXT --> CONTEXT[Obtain missing context]
+    CONTEXT --> REVIEWER
+    STATUS -- BLOCKED --> STOP[Stop and report blocker]
     PASS --> NEXT[Continue workflow]
 ```
 
 | Artifact type | Creator agents | Reviewer | Rework limit |
 |---|---|---|---|
-| PRD | product-analyst | doc-reviewer | 2 |
+| PRD, consensus path | product-analyst | doc-reviewer ordinary review | 2 |
+| PRD, unresolved after third recheck | product-analyst | doc-reviewer combined arbitration/full review; replaces ordinary review | 2 |
 | Architecture | architect | doc-reviewer | 2 |
 | Design spec | ui-ux-designer | doc-reviewer | 2 |
-| Execution plan | planner | doc-reviewer | 2 |
+| Execution plan, consensus path | planner | doc-reviewer ordinary review | 2 |
+| Execution plan, unresolved after third recheck | planner | doc-reviewer combined arbitration/full review; replaces ordinary review | 2 |
 | Scaffold code | implementor | code-reviewer | 2 |
 | Backend code | backend-dev | code-reviewer | 2 |
 | Frontend code | frontend-dev | code-reviewer | 2 |
 | Test code | tester | code-reviewer | 2 |
 
 After 3 identical failure signatures: change strategy once (different agent, narrower scope, split the task) or escalate to the user with the full attempt history.
+
+The budgets are independent: PRD/plan debate allows at most **3 debate cycles**. The consensus path then allows at most **2 creator rework dispatches** in ordinary doc-review. The cycle-3 path instead allows at most **2 creator reworks** while completing the combined arbitration/full review; that dispatch replaces ordinary review, so no second review budget is opened.
+
+## Documentation Gate Roles
+
+| Participant | Writes artifact | Responsibility |
+|---|---:|---|
+| product-analyst | Yes, PRD only | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. |
+| planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; resolves plan challenges. |
+| adversarial-reviewer | No | Challenges assumptions and plausible failure scenarios in explicit `prd` or `plan` mode; returns the `Debate verdict` field with `CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`. |
+| doc-reviewer | No | Checks completeness, consistency, and actionability; arbitrates unresolved `CH-*` items only after cycle 3. |
+| coordinator or ask-* mini-orchestrator | No | Carries full debate context, enforces budgets, updates round state, and blocks downstream dispatch until the document passes both gates. |
+
+`/ask-prd` and `/ask-planner` are exceptions to the usual direct-dispatch shortcut shape: each runs creator → adversarial debate, then either consensus plus ordinary doc-review or combined arbitration/full review after an unresolved third recheck. There is no `/ask-adversarial-reviewer` shortcut.
 
 ## Agent Dispatch Order
 
@@ -205,6 +265,7 @@ sequenceDiagram
     participant U as User
     participant C as Coordinator
     participant PA as product-analyst
+    participant ADV as adversarial-reviewer
     participant DR as doc-reviewer
     participant AR as architect
     participant UD as ui-ux-designer
@@ -224,39 +285,115 @@ sequenceDiagram
         Note over C,DR: Documentation Phase
         C->>PA: Create PRD (AC-IDs)
         PA-->>C: docs/prd.md + Evidence
-        C->>DR: Review PRD
-        DR-->>C: DONE or DONE_WITH_CONCERNS
-        opt Concerns found
-            C->>PA: Fix PRD (findings attached)
-            PA-->>C: docs/prd.md updated
+        C->>ADV: Initial PRD challenge (outside cycle budget)
+        ADV-->>C: CONSENSUS or REVISE
+        loop If REVISE: creator response + challenger recheck, maximum 3 cycles
+            C->>PA: Resolve every CH-* item
+            PA-->>C: Updated PRD + dispositions + Evidence
+            C->>ADV: Recheck PRD (cycle state + unresolved CH-* items)
+            ADV-->>C: CONSENSUS; REVISE before cycle 3; ARBITRATION_REQUIRED only after cycle 3
         end
+        alt Challenger reached CONSENSUS
+            C->>DR: Ordinary PRD review
+            DR-->>C: DONE or DONE_WITH_CONCERNS
+            loop While concerns remain, maximum 2 ordinary reworks
+                C->>PA: Fix PRD (all review findings attached)
+                PA-->>C: Updated PRD + Evidence
+                C->>DR: Recheck PRD
+                DR-->>C: DONE or DONE_WITH_CONCERNS
+            end
+        else ARBITRATION_REQUIRED after third recheck
+            C->>DR: Arbitrate CH-* items and review full PRD
+            DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+            alt NEEDS_CONTEXT: product intent or unavailable evidence
+                C->>U: Request decision
+                U-->>C: Decision
+                C->>PA: Apply decision to PRD
+                PA-->>C: Updated PRD + Evidence
+                C->>DR: Resume and verify combined arbitration/full review
+                DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+            else DONE_WITH_CONCERNS
+                loop Creator/reviewer rework, maximum 2
+                    C->>PA: Fix arbitration/full-review concerns
+                    PA-->>C: Updated PRD + Evidence
+                    C->>DR: Resume combined arbitration/full review
+                    DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+                end
+                Note over C,DR: After 2 concern reworks, change strategy or escalate
+            else BLOCKED
+                Note over C,DR: Stop; do not dispatch downstream
+            else DONE with Evidence
+                Note over C,DR: Combined gate passed; no duplicate ordinary review
+            end
+        end
+        Note over C,AR: Architecture waits for consensus + ordinary review, or successful arbitration/full review
 
         C->>AR: Design architecture (read PRD)
         AR-->>C: docs/architecture.md + Evidence
         C->>DR: Review architecture
         DR-->>C: DONE or DONE_WITH_CONCERNS
-        opt Concerns found
+        loop While concerns remain, maximum 2 ordinary reworks
             C->>AR: Fix architecture
-            AR-->>C: docs/architecture.md updated
+            AR-->>C: docs/architecture.md updated + Evidence
+            C->>DR: Recheck architecture
+            DR-->>C: DONE or DONE_WITH_CONCERNS
         end
 
         C->>UD: Design UI/UX (read PRD)
         UD-->>C: docs/design.md + Evidence
         C->>DR: Review design
         DR-->>C: DONE or DONE_WITH_CONCERNS
-        opt Concerns found
+        loop While concerns remain, maximum 2 ordinary reworks
             C->>UD: Fix design
-            UD-->>C: docs/design.md updated
+            UD-->>C: docs/design.md updated + Evidence
+            C->>DR: Recheck design
+            DR-->>C: DONE or DONE_WITH_CONCERNS
         end
 
         C->>PL: Create slice plan (read architecture)
         PL-->>C: docs/plan.md (vertical slices) + Evidence
-        C->>DR: Review plan (slicing, AC-ID mapping)
-        DR-->>C: DONE or DONE_WITH_CONCERNS
-        opt Concerns found
-            C->>PL: Fix plan
-            PL-->>C: docs/plan.md updated
+        C->>ADV: Initial plan challenge (outside cycle budget)
+        ADV-->>C: CONSENSUS or REVISE
+        loop If REVISE: creator response + challenger recheck, maximum 3 cycles
+            C->>PL: Resolve every CH-* item
+            PL-->>C: Updated plan + dispositions + Evidence
+            C->>ADV: Recheck plan (cycle state + unresolved CH-* items)
+            ADV-->>C: CONSENSUS; REVISE before cycle 3; ARBITRATION_REQUIRED only after cycle 3
         end
+        alt Challenger reached CONSENSUS
+            C->>DR: Ordinary plan review
+            DR-->>C: DONE or DONE_WITH_CONCERNS
+            loop While concerns remain, maximum 2 ordinary reworks
+                C->>PL: Fix plan (all review findings attached)
+                PL-->>C: Updated plan + Evidence
+                C->>DR: Recheck plan
+                DR-->>C: DONE or DONE_WITH_CONCERNS
+            end
+        else ARBITRATION_REQUIRED after third recheck
+            C->>DR: Arbitrate CH-* items and review full plan
+            DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+            alt NEEDS_CONTEXT: product intent or unavailable evidence
+                C->>U: Request decision
+                U-->>C: Decision
+                C->>PL: Apply decision to plan
+                PL-->>C: Updated plan + Evidence
+                C->>DR: Resume and verify combined arbitration/full review
+                DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+            else DONE_WITH_CONCERNS
+                loop Creator/reviewer rework, maximum 2
+                    C->>PL: Fix arbitration/full-review concerns
+                    PL-->>C: Updated plan + Evidence
+                    C->>DR: Resume combined arbitration/full review
+                    DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
+                end
+                Note over C,DR: After 2 concern reworks, change strategy or escalate
+            else BLOCKED
+                Note over C,DR: Stop; do not dispatch downstream
+            else DONE with Evidence
+                Note over C,DR: Combined gate passed; no duplicate ordinary review
+            end
+        end
+        Note over C,IM: Implementation waits for consensus + ordinary review, or successful arbitration/full review
     end
 
     rect rgb(230, 255, 230)
@@ -304,31 +441,52 @@ sequenceDiagram
 
 ## Status Handling
 
+Canonical report statuses remain `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, and `NEEDS_CONTEXT`. `Debate verdict` is an agent-specific field, not a new public status. For `adversarial-reviewer`, `DONE` is valid only with `Debate verdict: CONSENSUS` and file:line Evidence.
+
 ```mermaid
 stateDiagram-v2
     [*] --> AgentWorking
 
     AgentWorking --> EvidenceCheck: Report received
-    EvidenceCheck --> DONE: Evidence present, checks green
-    EvidenceCheck --> DONE_WITH_CONCERNS: DONE without Evidence,\nor issues found
-    AgentWorking --> BLOCKED: Cannot proceed
-    AgentWorking --> NEEDS_CONTEXT: Missing info
+    EvidenceCheck --> DebateCheck: Challenge report with Evidence
+    EvidenceCheck --> DONE: Status DONE, Evidence present, checks green
+    EvidenceCheck --> Rework: DONE_WITH_CONCERNS or DONE without Evidence
+    EvidenceCheck --> BlockedState: Status BLOCKED
+    EvidenceCheck --> ContextState: Status NEEDS_CONTEXT
+
+    DebateCheck --> OrdinaryDocReview: CONSENSUS and Evidence
+    DebateCheck --> CreatorRevision: REVISE and cycle fewer than 3
+    CreatorRevision --> DebateCheck: Creator dispositions plus challenger recheck
+    DebateCheck --> Arbitration: ARBITRATION_REQUIRED after third recheck
+    Arbitration --> DONE: Combined review returns DONE with Evidence
+    Arbitration --> Rework: DONE_WITH_CONCERNS or DONE without Evidence
+    Arbitration --> UserDecision: NEEDS_CONTEXT for product intent or unavailable evidence
+    Arbitration --> BlockedState: BLOCKED
+    UserDecision --> Arbitration: Non-material answer, creator update, resume combined review
+    UserDecision --> DebateCheck: Material scope change, new version and initial pass
+    OrdinaryDocReview --> DONE: Ordinary review returns DONE with Evidence
+    OrdinaryDocReview --> Rework: DONE_WITH_CONCERNS or DONE without Evidence
+    OrdinaryDocReview --> ContextState: NEEDS_CONTEXT
+    OrdinaryDocReview --> BlockedState: BLOCKED
 
     DONE --> NextPhase: Record in docs/progress.md
-    DONE_WITH_CONCERNS --> ReviewerChecks
-    ReviewerChecks --> Rework: Reviewer confirms issues
-    Rework --> NextPhase: max 2 reworks per gate
-    ReviewerChecks --> NextPhase: No significant issues
+    Rework --> ReviewerRecheck: Creator updates artifact
+    ReviewerRecheck --> DONE: Reviewer returns DONE with Evidence
+    ReviewerRecheck --> Rework: Concerns remain and reworks fewer than 2
+    ReviewerRecheck --> ChangeStrategy: Concerns remain after 2 reworks
+    ReviewerRecheck --> ContextState: NEEDS_CONTEXT
+    ReviewerRecheck --> BlockedState: BLOCKED
+    ChangeStrategy --> EscalateToUser: Change strategy once or escalate
 
-    BLOCKED --> ReDispatch: Provide missing info
-    ReDispatch --> AgentWorking: within rework limits
-    ReDispatch --> EscalateToUser: 3 identical failures
-
-    NEEDS_CONTEXT --> AnswerQuestions
+    BlockedState --> ReDispatch: Blocker can be resolved
+    BlockedState --> EscalateToUser: Blocker cannot be resolved
+    ReDispatch --> AgentWorking: Within applicable budget
+    ReDispatch --> EscalateToUser: Repeated failure limit reached
+    ContextState --> AnswerQuestions
     AnswerQuestions --> AgentWorking: Re-dispatch with answers
     AnswerQuestions --> AskUser: Cannot answer
+    AskUser --> AgentWorking: User provides context
 
     NextPhase --> [*]
     EscalateToUser --> [*]
-    AskUser --> [*]
 ```

@@ -1,13 +1,13 @@
 ---
 name: ask-planner
-description: Dispatches the planner agent to decompose a task into vertical slices and produce an execution plan.
+description: Runs a planner, adversarial-reviewer, and doc-reviewer mini-orchestration to produce a debated and reviewed vertical-slice plan.
 argument-hint: task to decompose into subtasks
 disable-model-invocation: true
 ---
 
-# Direct Agent Dispatch: planner
+# Plan Mini-Orchestrator
 
-You dispatch the **planner** agent directly with the user's task. You do NOT implement anything yourself — you gather context, launch the agent, and present the result.
+You orchestrate `planner` → adversarial debate → `doc-reviewer`. You do not implement or review the plan yourself.
 
 ## Task
 
@@ -20,7 +20,7 @@ $ARGUMENTS
    - Use `Glob("**/package.json")` and `Glob("**/pyproject.toml")` to detect stack and versions
    - Use `Glob("docs/*.md")` to check for existing PRD, architecture docs, or design specs
 
-2. **Dispatch agent** using the Agent tool:
+2. **Dispatch creator** using the Agent tool:
    - `subagent_type: "dev-team:planner"`
    - Include the full task from `$ARGUMENTS`
    - Include detected project structure, stack, and dependency versions
@@ -30,7 +30,15 @@ $ARGUMENTS
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 
-3. **Present the result** — show the agent's structured report to the user
+3. **Initial challenge**: dispatch internal read-only `dev-team:adversarial-reviewer` with `Mode: plan` and `Pass: initial`. It assigns stable `CH-PLAN-*` IDs and may return only `CONSENSUS` or `REVISE`. This pass consumes no debate cycle.
+4. **Debate cycles 1–3**: on `REVISE`, re-dispatch planner with every unresolved ID and require `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision` per ID; then re-dispatch the challenger. Each revision + recheck consumes one cycle. IDs remain stable; rechecks may assign new IDs only for defects introduced by the revision. Cycle 4 is forbidden. Full consensus requires verified fixes, evidence-backed rejections, no `needs_decision`, and mitigation, verification, or explicit acceptance for every residual risk.
+5. **Ordinary review or arbitration**:
+   - On challenger `CONSENSUS` with no unresolved IDs, dispatch `dev-team:doc-reviewer` for a full plan review. On concerns, re-dispatch planner and then doc-reviewer, maximum 2 ordinary reworks.
+   - After an unresolved third recheck, the challenger returns `ARBITRATION_REQUIRED`; dispatch doc-reviewer with the complete plan and ledger to arbitrate all items and perform the full review together. A successful result needs no additional ordinary review.
+   - On arbitration `NEEDS_CONTEXT`, ask the user. A non-material answer is applied by planner and verified by doc-reviewer without restarting debate; a change to goals, acceptance criteria, architecture assumptions, slice boundaries, or constraints is material, increments the artifact version, and restarts at the initial pass.
+6. **Present the result** only after consensus + successful ordinary review, or successful arbitration/full review. Keep state in orchestration context; create neither `docs/progress.md` nor a challenge file.
+
+Every dispatch includes the original request, artifact path/version, initial pass or cycle/max, complete stable ledger, dispositions/evidence, verdict, unresolved IDs, related documents, scope, stack/version context, output format, and report reminder.
 
 ## Report Reminder (include in agent prompt)
 

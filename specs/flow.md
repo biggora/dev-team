@@ -1,4 +1,4 @@
-> **NOTE (2026-07)** — this walkthrough predates the evidence-gate revision: the `brainstorming`/`writing-plans`/`using-superpowers` skills mentioned below were removed, the report protocol now requires an `Evidence` field, the planner produces vertical slices, and the tester runs in Mode A (red) / Mode B (green). For current behavior see `specs/workflow.md` and `CLAUDE.md`.
+> **NOTE (2026-07)** — this historical walkthrough predates the evidence-gate and adversarial-planning revisions. It does not describe the mandatory PRD/plan creator → `adversarial-reviewer` debate, cycle-3 arbitration, or the later ordinary document review. The `brainstorming`/`writing-plans`/`using-superpowers` skills mentioned below were removed, the report protocol now requires an `Evidence` field, the planner produces vertical slices, and the tester runs in Mode A (red) / Mode B (green). For current behavior see `specs/workflow.md` and `CLAUDE.md`.
 
 ## Процесс разработки приложения с нуля через `/dev-team`
 

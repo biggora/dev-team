@@ -2,6 +2,14 @@
 
 ---
 
+> **Current lifecycle (2026-07):** the plugin has 11 agents. `adversarial-reviewer` is an internal read-only specialist with explicit `prd` and `plan` modes; it has no public shortcut. Every PRD and execution plan follows creator → adversarial debate (maximum 3 cycles). Consensus proceeds to ordinary document review with a separate maximum of 2 reworks. An unresolved third recheck proceeds instead to combined `doc-reviewer` arbitration/full review; after a user decision, the creator updates and `doc-reviewer` resumes that combined review without a second ordinary review. `/ask-prd` and `/ask-planner` run the same mini-orchestration. See `specs/workflow.md` for the normative workflow.
+
+Current review-role inventory:
+
+- `adversarial-reviewer` challenges assumptions, trade-offs, and plausible failure scenarios; it never edits the artifact.
+- `doc-reviewer` checks completeness, consistency, and actionability; after cycle 3, it arbitrates unresolved `CH-*` items.
+- The document creator remains the only writer. Downstream agents receive only consensus or arbitrated documents that pass their applicable full review.
+
 ## 1. Механизм добавления агентов
 
 Каждый агент — это один `.md` файл в `agents/`. Claude Code обнаруживает их автоматически. Структура файла:
