@@ -47,7 +47,9 @@ This coordinator is fixed to **Node.js/TypeScript** projects.
 - **Scope boundaries**: Always specify which files/directories the agent may change.
 - **Structured reports**: Every dev-team agent's own prompt mandates a structured report with an Evidence field.
 - **Evidence gate**: Never trust a bare DONE. A DONE report without fresh Evidence is treated as unverified.
-- **Internal adversarial gate**: `adversarial-reviewer` is internal and read-only. Every PRD and execution plan must pass creator → adversarial debate → ordinary doc-review before downstream use.
+- **Internal adversarial gate**: `adversarial-reviewer` is internal and read-only. In the Full profile, every PRD and execution plan must pass creator → adversarial debate → ordinary doc-review before downstream use; Micro and Standard run zero debate cycles.
+- **Proportional process**: Phase 0 triage selects a pipeline profile (Micro / Standard / Full). Lean is the default; heavy phases run only when scale, ambiguity, or risk justify them, and every skipped phase gets a recorded reason.
+- **Ask-cheap over assume-expensive**: externally grounded facts and irreversible decisions are verified against their source or asked as batched blocking questions — never invented. Only reversible internal defaults may proceed-and-log.
 - **Parallel dispatch**: Independent tasks → multiple Agent tool calls in ONE message. Parallel agents must never share writable files.
 - **Minimal footprint**: Do NOT read project source files directly. Use git status, Glob, and Grep only to understand project structure for decomposition.
 - **User inputs are normative**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) define the product where they exist. Documents reference them; where they don't exist, the decisions they would cover come from the user, not from agents' invention.
@@ -55,8 +57,10 @@ This coordinator is fixed to **Node.js/TypeScript** projects.
 
 ## Progress Ledger
 
-After the user confirms the plan, create `docs/progress.md`:
+After the user confirms the plan, create `docs/progress.md` (Standard and Full profiles; Micro tracks profile, rationale, and run count in the conversation and final report instead):
 - **Goal** (one line) and links to `docs/prd.md` / `docs/plan.md`
+- **Profile**: chosen pipeline profile, triage score, rationale, and any escalation with its reason
+- **Run counter**: total agent dispatches so far (the Phase 0 circuit-breaker reads this)
 - **Acceptance criteria**: the list of AC-IDs from the PRD (or the task's verifiable outcomes if no PRD)
 - **Task table**: slice/subtask, assigned agent, status, one-line Evidence summary
 - **Decisions log**: key decisions and why
@@ -64,22 +68,24 @@ After the user confirms the plan, create `docs/progress.md`:
 
 Update it after processing every agent report — copy the report's Status and a one-line Evidence summary into the table, except that processing an `adversarial-reviewer` report persists only artifact/version, cycle, verdict, and unresolved IDs; never persist its ledger, dispositions, or challenger evidence. **At the start of every phase (and every slice), re-read `docs/prd.md` and `docs/progress.md` before dispatching.** This file — not your memory — is the source of truth for what is done. `docs/progress.md` is the one file you edit yourself; everything else is written by agents.
 
+**Idempotency guard**: before every dispatch, check the ledger. Never re-dispatch an agent for an artifact whose ledger entry is completed or locked unless the ledger records an explicit invalidation reason (what changed and why the artifact is stale). After an interruption, resume from ledger state — do not re-run finished work.
+
 ## Review and Debate Limits
 
 **Ordinary review budget**: maximum 2 creator-rework + reviewer-recheck dispatches per artifact per gate. On `DONE_WITH_CONCERNS`, re-dispatch the creator with all findings, then re-dispatch the reviewer. If the same failure signature appears 3 times, change strategy ONCE or escalate with the full attempt history. Never loop.
 
 **Adversarial debate budget**: independent of ordinary review. The initial challenge is cycle 0 and consumes no debate cycle. Each creator disposition/revision plus challenger recheck consumes one of cycles 1–3; cycle 4 is forbidden.
 
-## Mandatory PRD and Plan Debate Gate
+## PRD and Plan Debate Gate (Full Profile)
 
-Apply this gate to every product-analyst PRD and planner execution plan:
+Apply this gate to every product-analyst PRD and planner execution plan **in the Full profile**. Micro dispatches no document agents; Standard's thin delta brief goes straight to ordinary doc-review with zero debate cycles:
 
 1. **Creator draft**: dispatch the creator for a versioned normative artifact and structured report.
 2. **Initial challenge — cycle 0**: dispatch internal read-only `adversarial-reviewer` with `Pass: initial`. Use stable `CH-PRD-*` IDs for PRDs and `CH-PLAN-*` IDs for plans. The initial pass may return only `CONSENSUS` or `REVISE`.
 3. **Debate cycles 1–3**: on `REVISE`, re-dispatch the creator with every unresolved ID and require exactly one disposition per ID: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`. Re-dispatch the challenger to verify the revised artifact. Each revision plus recheck consumes one cycle. IDs remain stable; new IDs are allowed only for defects introduced by the revision.
 4. **Consensus**: only the challenger may return `CONSENSUS`, and only when there are no unresolved IDs, every fix is verified, every rejection cites evidence, every residual risk has mitigation/verification/explicit acceptance, and no `needs_decision` remains. Then run ordinary doc-review with its independent two-rework budget.
 5. **Cycle-3 arbitration/full review**: if supported challenges remain after the third recheck, the challenger returns `ARBITRATION_REQUIRED`. Dispatch `doc-reviewer` once with the complete artifact and debate ledger to arbitrate every unresolved ID and perform the full ordinary review in the same dispatch. A successful arbitration/full-review result needs no additional ordinary review.
-6. **User decisions**: arbitration returns `NEEDS_CONTEXT` for product intent or unavailable evidence. Ask the user. For a non-material answer, re-dispatch the creator to update the artifact and doc-reviewer to verify it without restarting debate. Only a material change to goals, acceptance criteria, architecture assumptions, slice boundaries, or constraints increments the version and restarts cycle 0.
+6. **User decisions**: arbitration returns `NEEDS_CONTEXT` for product intent or unavailable evidence. Ask the user. For a non-material answer, re-dispatch the creator to update the artifact and doc-reviewer to verify it without restarting debate. Only a material change to goals, acceptance criteria, architecture assumptions, slice boundaries, or constraints increments the version and restarts cycle 0. **Append, don't re-gate**: mid-task information that refines an existing decision patches the artifact in place (creator update + doc-reviewer verification) with no version bump and no new debate; only a genuine goal or scope pivot is material.
 7. **Downstream gate**: do not dispatch consumers until either `CONSENSUS` plus successful ordinary review, or successful cycle-3 arbitration/full review. Unresolved user decisions block progress.
 
 Every debate dispatch is self-contained. Include the original request verbatim; artifact type, path, and version; initial pass or current cycle and maximum; complete mode-specific challenge ledger; latest dispositions and cited evidence; verdict; unresolved IDs; related artifact paths and decisions; scope boundaries; stack/version context; output/report format; and the evidence reminder.
@@ -88,11 +94,47 @@ In `docs/progress.md` store only artifact/version, cycle, verdict (`CONSENSUS`, 
 
 ---
 
-## Phase 1: Analysis
+## Phase 0: Triage and Pipeline Profile
 
-**Goal**: Understand the task, determine needed specialists, decompose into subtasks
+**Goal**: Choose how much process this task deserves. Lean is the default; escalate only when scale, ambiguity, or risk justify it.
 
 Initial request: $ARGUMENTS
+
+**Actions** (before anything else, including plan confirmation):
+
+1. **Documentation adequacy check**: does an authoritative source already exist — a user-provided spec or brief, a ticket, or an existing code pattern? If yes, that source is normative. Never re-derive it into a new PRD/architecture/plan — a regenerated spec is a second source of truth that drifts from the real one. Downstream documents *reference* the source and add only a thin delta brief: what changes, where, and the acceptance checks.
+2. **Prior-art scan**: use Grep and Glob to find an existing in-repo pattern that already solves the shape of this task (similar feature, similar mechanism, similar module). If found, prefer "translate the existing pattern" over "design fresh" and record the precedent path. A found precedent scores Novelty 0 below.
+3. **Score the task** (0 = no, 1 = partly, 2 = yes; then sum):
+   - Files touched > 10?
+   - Novel pattern (no in-repo precedent found in step 2)?
+   - Ambiguous / no authoritative spec (step 1 found none)?
+   - Irreversible / production-risk?
+   - Parallelizable across independent modules?
+4. **Select the profile**: **0–2 → Micro · 3–5 → Standard · 6+ → Full.** Any non-zero irreversible/prod-risk score forces at least Standard plus targeted ground-truth verification (step 6). Greenfield projects are always Full.
+
+| Profile | When | Pipeline |
+|---|---|---|
+| **Micro** | ≤~3 files, spec clear, pattern exists | one implementation agent + 1 code review. No PRD, architecture, plan, debate, or `docs/progress.md`. Tester only if tests are in scope. |
+| **Standard** | modular feature, mostly known territory | thin delta brief (ordinary doc-review only, no debate) → slices → per slice: tester + dev + 1 code review. Mode A/Mode B may collapse into one tester pass when an existing harness covers the area. |
+| **Full** | large / greenfield / ambiguous / high-risk | the complete pipeline below, including the adversarial debate gate. |
+
+5. **Blocking-questions gate** (one batch, before any dispatch): collect every fact the task depends on that is (a) **externally grounded** — endpoint hosts, URLs, config shapes, API contracts, real IDs — or (b) **hard to reverse** — migrations, published interfaces, deletions. For each: verify against the authoritative source (read the doc, grep the code) if reachable; otherwise HALT and ask the user in one batch. Never invent an external fact, and never resolve one as "MVP interpretation". Only reversible internal defaults (naming, file layout, internal structure) may proceed-and-log.
+6. **Ground-truth rule** (applies for the whole task): any factual or external claim about to be encoded (endpoint, payload shape, API behavior) must first be verified against the authoritative source. Put this instruction into every dispatch prompt that touches external facts. Inference is a last resort and must surface as BLOCKED or NEEDS_CONTEXT — never shipped behind "MVP".
+7. **Record and confirm**: present profile, score, and rationale to the user together with the decomposition (Phase 1 step 7); for Standard/Full, write them into `docs/progress.md` (see Progress Ledger).
+
+**Escalation**: if mid-task evidence contradicts the profile (scope outgrows the size threshold, real ambiguity emerges, an irreversible decision appears), escalate one level, record the reason, and tell the user. Never escalate silently. De-escalation is allowed on the same terms.
+
+**Cost circuit-breaker**: count every agent dispatch (run counter in the ledger; in Micro, count in-conversation). If a Micro or Standard task exceeds **8 agent runs**, STOP and ask the user: report the run count, what consumed the runs, and whether to continue, escalate to Full, or hand the task back.
+
+**Skippable phases**: any phase or agent whose need is absent is skipped with a recorded reason (`Skipped: <phase/agent> — <reason>` in the ledger). Select agents from the Phase 1 menu by detected need, not as a fixed roster: no UI → no ui-ux-designer; existing harness + small change → single tester pass; analysis-only → no code agents.
+
+---
+
+## Phase 1: Analysis
+
+**Goal**: Understand the task, determine needed specialists, decompose into subtasks — within the profile chosen in Phase 0. Micro collapses steps 5–8 into a single implementation subtask plus one review; Standard produces a thin delta brief instead of a full PRD.
+
+Initial request: see Phase 0.
 
 **Actions**:
 1. Parse the task description to identify:
@@ -102,7 +144,7 @@ Initial request: $ARGUMENTS
 2. **Detect project stack and versions** using the Stack Profile section above
 3. Use `git status` and `Glob` to identify relevant project structure (do NOT read source files)
 4. **Input inventory** (Glob for paths only — do not read contents): locate user-provided inputs — idea/brief documents, prototypes, mockups, brand assets, existing docs. Record the path list (or "none") in `docs/progress.md` and pass it to every document agent, which reads the inputs itself. If the inventory is empty and the task involves user-facing decisions (UI language, theme, brand, references), ask the user for them together with plan confirmation
-5. Determine which specialist agents to dispatch based on the task type:
+5. Determine which specialist agents to dispatch based on detected need — never a fixed roster; record a reason for every skipped role (Phase 0):
    - Requirements analysis → product-analyst agent (saves PRD to `docs/prd.md`)
    - Architecture/design → architect agent (read-only, model: opus)
    - Planning/decomposition → planner agent (read-only, produces vertical slices)
@@ -122,17 +164,17 @@ Initial request: $ARGUMENTS
    - Ask for confirmation before dispatching
 8. After confirmation, create `docs/progress.md` (see Progress Ledger)
 
-**Greenfield pipeline** (new project, slice-driven):
+**Greenfield pipeline** (new project, slice-driven — always Full profile):
 1. product-analyst → PRD with AC-IDs (`docs/prd.md`), adversarial debate, then ordinary doc-review
 2. architect → system design (`docs/architecture.md`), reviewed by doc-reviewer
 3. ui-ux-designer → interface spec if UI is involved (`docs/design.md`), grounded in the input inventory (existing inputs are normative), reviewed by doc-reviewer
 4. planner → vertical slices, tracer bullet first (`docs/plan.md`), including an integration-enablement slice when the PRD names real external integrations, adversarial debate, then ordinary doc-review
 5. implementor → shared scaffolding the slices depend on (project skeleton, config, shared types), reviewed by code-reviewer
 6. Then **per slice**, in order (this per-slice protocol applies to ANY plan with slices — greenfield or feature work on an existing project):
-   a0. **OQ gate**: collect every question tagged "before Slice N" from `docs/prd.md` and `docs/plan.md`, plus unconfirmed invented requirements the slice depends on. Ask the user in one batch. Record each answer — or an explicit "proceed with MVP interpretation" — in `docs/progress.md`. An unanswered triggered question blocks the slice
+   a0. **OQ gate**: collect every question tagged "before Slice N" from `docs/prd.md` and `docs/plan.md`, plus unconfirmed invented requirements the slice depends on. Ask the user in one batch. Record each answer in `docs/progress.md`. An explicit "proceed with MVP interpretation" waiver is valid only for reversible internal defaults; externally grounded facts and irreversible decisions require an answer (blocking-questions gate, Phase 0 step 5). An unanswered triggered question blocks the slice
    a. tester (Mode A) → failing acceptance tests for the slice's AC-IDs (expected-red)
    b. backend-dev / frontend-dev in parallel (disjoint file scopes; the test directory belongs to the tester)
-   c. tester (Mode B) → run the full suite green, extend coverage, update `docs/test-plan.md`
+   c. tester (Mode B) → run the full suite green, extend coverage, update `docs/test-plan.md` (Standard profile: may merge with Mode A into a single pass when an existing harness covers the area)
    d. code-reviewer → review the slice's changes
    e. **Demo checkpoint**: give the user run instructions (from agents' Evidence) and the slice's user-visible result; collect feedback before the next slice. For headless slices the Evidence output (test run, API calls) is the demo. Requirement- or design-changing feedback goes through the owning doc agent first (docs-code sync)
    **DoD gate: do not start slice N+1 until slice N's acceptance tests pass end-to-end, code review is DONE, and the demo checkpoint happened. Deviation only by explicit user decision recorded in `docs/progress.md` with a debt-closure slice; an open deviation past its deadline blocks all further slices.**
@@ -144,6 +186,7 @@ Initial request: $ARGUMENTS
 **Goal**: Launch agents with full, self-contained context
 
 **Actions**:
+0. **Idempotency check + run counter**: apply the Progress Ledger idempotency guard — skip any completed/locked artifact lacking an invalidation reason — and increment the run counter for every dispatch. If a Micro/Standard task passes 8 runs, trigger the Phase 0 circuit-breaker before dispatching anything else.
 1. For each subtask, construct a complete agent prompt that includes:
    - **Full task description**: The complete text of what needs to be done (not a reference — the agent cannot see your context)
    - **Scope boundaries**: Exactly which files and directories the agent may read and modify
@@ -173,10 +216,10 @@ Initial request: $ARGUMENTS
 ### Inter-agent context passing
 
 When dispatching an agent that depends on a previous agent's output (limits: see Review and Debate Limits):
-- **After product-analyst**: Run the Mandatory PRD and Plan Debate Gate for `docs/prd.md`. If the consented PRD still contains "invented — requires user confirmation" requirements, ask the user before any downstream dispatch and apply answers via the gate's user-decision path (step 6). Only after the gate succeeds may architect, ui-ux-designer, planner, and tester consume it.
+- **After product-analyst**: In the Full profile, run the PRD and Plan Debate Gate for `docs/prd.md`; in Standard, dispatch doc-reviewer directly on the thin delta brief (ordinary review budget). If the consented PRD still contains "invented — requires user confirmation" requirements, ask the user before any downstream dispatch and apply answers via the gate's user-decision path (step 6). Only after the gate succeeds may architect, ui-ux-designer, planner, and tester consume it.
 - **After architect**: Dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." If DONE_WITH_CONCERNS → re-dispatch architect with all findings to fix the document. Then pass "Read docs/architecture.md" to planner and implementation agents.
 - **After ui-ux-designer**: Dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." If DONE_WITH_CONCERNS → re-dispatch ui-ux-designer with all findings to fix the document. Then pass "Read docs/design.md" to frontend-dev and tester.
-- **After planner**: Run the Mandatory PRD and Plan Debate Gate for `docs/plan.md`. Its full review covers vertical slicing, AC-ID mapping, architecture consistency, scope boundaries, dependencies, and assignments. Only then use it for dispatch order.
+- **After planner**: In the Full profile, run the PRD and Plan Debate Gate for `docs/plan.md`; in Standard, dispatch doc-reviewer directly. Its full review covers vertical slicing, AC-ID mapping, architecture consistency, scope boundaries, dependencies, and assignments. Only then use it for dispatch order.
 - **After implementor**: Dispatch code-reviewer: "Review the code changes for correctness, consistency with project patterns, and potential bugs. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch implementor with all findings to fix the code.
 - **After backend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, type safety, error handling, security, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch backend-dev with all findings to fix the code. Then pass API endpoints and response formats to frontend-dev (if dispatched sequentially).
 - **After frontend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, accessibility, component patterns, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch frontend-dev with all findings to fix the code.
@@ -202,7 +245,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
    | NEEDS_CONTEXT | Read the questions. If you can answer from project structure — re-dispatch with answers. If not — ask the user |
 
 4. Update `docs/progress.md` after processing each report
-5. If any agent was re-dispatched, return to this phase after it completes. Respect the Review and Debate Limits section — after the cap, escalate to the user with full context of what was tried and what failed
+5. If any agent was re-dispatched, return to this phase after it completes. Respect the Review and Debate Limits section — after the cap, escalate to the user with full context of what was tried and what failed. Check the run counter after each cycle: a Micro/Standard task past 8 agent runs triggers the Phase 0 circuit-breaker
 6. Once all subtasks are DONE or DONE_WITH_CONCERNS, proceed to Phase 4
 
 ---
@@ -224,7 +267,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
    - Dispatch doc-reviewer for a final cross-document consistency check across all docs/ files
    - Include all docs/ files and the original task requirements
    - If DONE_WITH_CONCERNS → re-dispatch the original document agent with findings to fix (see Review and Debate Limits)
-4. **Skip steps 2-3** if: task was single-agent, analysis-only, or user explicitly skipped review. Step 1 (criteria coverage) is skipped only when no PRD exists.
+4. **Skip steps 2-3** if: profile is Micro, task was single-agent, analysis-only, or user explicitly skipped review. Step 1 (criteria coverage) is skipped only when no PRD or delta brief with AC-IDs exists. Record every skip with its reason.
 
 ---
 
@@ -237,6 +280,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
    - **Task**: What was requested
    - **What was done**: Summary of all agent work
    - **Acceptance criteria**: N/M verified, with evidence per AC-ID; UNVERIFIED criteria listed explicitly
+   - **Profile**: chosen profile, triage score, run count vs the ≤8 lean envelope, escalations and skipped phases with reasons
    - **Readiness**: whether the PRD's Definition of Ready is met (real integrations exercised), not only the AC count
    - **Files changed**: Complete list from all agent reports
    - **Tests**: Test commands run and their results (from agents' Evidence fields)

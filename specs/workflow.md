@@ -2,9 +2,12 @@
 
 ## Overview
 
-The dev-team plugin follows a 5-phase coordinator + specialists architecture. Documents and code are reviewed inline. PRDs and execution plans first pass a mandatory adversarial debate, then either consensus plus ordinary document review or a combined arbitration/full review after an unresolved third recheck. Other artifacts enter their ordinary review gate immediately after creation.
+The dev-team plugin follows a six-phase (Phase 0–5) coordinator + specialists architecture. Documents and code are reviewed inline. In the Full profile, PRDs and execution plans first pass an adversarial debate, then either consensus plus ordinary document review or a combined arbitration/full review after an unresolved third recheck. Other artifacts enter their ordinary review gate immediately after creation.
 
 Core disciplines:
+- **Pipeline profiles**: Phase 0 triage scores the task (0–2 on size, novelty, ambiguity, irreversibility, parallelizability) and selects Micro / Standard / Full; lean is default, greenfield is always Full, and every skipped phase records a reason.
+- **Blocking questions & ground truth**: externally grounded facts and irreversible decisions halt for one batched user question or are verified against the authoritative source; mid-task info patches the brief without restarting debate (append, don't re-gate).
+- **Idempotency & circuit-breaker**: the ledger is the machine-checkable authority — completed/locked artifacts are never re-dispatched without an invalidation reason, and Micro/Standard tasks stop at 8 agent runs for user confirmation.
 - **Evidence gate**: every agent report must contain an `Evidence` field with fresh command output (or file:line citations for read-only agents). A DONE without Evidence is treated as DONE_WITH_CONCERNS.
 - **Adversarial planning gate**: `adversarial-reviewer` attacks PRD and plan assumptions, trade-offs, and plausible failure scenarios. The document creator resolves stable `CH-*` challenges; downstream agents receive the document only after consensus plus ordinary review or successful combined arbitration/full review.
 - **Separated review duties**: `adversarial-reviewer` performs risk-oriented challenge. `doc-reviewer` checks completeness, consistency, and actionability; after debate cycle 3, it also arbitrates unresolved challenges.
@@ -19,11 +22,27 @@ Task-type skill routing (Phase 1):
 - **Metric optimization** ("make it faster", "improve the score", tune a measurable number) → implementor dispatched with the `autoresearch` skill: immutable evaluator, one atomic mutation per experiment, keep/discard by metric, every attempt logged.
 - **UI tasks** → the coordinator names the aesthetic explicitly (e.g., "premium SaaS", "minimalist editorial") so ui-ux-designer and frontend-dev apply the same `design-styles` preset; the aesthetic name is passed through both dispatches.
 
+## Pipeline Profiles (Phase 0)
+
+Before any analysis, the coordinator triages the task: a documentation adequacy check (an authoritative user spec or existing code pattern is never re-derived — downstream documents reference it and add a thin delta brief), a prior-art scan (prefer translating an existing in-repo pattern over designing fresh), and a 0–2 score on five questions (files > 10; novel pattern; no authoritative spec; irreversible/prod-risk; parallelizable). Sum: **0–2 → Micro · 3–5 → Standard · 6+ → Full**. Any non-zero irreversible/prod-risk score forces at least Standard; greenfield is always Full.
+
+| Profile | When | Pipeline |
+|---|---|---|
+| **Micro** | ≤~3 files, spec clear, pattern exists | one implementation agent + 1 code review. No PRD, architecture, plan, debate, or `docs/progress.md`. |
+| **Standard** | modular feature, mostly known territory | thin delta brief (ordinary doc-review only, no debate) → slices → per slice: tester + dev + 1 code review. |
+| **Full** | large / greenfield / ambiguous / high-risk | the complete workflow below, including the adversarial debate gate. |
+
+Externally grounded facts (endpoint hosts, config shapes, contracts, real IDs) and irreversible decisions are collected into one batched blocking-questions gate: verified against the authoritative source or asked of the user before any dispatch. A cost circuit-breaker stops any Micro/Standard task exceeding 8 agent runs and asks the user whether to continue, escalate to Full, or hand back.
+
 ## Full Workflow (Greenfield)
 
 ```mermaid
 flowchart TD
-    START([User Request]) --> P1
+    START([User Request]) --> P0["Phase 0: Triage & profile"]
+    P0 --> PROF{Profile?}
+    PROF -- "Micro / Standard" --> LEAN["Lean pipeline<br/>(see Pipeline Profiles)"]
+    LEAN --> LEANREP([Report])
+    PROF -- "Full" --> P1
 
     subgraph P1["Phase 1: Analysis"]
         A1[Parse task & detect stack]
@@ -186,7 +205,7 @@ flowchart TD
 
 ## Adversarial Debate Loop
 
-The PRD and execution plan use this gate before downstream work. On the consensus path, the artifact then enters ordinary document review. After an unresolved third recheck, the combined arbitration/full-review dispatch replaces that ordinary review; it is not followed by a duplicate review. The creator remains the only writer. The read-only challenger reports stable `CH-*` items with severity, affected requirement or slice, counter-scenario, evidence, impact, and required resolution. The creator records one disposition for every item: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`.
+This loop runs only in the Full profile (and in `/ask-prd`, `/ask-planner`); Micro and Standard use zero debate cycles. The PRD and execution plan use this gate before downstream work. On the consensus path, the artifact then enters ordinary document review. After an unresolved third recheck, the combined arbitration/full-review dispatch replaces that ordinary review; it is not followed by a duplicate review. The creator remains the only writer. The read-only challenger reports stable `CH-*` items with severity, affected requirement or slice, counter-scenario, evidence, impact, and required resolution. The creator records one disposition for every item: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`.
 This workflow applies adversarial planning as risk-oriented challenge, not literal competition: trade-off analysis replaces zero-sum scoring; a qualitative maximin check tests the worst plausible outcome; contingency branches are allowed only for high-impact uncertainty and must define a trigger, fallback, verification, and return point. Agents never hide intent. Assumptions, evidence, and residual risks make limited information explicit; likelihood, impact, and confidence stay categorical or `unknown`, never invented probabilities.
 
 ```mermaid

@@ -11,12 +11,20 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - Skills are surfaced by their descriptions; dispatch prompts include stack phrases to help agents pick the relevant ones
 - The coordinator does NOT read project source files — only git status, Glob, and Grep for structure analysis
 - **Every artifact is reviewed inline**: doc-reviewer after each document, code-reviewer after each code agent
-- **Mandatory adversarial debate**: every PRD and execution plan is challenged by the read-only `adversarial-reviewer` before ordinary doc-review; downstream agents see only consensus or arbitrated documents
+- **Conditional adversarial debate**: in the Full profile, every PRD and execution plan is challenged by the read-only `adversarial-reviewer` before ordinary doc-review; Micro and Standard run zero debate cycles. Downstream agents see only consensus or arbitrated documents
+- **Pipeline profiles (Phase 0 triage)**: every task is scored (size, novelty, clarity, reversibility, parallelizability; 0–2 each) and assigned Micro (≤~3 files: implement + 1 review), Standard (thin delta brief + slices + tester + 1 review, no debate), or Full (complete pipeline). Lean is the default; greenfield is always Full; skipped phases carry a recorded reason
+- **Documentation adequacy**: an authoritative user spec or existing code pattern is never re-derived — documents reference it and add only a thin delta brief; a Phase 0 prior-art scan biases toward translating existing in-repo patterns
+- **Blocking-questions gate + ground truth**: externally grounded facts (endpoints, hosts, contracts, IDs) and irreversible decisions halt for one batched user question or are verified against the authoritative source before encoding; only reversible internal defaults may proceed-and-log. Mid-task info patches the brief (append, don't re-gate); only a genuine goal/scope pivot restarts debate
+- **Idempotency + circuit-breaker**: the ledger records profile, rationale, and a run counter; completed/locked artifacts are never re-dispatched without an invalidation reason, and a Micro/Standard task past 8 agent runs auto-escalates to the user
 - **Review-and-rework pattern**: if reviewer finds concerns → original agent is re-dispatched with findings
 - **Evidence gate**: DONE is only accepted with fresh verification output (see Report Protocol)
 - **Vertical slices**: the planner decomposes by end-to-end user paths (tracer bullet first), not by layers
 - **Tester-first per slice**: tester writes failing acceptance tests (Mode A) before implementation, then verifies green and extends coverage (Mode B) after
-- **Progress ledger**: the coordinator maintains `docs/progress.md` (goal, AC-IDs, task table with evidence, decisions) and re-reads it at every phase start — the file, not conversation memory, is the source of truth
+- **Progress ledger**: the coordinator maintains `docs/progress.md` (goal, AC-IDs, task table with evidence, decisions, open questions with triggers) and re-reads it at every phase start — the file, not conversation memory, is the source of truth
+- **Input inventory**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) are collected in Phase 1 and are normative; requirements without a source are marked `invented — requires user confirmation` and need the user's answer before dependent work. Where no inputs exist, the decisions they would cover come from the user, not from agents' invention
+- **OQ gate**: open questions carry `Confirm before:` triggers; before slice N the coordinator asks the user every question tagged for it (one batch) or records an explicit MVP waiver — an unanswered triggered question blocks the slice
+- **DoD gate + demo checkpoint**: slice N+1 starts only after slice N's acceptance tests pass, code review is DONE, and the user has seen a demo of the increment; deviations are explicit user decisions with a debt-closure slice
+- **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice
 
 ## Available Agents
 
@@ -54,7 +62,7 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 | `/ask-doc-reviewer` | doc-reviewer | Review documentation quality |
 
 **When to use shortcuts vs coordinator:**
-- `/ask-*` — focused tasks with clear scope; PRD and plan shortcuts still enforce their multi-agent document gates
+- `/ask-*` — focused tasks with clear scope; PRD and plan shortcuts still enforce their multi-agent document gates (`/ask-prd` and `/ask-planner` always run the full document gate — profile-independent by design)
 - `/dev-team` — complex tasks requiring multiple agents, decomposition, and coordination
 
 ## Report Protocol
@@ -105,15 +113,17 @@ Every artifact produced in Phase 2 goes through an inline gate before the next a
 | Frontend code | frontend-dev | code-reviewer | Re-dispatch frontend-dev |
 | Test code | tester | code-reviewer | Re-dispatch tester |
 
-Phase 4 performs a criteria coverage check (every AC-ID must have passing evidence or be listed UNVERIFIED) plus a final cross-cutting review (code-reviewer for cross-module consistency + doc-reviewer for cross-document consistency) when multiple agents were dispatched.
+Phase 4 performs a criteria coverage check (every AC-ID must have passing evidence or be listed UNVERIFIED) plus a final cross-cutting review (code-reviewer for cross-module consistency + doc-reviewer for cross-document consistency) when multiple agents were dispatched. ACs naming real external integrations are UNVERIFIED with mock-only evidence.
 
 See `specs/workflow.md` for full mermaid diagrams.
 
 ## Dispatch Rules (for coordinator)
 
+- **Check the ledger before every dispatch** (idempotency guard) and increment the run counter; respect the 8-run circuit-breaker for Micro/Standard
 - Include the **full task description** — agents cannot see coordinator context
 - Specify **scope boundaries** — which files/directories can be changed; the test directory belongs to the tester
 - Include **context** about what other agents have done
+- Pass the **input inventory** (paths of user-provided briefs, prototypes, brand assets — or "none") to product-analyst and ui-ux-designer; document agents read the inputs, the coordinator does not
 - For PRD/plan debate, include the original request, artifact path and version, cycle number, unresolved `CH-*`, latest dispositions/evidence, and related documents; store only cycle, verdict, and unresolved IDs in `docs/progress.md`
 - Add the **report reminder line** to every dispatch: "Reminder: Status DONE requires the Evidence field with fresh command output; failing checks forbid DONE" (the full protocol lives in each agent's own prompt)
 - Independent tasks → **multiple Agent tool calls in one message** (parallel dispatch); parallel agents must never share writable files

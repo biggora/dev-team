@@ -2,7 +2,7 @@
 
 Plugin toolkit for orchestrating a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
 
-The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 11 specialist agents with isolated contexts, and enforces inline quality gates. Every PRD and execution plan passes a mandatory adversarial debate before ordinary `doc-reviewer` review; code passes `code-reviewer` review.
+The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 11 specialist agents with isolated contexts, and enforces inline quality gates. A Phase 0 triage assigns each task a pipeline profile — Micro, Standard, or Full; lean is the default. In the Full profile every PRD and execution plan passes an adversarial debate before ordinary `doc-reviewer` review; code always passes `code-reviewer` review.
 
 Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. The coordinator tracks state in `docs/progress.md`.
 
@@ -140,14 +140,15 @@ Workspace-scope skills load only in trusted folders (`/trust`, then restart). Th
 /dev-team-python Design a SaaS platform with Django
 
 # The coordinator automatically:
-# 1. Analyzes the task (detects greenfield vs existing project)
-# 2. Dispatches agents with inline quality gates:
-#    - PRD and plan → debate → consensus + ordinary review, or combined arbitration/full review
+# 1. Triages the task and picks a profile (Micro / Standard / Full; greenfield = Full)
+# 2. Analyzes the task (detects greenfield vs existing project)
+# 3. Dispatches agents with inline quality gates:
+#    - PRD and plan (Full profile) → debate → consensus + ordinary review, or combined arbitration/full review
 #    - Other documents → doc-reviewer → rework if needed
 #    - Each code change → code-reviewer → rework if needed
-# 3. Dispatches implementor/tester (parallel when independent)
-# 4. Final cross-cutting review (multi-agent tasks)
-# 5. Reports summary to user
+# 4. Dispatches implementor/tester (parallel when independent)
+# 5. Final cross-cutting review (multi-agent tasks)
+# 6. Reports summary to user
 ```
 
 ### In Codex CLI
@@ -164,10 +165,11 @@ Use /ask-reviewer semantics to review my recent changes for security and correct
 When those phrases appear, the `dev-team-codex` skill acts as the coordinator bridge:
 
 1. It interprets the requested coordinator or specialist flow.
-2. It reads the matching coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` prompts.
-3. It dispatches Codex subagents with `spawn_agent`.
-4. It preserves adversarial PRD/plan debate and the inline `code-reviewer` and `doc-reviewer` gates.
-5. It reports back using the same structured report protocol.
+2. It runs Phase 0 triage and picks the pipeline profile (Micro / Standard / Full).
+3. It reads the matching coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` prompts.
+4. It dispatches Codex subagents with `spawn_agent`.
+5. It preserves the inline `code-reviewer` and `doc-reviewer` gates, plus adversarial PRD/plan debate in the Full profile.
+6. It reports back using the same structured report protocol.
 
 ### In Claude Code: Shortcut Commands (direct agent dispatch)
 
@@ -231,11 +233,11 @@ Coordinators (multi-agent)          Focused shortcuts
 
 **Skill selection**: skills are surfaced by their descriptions; dispatch prompts include stack-specific phrases ("typescript", "nestjs", "django") to help agents pick the relevant ones.
 
-**Inline quality gates**: `adversarial-reviewer` attacks assumptions and plausible failure scenarios in every PRD and plan; the creator resolves stable `CH-*` items for at most 3 debate cycles. Consensus proceeds to ordinary `doc-reviewer` review with a separate 2-rework budget. After an unresolved third recheck, `doc-reviewer` arbitrates and performs the full review in one dispatch; successful arbitration needs no second ordinary review. Product intent or unavailable evidence is escalated to the user, then the creator updates and `doc-reviewer` resumes the combined review. Code uses `code-reviewer`. Downstream waits for either successful path. See `specs/workflow.md` for full diagrams.
+**Inline quality gates**: In the Full profile, `adversarial-reviewer` attacks assumptions and plausible failure scenarios in every PRD and plan; the creator resolves stable `CH-*` items for at most 3 debate cycles. Consensus proceeds to ordinary `doc-reviewer` review with a separate 2-rework budget. After an unresolved third recheck, `doc-reviewer` arbitrates and performs the full review in one dispatch; successful arbitration needs no second ordinary review. Product intent or unavailable evidence is escalated to the user, then the creator updates and `doc-reviewer` resumes the combined review. Code uses `code-reviewer`. Downstream waits for either successful path. See `specs/workflow.md` for full diagrams.
 
 **Evidence gate**: a DONE report without fresh verification output (command → exit code → key lines) is treated as unverified and sent back. Failing checks forbid DONE. "No change was needed" is a valid, evidence-backed outcome (fix-or-abstain).
 
-**Cost and latency**: PRD and plan creation now require at least one challenger pass and one document review pass: ordinary doc-review on the consensus path, or combined arbitration/full review on the unresolved cycle-3 path. Revisions add creator and challenger dispatches, up to 3 debate cycles; unresolved cycle-3 items may pause for a user decision. Simple documents can reach consensus after the first challenge pass.
+**Cost and latency**: process cost is profile-driven. Micro tasks cost ~2–4 agent runs (implement + review); Standard stays within a lean envelope with zero debate cycles; a circuit-breaker stops any Micro/Standard task that exceeds 8 runs and asks the user. In the Full profile, PRD and plan creation require at least one challenger pass and one document review pass: ordinary doc-review on the consensus path, or combined arbitration/full review on the unresolved cycle-3 path. Revisions add creator and challenger dispatches, up to 3 debate cycles; unresolved cycle-3 items may pause for a user decision. Simple documents can reach consensus after the first challenge pass.
 
 ## Plugin Structure
 
@@ -285,6 +287,7 @@ dev-team/
 ├── skills-lock.json             # Provenance of vendored skills (source + hash)
 └── specs/
     ├── dev-team-architecture.md # Architecture specification
+    ├── dev-team-optimization-proposals.md # Triage/profile design rationale
     └── workflow.md              # Workflow mermaid diagrams
 ```
 
@@ -292,7 +295,8 @@ dev-team/
 
 | Phase | Goal | Details |
 |-------|------|---------|
-| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into vertical slices; create docs/progress.md after user confirms |
+| 0. Triage | Choose process weight | Score size/novelty/clarity/reversibility/parallelizability (0–2 each); select Micro / Standard / Full; documentation adequacy check, prior-art scan, batched blocking questions for external facts and irreversible decisions |
+| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into vertical slices; create docs/progress.md after user confirms (Standard/Full) |
 | 2. Dispatch | Launch agents with inline review | PRD/plan: creator → debate (max 3 cycles) → consensus + ordinary review (max 2 reworks), or combined arbitration/full review after the third unresolved recheck. Other docs go directly to doc-review. Per slice: tester Mode A → implementation → tester Mode B → code-reviewer. |
 | 3. Collection | Process results | Evidence gate (DONE without Evidence = unverified), handle DONE / BLOCKED / NEEDS_CONTEXT, update docs/progress.md |
 | 4. Final Review | Cross-cutting review | Criteria coverage check (every AC-ID verified or listed UNVERIFIED) + cross-module code consistency + cross-document consistency (if multi-agent) |
