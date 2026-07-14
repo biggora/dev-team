@@ -31,6 +31,7 @@ Before writing a single line of the PRD, you **MUST** interrogate the user to fi
 **Ask about:**
 
 - **The Core Problem**: Why are we building this now?
+- **Existing Inputs**: What already exists — prototypes, mockups, brand, design system, UI language, reference products, prior docs? Inventory them first; the PRD cites them as sources. "Nothing exists" is a valid answer recorded explicitly.
 - **Success Metrics**: How do we know it worked?
 - **Constraints**: Budget, tech stack, or deadline?
 
@@ -56,7 +57,7 @@ Generate the document using the **Strict PRD Schema** below.
 
 Use concrete, measurable criteria. Avoid "fast", "easy", or "intuitive".
 
-Every requirement and decision must trace to the user's request or cited project code. Label unsupported candidates as assumptions or questions. Give every acceptance criterion a stable `AC-###` ID; once assigned, never renumber, reuse, or transfer it to another criterion. Retire obsolete IDs explicitly.
+Every requirement and decision must trace to the user's request, a user-provided input, or cited project code. Mark any requirement with no source `invented — requires user confirmation` and register it as an open question. Give every acceptance criterion a stable `AC-###` ID; once assigned, never renumber, reuse, or transfer it to another criterion. Retire obsolete IDs explicitly.
 
 ```diff
 # Vague (BAD)
@@ -80,6 +81,7 @@ You **MUST** follow this exact structure for the output:
 - **Problem Statement**: 1-2 sentences on the pain point.
 - **Proposed Solution**: 1-2 sentences on the fix.
 - **Success Criteria**: 3-5 measurable KPIs.
+- **Definition of Ready**: what the user can actually do against the real external dependencies when the product is done; mock or stub mode never satisfies it.
 
 ### 2. User Experience & Functionality
 
@@ -101,9 +103,10 @@ You **MUST** follow this exact structure for the output:
 - **Security & Privacy Requirements**: Required outcomes, data-handling rules, and compliance constraints without prescribing implementation.
 - **No HOW Decisions**: Leave architecture, data flow, API shape, storage design, and authentication design to downstream architecture work.
 
-### 5. Assumptions & Uncertainties
+### 5. Assumptions, Uncertainties & Open Questions
 
 - **Register**: Statement, source/evidence, impact, categorical confidence (`low`, `medium`, `high`, or `unknown`), owner, and validation method.
+- **Open Questions**: `OQ-###` — question, affected FR/AC-IDs, and a `Confirm before:` trigger (slice or phase). Triggered questions must be answered by the user or explicitly waived before the gated work starts.
 
 ### 6. Scope Alternatives & Trade-offs
 
@@ -143,6 +146,7 @@ You **MUST** follow this exact structure for the output:
 - **Hallucinate Constraints**: If the user didn't specify a tech stack, ask or label it as `TBD`.
 - **Invent probabilities**: Use categorical impact and confidence or `unknown`.
 - **Rewrite IDs**: Never renumber or reuse an assigned AC-ID.
+- **Mock-Ready**: Never define done through mock-mode criteria alone when the product's value requires real integrations.
 
 ---
 

@@ -66,14 +66,17 @@ For `dev-team` requests:
 
 1. Analyze the task and decide whether multi-agent orchestration is warranted.
 2. Detect the stack with lightweight inspection first.
-3. Choose the relevant specialist prompts from `agents/`.
-4. For multi-slice work, maintain `docs/progress.md` (goal, acceptance criterion IDs, task table with evidence summaries, decisions) and re-read it plus `docs/prd.md` before each dispatch round.
-5. Dispatch independent specialists in parallel when scopes do not overlap. The test directory belongs to the tester — implementation agents must not touch test files.
-6. For each PRD or plan, run the mandatory lifecycle below before downstream use. For other documents, run `doc-reviewer` directly.
-7. After each code-producing agent, run `code-reviewer`.
-8. **Evidence gate**: a specialist report claiming DONE without an `Evidence` field (fresh command output, or file:line citations for read-only work), or with failing output in Evidence, is treated as DONE_WITH_CONCERNS — re-dispatch demanding verification.
-9. If a reviewer reports concerns, re-dispatch the original specialist with the findings. Maximum 2 rework dispatches per artifact per gate; after 3 identical failures change strategy once or escalate to the user.
-10. Integrate results and report the final outcome succinctly, including which acceptance criteria were verified with evidence.
+3. Inventory user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) and pass the path list — or "none" — to document agents; they read the inputs themselves.
+4. Choose the relevant specialist prompts from `agents/`.
+5. For multi-slice work, maintain `docs/progress.md` (goal, acceptance criterion IDs, task table with evidence summaries, decisions, open questions with triggers) and re-read it plus `docs/prd.md` before each dispatch round.
+6. **OQ gate**: before each slice, obtain the user's answers to open questions tagged for that slice (or an explicit "proceed with MVP interpretation") and record them in `docs/progress.md`; an unanswered triggered question blocks the slice.
+7. Dispatch independent specialists in parallel when scopes do not overlap. The test directory belongs to the tester — implementation agents must not touch test files.
+8. For each PRD or plan, run the mandatory lifecycle below before downstream use. For other documents, run `doc-reviewer` directly.
+9. After each code-producing agent, run `code-reviewer`.
+10. **Evidence gate**: a specialist report claiming DONE without an `Evidence` field (fresh command output, or file:line citations for read-only work), or with failing output in Evidence, is treated as DONE_WITH_CONCERNS — re-dispatch demanding verification.
+11. **DoD gate and demo checkpoint**: do not start the next slice until the current slice's acceptance tests pass, review is DONE, and the user saw a demo of the increment. Deviations require an explicit user decision with a debt-closure slice. Doc-affecting code changes update the owning doc in the same slice (docs-code sync).
+12. If a reviewer reports concerns, re-dispatch the original specialist with the findings. Maximum 2 rework dispatches per artifact per gate; after 3 identical failures change strategy once or escalate to the user.
+13. Integrate results and report the final outcome succinctly, including which acceptance criteria were verified with evidence.
 
 ### Mandatory PRD/plan lifecycle
 

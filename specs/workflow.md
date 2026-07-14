@@ -11,6 +11,9 @@ Core disciplines:
 - **Vertical slices**: the planner decomposes into end-to-end user paths (tracer bullet first), mapped to PRD acceptance criterion IDs (AC-001...).
 - **Tester-first per slice**: tester Mode A writes failing acceptance tests before implementation; implementation agents make them green (but never touch test files); tester Mode B verifies green and extends coverage.
 - **Progress ledger**: the coordinator maintains `docs/progress.md` and re-reads it (plus `docs/prd.md`) at every phase and slice start.
+- **Input inventory**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) are collected in Phase 1 and are normative; requirements without a source are marked `invented — requires user confirmation`. Where no inputs exist, the decisions they would cover come from the user.
+- **OQ and DoD gates**: open questions tagged "before Slice N" must be answered by the user (or explicitly waived as MVP interpretation) before slice N starts; slice N+1 starts only after slice N passes tests, review, and a user demo checkpoint.
+- **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice.
 
 Task-type skill routing (Phase 1):
 - **Metric optimization** ("make it faster", "improve the score", tune a measurable number) → implementor dispatched with the `autoresearch` skill: immutable evaluator, one atomic mutation per experiment, keep/discard by metric, every attempt logged.
@@ -24,9 +27,10 @@ flowchart TD
 
     subgraph P1["Phase 1: Analysis"]
         A1[Parse task & detect stack]
+        A1b["Input inventory:<br/>user briefs, prototypes, brand"]
         A2[Identify agents & decompose subtasks]
         A3[Present plan to user]
-        A1 --> A2 --> A3
+        A1 --> A1b --> A2 --> A3
     end
 
     P1 --> CONFIRM{User confirms?}
@@ -104,6 +108,10 @@ flowchart TD
 
         subgraph SLICE_LOOP["Per Slice (tracer bullet first)"]
             direction TB
+            OQGATE{"OQ gate: questions tagged<br/>'before Slice N' answered?"}
+            OQGATE -- No --> ASKOQ["Ask user in one batch<br/>or record MVP waiver"]
+            ASKOQ --> OQGATE
+            OQGATE -- Yes --> TA
             TA["tester Mode A: failing acceptance tests<br/>(expected-red per AC-ID)"] --> PARALLEL
 
             subgraph PARALLEL["Parallel Implementation (disjoint scopes)"]
@@ -122,8 +130,9 @@ flowchart TD
                 CRS_FIX --> CRS_OK[Slice done]
                 CRS_D -- No --> CRS_OK
             end
-            CRS --> GATE{"Slice acceptance tests<br/>pass end-to-end?"}
-            GATE -- Yes --> NEXT_SLICE[Next slice]
+            CRS --> GATE{"DoD gate: slice AC tests pass<br/>end-to-end + review DONE?"}
+            GATE -- Yes --> DEMO["Demo checkpoint:<br/>show increment to user"]
+            DEMO --> NEXT_SLICE[Next slice]
             GATE -- No --> FIX[re-dispatch within rework limits]
             FIX --> TB2
         end
@@ -250,11 +259,11 @@ The budgets are independent: PRD/plan debate allows at most **3 debate cycles**.
 
 | Participant | Writes artifact | Responsibility |
 |---|---:|---|
-| product-analyst | Yes, PRD only | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. |
-| planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; resolves plan challenges. |
+| product-analyst | Yes, PRD only | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; maintains the OQ register with `Confirm before:` triggers and the Definition of Ready; marks sourceless requirements `invented — requires user confirmation`; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. |
+| planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; carries OQ triggers into the slices they gate, states the DoD gate, and plans an integration-enablement slice when the PRD names real integrations; resolves plan challenges. |
 | adversarial-reviewer | No | Challenges assumptions and plausible failure scenarios in explicit `prd` or `plan` mode; returns the `Debate verdict` field with `CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`. |
 | doc-reviewer | No | Checks completeness, consistency, and actionability; arbitrates unresolved `CH-*` items only after cycle 3. |
-| coordinator or ask-* mini-orchestrator | No | Carries full debate context, enforces budgets, updates round state, and blocks downstream dispatch until the document passes both gates. |
+| coordinator or ask-* mini-orchestrator | No | Carries full debate context, enforces budgets, updates round state, and blocks downstream dispatch until the document passes both gates; collects the input inventory and enforces the OQ, DoD, and demo-checkpoint gates. |
 
 `/ask-prd` and `/ask-planner` are exceptions to the usual direct-dispatch shortcut shape: each runs creator → adversarial debate, then either consensus plus ordinary doc-review or combined arbitration/full review after an unresolved third recheck. There is no `/ask-adversarial-reviewer` shortcut.
 
@@ -283,6 +292,7 @@ sequenceDiagram
 
     rect rgb(230, 245, 255)
         Note over C,DR: Documentation Phase
+        Note over C,U: Invented requirements and triggered OQs need user confirmation before dependent work
         C->>PA: Create PRD (AC-IDs)
         PA-->>C: docs/prd.md + Evidence
         C->>ADV: Initial PRD challenge (outside cycle budget)
@@ -291,7 +301,7 @@ sequenceDiagram
             C->>PA: Resolve every CH-* item
             PA-->>C: Updated PRD + dispositions + Evidence
             C->>ADV: Recheck PRD (cycle state + unresolved CH-* items)
-            ADV-->>C: CONSENSUS; REVISE before cycle 3; ARBITRATION_REQUIRED only after cycle 3
+            ADV-->>C: CONSENSUS, REVISE before cycle 3, or ARBITRATION_REQUIRED only after cycle 3
         end
         alt Challenger reached CONSENSUS
             C->>DR: Ordinary PRD review
@@ -321,9 +331,9 @@ sequenceDiagram
                 end
                 Note over C,DR: After 2 concern reworks, change strategy or escalate
             else BLOCKED
-                Note over C,DR: Stop; do not dispatch downstream
+                Note over C,DR: Stop — do not dispatch downstream
             else DONE with Evidence
-                Note over C,DR: Combined gate passed; no duplicate ordinary review
+                Note over C,DR: Combined gate passed — no duplicate ordinary review
             end
         end
         Note over C,AR: Architecture waits for consensus + ordinary review, or successful arbitration/full review
@@ -358,7 +368,7 @@ sequenceDiagram
             C->>PL: Resolve every CH-* item
             PL-->>C: Updated plan + dispositions + Evidence
             C->>ADV: Recheck plan (cycle state + unresolved CH-* items)
-            ADV-->>C: CONSENSUS; REVISE before cycle 3; ARBITRATION_REQUIRED only after cycle 3
+            ADV-->>C: CONSENSUS, REVISE before cycle 3, or ARBITRATION_REQUIRED only after cycle 3
         end
         alt Challenger reached CONSENSUS
             C->>DR: Ordinary plan review
@@ -388,9 +398,9 @@ sequenceDiagram
                 end
                 Note over C,DR: After 2 concern reworks, change strategy or escalate
             else BLOCKED
-                Note over C,DR: Stop; do not dispatch downstream
+                Note over C,DR: Stop — do not dispatch downstream
             else DONE with Evidence
-                Note over C,DR: Combined gate passed; no duplicate ordinary review
+                Note over C,DR: Combined gate passed — no duplicate ordinary review
             end
         end
         Note over C,IM: Implementation waits for consensus + ordinary review, or successful arbitration/full review
@@ -404,6 +414,8 @@ sequenceDiagram
         CR-->>C: DONE or DONE_WITH_CONCERNS
 
         loop Each slice
+            C->>U: OQ gate — questions tagged "before Slice N" in one batch
+            U-->>C: Answers or explicit MVP waiver (recorded in docs/progress.md)
             C->>TE: Mode A — failing acceptance tests for slice AC-IDs
             TE-->>C: expected-red evidence
 
@@ -419,7 +431,9 @@ sequenceDiagram
             TE-->>C: Green run evidence + docs/test-plan.md
             C->>CR: Review slice (incl. test integrity)
             CR-->>C: DONE or DONE_WITH_CONCERNS
-            Note over C: Tracer bullet gate — slice AC tests must pass before next slice
+            C->>U: Demo checkpoint — run instructions and slice increment
+            U-->>C: Feedback (design/requirement changes go through the owning doc agent first)
+            Note over C: DoD gate — slice AC tests pass + review DONE + demo before next slice
         end
     end
 

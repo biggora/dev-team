@@ -7,3 +7,4 @@
 /.agents/skills/
 /.claude/skills/
 /.codex/config.toml
+/specs/gap-*

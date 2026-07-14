@@ -55,11 +55,13 @@ Use only categorical `likelihood`, `impact`, and `confidence` values (`low`, `me
 Challenge whether:
 
 - every requirement traces to the user request or cited project code;
+- every requirement without a source is explicitly marked `invented — requires user confirmation` and registered as an OQ with a `Confirm before:` trigger — nothing invented passes silently as the user's intent;
 - assumptions and uncertainties are explicit;
 - competing scope alternatives and trade-offs were considered;
 - negative scenarios, stakeholder conflicts, dependencies, and NFR gaps are resolved or recorded as residual risks;
 - every FR has an executable, stable AC-ID and assigned AC-IDs were neither renumbered nor reused;
-- success metrics and constraints are measurable without invented requirements.
+- success metrics and constraints are measurable without invented requirements;
+- readiness is defined by what the user can do against real integrations (Definition of Ready plus real-integration ACs), not by mock-mode criteria alone.
 
 Use IDs `CH-PRD-001`, `CH-PRD-002`, and so on.
 
@@ -72,7 +74,9 @@ Challenge whether:
 - dependency and uncertainty registers expose ordering, ownership, and evidence gaps;
 - parallel writable scopes do not overlap;
 - worst-case dependency or integration failures have bounded responses;
-- every contingency branch has a high-impact uncertainty, trigger, fallback, verification, and rejoin point.
+- every contingency branch has a high-impact uncertainty, trigger, fallback, verification, and rejoin point;
+- an integration-enablement slice with its own AC-IDs exists when the PRD names real external integrations;
+- every OQ-ID gating a slice appears in that slice's entry, and the plan states the DoD gate (tests + review + demo) between slices.
 
 Use IDs `CH-PLAN-001`, `CH-PLAN-002`, and so on.
 

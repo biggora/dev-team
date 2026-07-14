@@ -27,6 +27,7 @@ $ARGUMENTS
    - If `docs/prd.md` exists: instruct to "Read docs/prd.md for the product requirements document"
    - If `docs/architecture.md` exists: instruct to "Read docs/architecture.md for the architecture blueprint"
    - Instruct to "Explore at least two decomposition alternatives before committing; decompose by vertical slices with a tracer bullet first."
+   - Instruct: "Carry PRD OQ triggers into the slice entries they gate; state the DoD gate (tests + review + demo) between slices; add an integration-enablement slice when the PRD names real external integrations."
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 
@@ -36,7 +37,7 @@ $ARGUMENTS
    - On challenger `CONSENSUS` with no unresolved IDs, dispatch `dev-team:doc-reviewer` for a full plan review. On concerns, re-dispatch planner and then doc-reviewer, maximum 2 ordinary reworks.
    - After an unresolved third recheck, the challenger returns `ARBITRATION_REQUIRED`; dispatch doc-reviewer with the complete plan and ledger to arbitrate all items and perform the full review together. A successful result needs no additional ordinary review.
    - On arbitration `NEEDS_CONTEXT`, ask the user. A non-material answer is applied by planner and verified by doc-reviewer without restarting debate; a change to goals, acceptance criteria, architecture assumptions, slice boundaries, or constraints is material, increments the artifact version, and restarts at the initial pass.
-6. **Present the result** only after consensus + successful ordinary review, or successful arbitration/full review. Keep state in orchestration context; create neither `docs/progress.md` nor a challenge file.
+6. **Present the result** only after consensus + successful ordinary review, or successful arbitration/full review. Surface the OQ-IDs gating slice 1 to the user before presenting the plan as final. Keep state in orchestration context; create neither `docs/progress.md` nor a challenge file.
 
 Every dispatch includes the original request, artifact path/version, initial pass or cycle/max, complete stable ledger, dispositions/evidence, verdict, unresolved IDs, related documents, scope, stack/version context, output format, and report reminder.
 

@@ -64,12 +64,15 @@ In normal mode, verify that adversarial decisions and residual risks appear in t
 - [ ] Out of Scope section is present and substantive
 - [ ] User stories cover all functional requirements
 - [ ] Constraints distinguish between hard constraints (user-specified) and assumptions (inferred)
+- [ ] Every requirement cites a Source (request quote, file:line of a user input or project code); requirements without one are marked `invented — requires user confirmation`
+- [ ] Open questions have OQ-IDs with `Confirm before:` triggers
 - [ ] Assumptions and uncertainties include source/evidence, impact, confidence, owner, and validation method
 - [ ] Scope alternatives and trade-offs are recorded
 - [ ] Negative scenarios, decisions, and residual risks identify affected FR/AC-IDs
 - [ ] Assigned AC-IDs were not renumbered or reused
 - [ ] No architecture or technology decisions embedded in requirements (unless user-specified constraints)
 - [ ] Success metrics are defined and measurable
+- [ ] A Definition of Ready states what the user can do against real external integrations; each named integration has at least one real-integration AC (mock mode never satisfies readiness)
 
 ### Architecture Review
 
@@ -94,6 +97,7 @@ In normal mode, verify that adversarial decisions and residual risks appear in t
 - [ ] All user stories from PRD have corresponding screens or flows
 - [ ] Navigation and user flow between screens is defined
 - [ ] Empty states, error states, and loading states are covered
+- [ ] When design inputs (prototype, brand, design system) exist, the spec references them and visual decisions cite their source; when none exist, key visual decisions (theme, palette, UI language) cite the dispatch or a user statement — nothing silently invented
 
 ### Execution Plan Review
 
@@ -111,6 +115,8 @@ In normal mode, verify that adversarial decisions and residual risks appear in t
 - [ ] Dependency and uncertainty register names owners, evidence gaps, impact, and triggers
 - [ ] Every contingency branch addresses high-impact uncertainty and defines trigger, fallback, verification, and rejoin point
 - [ ] Residual risks include mitigation, verification, or explicit acceptance
+- [ ] Slice entries list the OQ-IDs that gate them; the DoD gate (tests + review + demo checkpoint) is stated
+- [ ] An integration-enablement slice with its own AC-IDs exists when the PRD names real external integrations
 
 ## Arbitration Mode
 

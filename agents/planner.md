@@ -57,6 +57,7 @@ Decompose by vertical slices, not horizontal layers:
 - **Slice 1 is a tracer bullet**: the thinnest possible path that touches every layer (schema → logic → API → UI → test). Integration problems must surface in slice 1, not at the end
 - Layer-shaped tasks are allowed ONLY for shared scaffolding that slices depend on (types, config, project skeleton) — dispatched first
 - Never plan "build the whole backend, then the whole frontend": nothing is verifiable until everything is done, which is how projects fail
+- If the PRD names real external integrations, plan an explicit **integration-enablement slice** with its own AC-IDs (real credentials, real API paths). Mock-mode coverage never closes an AC that requires a real integration — a plan whose final slice still runs on mocks is not done
 
 ## Output Format
 
@@ -71,9 +72,11 @@ Provide a structured execution plan:
    - PRD criterion IDs this slice satisfies (AC-001...)
    - Scope boundaries (files/directories) per agent role — no two parallel agents may share files
    - Acceptance-test task for the tester (which criteria to turn into failing tests before implementation)
+   - OQ-IDs gating this slice (PRD questions with a `Confirm before:` trigger and unconfirmed invented requirements the slice depends on)
    - Dependencies on other slices or scaffolding tasks
    - Suggested agent roles (backend-dev, frontend-dev, implementor, tester)
 4. **Execution order**: Which tasks are parallel, which are sequential
+   - **DoD gate and demo checkpoints**: slice N+1 starts only after slice N's acceptance tests pass end-to-end, code review returns DONE, and the user has seen a demo of the increment. State this gate explicitly in the plan; deviations are user decisions with a debt-closure slice
 5. **Alternatives and trade-offs**: Decompositions considered, selected option, and evidence-backed reason
 6. **Dependency and uncertainty register**: Dependency, owner, evidence, impact, confidence (`low`, `medium`, `high`, or `unknown`), and resolution trigger
 7. **Contingency branches**: Only high-impact uncertainties, each with trigger, fallback, verification, and rejoin point
@@ -98,6 +101,7 @@ Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases
 - Scope boundaries must be precise — files and directories, not vague areas
 - Risks must be actionable — not just "this might be hard"
 - Every PRD AC-ID must map to a slice or be explicitly marked `UNVERIFIED` with a reason
+- Every PRD OQ-ID with a slice trigger must appear in the slice entry it gates
 - Parallel agents must have disjoint writable scopes
 - A contingency branch is valid only for high-impact uncertainty and must define trigger, fallback, verification, and rejoin point
 - Use categorical likelihood, impact, and confidence only; never invent probabilities

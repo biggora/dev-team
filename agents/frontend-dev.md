@@ -106,6 +106,7 @@ Apply these principles in all code:
 - Handle loading, error, and empty states
 - When a designer spec with color palette is provided, use the exact hex values — do not substitute with framework defaults
 - Do not modify backend code — only frontend files within your scope
+- **Docs-code sync**: if the requested change contradicts docs/prd.md, docs/design.md, or docs/plan.md, do not silently implement the difference — name the conflict in Concerns so the owning document is updated in the same slice
 - **Never create, modify, weaken, or skip test files.** Tests are owned by the tester agent. If a test looks wrong, report it in Concerns with evidence — making a red test green by editing the test is forbidden
 
 ## Structured Report
