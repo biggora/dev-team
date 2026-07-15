@@ -188,6 +188,7 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 /ask-frontend Build responsive user registration form with validation
 /ask-backend Implement JWT authentication with role-based access control
 /ask-implementor Set up GitHub Actions CI/CD pipeline
+#   (the agent first proves the local build/lint/test run green; a red run → BLOCKED, no pipeline)
 
 # Quality:
 /ask-tester Write tests for src/auth/ module
@@ -236,6 +237,8 @@ Coordinators (multi-agent)          Focused shortcuts
 **Inline quality gates**: In the Full profile, `adversarial-reviewer` attacks assumptions and plausible failure scenarios in every PRD and plan; the creator resolves stable `CH-*` items for at most 3 debate cycles. Consensus proceeds to ordinary `doc-reviewer` review with a separate 2-rework budget. After an unresolved third recheck, `doc-reviewer` arbitrates and performs the full review in one dispatch; successful arbitration needs no second ordinary review. Product intent or unavailable evidence is escalated to the user, then the creator updates and `doc-reviewer` resumes the combined review. Code uses `code-reviewer`. Downstream waits for either successful path. See `specs/workflow.md` for full diagrams.
 
 **Evidence gate**: a DONE report without fresh verification output (command → exit code → key lines) is treated as unverified and sent back. Failing checks forbid DONE. "No change was needed" is a valid, evidence-backed outcome (fix-or-abstain).
+
+**CI/CD last**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is always the final subtask — never part of scaffolding or intermediate slices. It is dispatched only after the local-proof gate passes: every AC-ID verified with fresh local evidence, the full test suite green, and the final demo checkpoint accepted by the user. The pipeline encodes only checks already proven green locally. Local dev tooling (docker-compose for a dev database, git hooks, lint config) is not CI/CD.
 
 **Cost and latency**: process cost is profile-driven. Micro tasks cost ~2–4 agent runs (implement + review); Standard stays within a lean envelope with zero debate cycles; a circuit-breaker stops any Micro/Standard task that exceeds 8 runs and asks the user. In the Full profile, PRD and plan creation require at least one challenger pass and one document review pass: ordinary doc-review on the consensus path, or combined arbitration/full review on the unresolved cycle-3 path. Revisions add creator and challenger dispatches, up to 3 debate cycles; unresolved cycle-3 items may pause for a user decision. Simple documents can reach consensus after the first challenge pass.
 

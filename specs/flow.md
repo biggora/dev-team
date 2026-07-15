@@ -87,7 +87,7 @@ Summary: 5 экранов, 14 цветов в палитре, wireframes для 
 4. **Сохраняет `docs/plan.md`** — подзадачи, зависимости, scope, агенты
 
 ```
-Subtask 1: [implementor] Scaffolding — package.json, tsconfig, docker-compose, dirs
+Subtask 1: [implementor] Scaffolding — package.json, tsconfig, docker-compose (локальная dev-среда, не CI/CD), dirs
 Subtask 2: [implementor] Shared types — src/shared/types/, src/shared/config/
 Subtask 3: [backend-dev] Auth module — JWT, guards, user entity      ← параллельно
 Subtask 4: [backend-dev] Task module — CRUD endpoints, task entity   ← параллельно
@@ -97,6 +97,8 @@ Subtask 7: [frontend-dev] Dashboard + Task UI                        ← пос�
 Subtask 8: [tester] E2E тесты
 Subtask 9: [code-reviewer] Финальный ревью
 ```
+
+**CI/CD last**: пайплайны, деплой и release в план не входят — они не были запрошены. Если бы входили, планер обязан поставить их отдельной финальной подзадачей после Subtask 9 с предусловием local-proof gate: все AC подтверждены локально, полный тестовый набор зелёный, финальное demo принято пользователем; пайплайн кодирует только проверки, доказанные зелёными локально.
 
 ```
 Status: DONE
@@ -109,7 +111,7 @@ Summary: 9 подзадач, 3 фазы: scaffolding → parallel dev → test+r
 ### Phase 2d: Implementor — Scaffolding (sonnet)
 
 Координатор dispatch (из `docs/plan.md`, subtasks 1+2):
-> *"Scaffold the project and create shared files. Read docs/architecture.md for the file structure. This is a Node.js TypeScript project using Next.js and NestJS. Create: package.json, tsconfig, docker-compose, directory structure, shared types and config files. Scope: project root, src/shared/"*
+> *"Scaffold the project and create shared files. Read docs/architecture.md for the file structure. This is a Node.js TypeScript project using Next.js and NestJS. Create: package.json, tsconfig, docker-compose (local dev environment only — no CI pipelines or deployment configs), directory structure, shared types and config files. Scope: project root, src/shared/"*
 
 **Implementor:**
 1. Применяет `brainstorming` — оценивает структуру

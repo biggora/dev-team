@@ -17,6 +17,7 @@ Core disciplines:
 - **Input inventory**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) are collected in Phase 1 and are normative; requirements without a source are marked `invented — requires user confirmation`. Where no inputs exist, the decisions they would cover come from the user.
 - **OQ and DoD gates**: open questions tagged "before Slice N" must be answered by the user (or explicitly waived as MVP interpretation) before slice N starts; slice N+1 starts only after slice N passes tests, review, and a user demo checkpoint.
 - **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice.
+- **CI/CD last + local-proof gate**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is never part of scaffolding or ordinary slices — it is planned only as the final subtask and dispatched only after every AC-ID has fresh passing local evidence, the full test suite is green, and the final demo checkpoint is accepted by the user. The pipeline encodes only checks already proven green locally. Local dev tooling (docker-compose for a dev database, git hooks, lint config) is not CI/CD.
 
 Task-type skill routing (Phase 1):
 - **Metric optimization** ("make it faster", "improve the score", tune a measurable number) → implementor dispatched with the `autoresearch` skill: immutable evaluator, one atomic mutation per experiment, keep/discard by metric, every attempt logged.
@@ -112,7 +113,7 @@ flowchart TD
         DOC_PHASE --> SCAFFOLD
 
         subgraph SCAFFOLD["Shared Scaffolding"]
-            IMP[implementor: skeleton, config, shared types] --> CR1
+            IMP["implementor: skeleton, config, shared types<br/>(no CI/CD — pipelines and deploy come last)"] --> CR1
             subgraph CR1["Code Review: Scaffold"]
                 CR1_R[code-reviewer]
                 CR1_D{Concerns?}
@@ -155,6 +156,8 @@ flowchart TD
             GATE -- No --> FIX[re-dispatch within rework limits]
             FIX --> TB2
         end
+
+        SLICE_LOOP --> CICD["CI/CD (optional, always last)<br/>local-proof gate: all AC-IDs verified locally,<br/>full suite green, final demo accepted;<br/>pipeline encodes only locally-green checks"]
     end
 
     P2 --> P3
@@ -453,6 +456,14 @@ sequenceDiagram
             C->>U: Demo checkpoint — run instructions and slice increment
             U-->>C: Feedback (design/requirement changes go through the owning doc agent first)
             Note over C: DoD gate — slice AC tests pass + review DONE + demo before next slice
+        end
+
+        opt CI/CD (always last)
+            Note over C: Local-proof gate — all AC-IDs verified locally, full suite green, final demo accepted
+            C->>IM: CI/CD setup (pipeline encodes only locally-green checks)
+            IM-->>C: Files + Evidence (local green run + pipeline config)
+            C->>CR: Review CI/CD config
+            CR-->>C: DONE or DONE_WITH_CONCERNS
         end
     end
 

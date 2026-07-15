@@ -51,6 +51,7 @@ This universal coordinator auto-detects the stack from project structure.
 - **Minimal footprint**: Do NOT read project source files directly. Use git status, Glob, and Grep only to understand project structure for decomposition.
 - **User inputs are normative**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) define the product where they exist. Documents reference them; where they don't exist, the decisions they would cover come from the user, not from agents' invention.
 - **Docs-code sync**: a change that alters requirements, design, or plan updates the owning doc in the same slice — dispatch the doc agent alongside the code agent.
+- **CI/CD last**: CI/CD work (CI pipelines such as GitHub Actions, deployment Dockerfiles/images, publish/release, staging/production configs) is never part of scaffolding or intermediate slices — it may only be the final subtask, dispatched after the **local-proof gate** passes: every in-scope AC-ID has fresh passing local evidence, the full test suite is green, and the last slice's demo checkpoint is accepted by the user. Local dev tooling that serves local verification (docker-compose for a dev database, git hooks, lint config) is not CI/CD and may come earlier. A pipeline may only encode checks already proven green locally.
 
 ## Progress Ledger
 
@@ -154,7 +155,7 @@ Initial request: see Phase 0.
    - Document review → doc-reviewer agent (read-only)
    - PRD/plan challenge → adversarial-reviewer agent (internal, read-only)
    - Metric optimization ("make it faster", "improve the score", tune a measurable number) → implementor agent instructed to apply the `autoresearch` skill (Agent-Optimizer loop: immutable evaluator, one atomic mutation per experiment, keep/discard by metric)
-6. Decompose into concrete subtasks with clear scope boundaries
+6. Decompose into concrete subtasks with clear scope boundaries. Any CI/CD subtask (pipelines, deployment, release) is always ordered last — after every implementation, test, and review subtask — and is marked as gated by the local-proof gate (see CI/CD last in Core Principles); scaffolding and ordinary slices never contain CI/CD work
 7. Present the decomposition plan to the user:
    - List of subtasks with assigned agents
    - Execution order (parallel vs sequential)
@@ -166,7 +167,7 @@ Initial request: see Phase 0.
 2. architect → system design (`docs/architecture.md`), reviewed by doc-reviewer
 3. ui-ux-designer → interface spec if UI is involved (`docs/design.md`), grounded in the input inventory (existing inputs are normative), reviewed by doc-reviewer
 4. planner → vertical slices, tracer bullet first (`docs/plan.md`), including an integration-enablement slice when the PRD names real external integrations, adversarial debate, then ordinary doc-review
-5. implementor → shared scaffolding the slices depend on (project skeleton, config, shared types), reviewed by code-reviewer
+5. implementor → shared scaffolding the slices depend on (project skeleton, config, shared types — never CI pipelines, deployment configs, or release tooling; local dev-environment tooling such as docker-compose for a dev database is allowed), reviewed by code-reviewer
 6. Then **per slice**, in order (this per-slice protocol applies to ANY plan with slices — greenfield or feature work on an existing project):
    a0. **OQ gate**: collect every question tagged "before Slice N" from `docs/prd.md` and `docs/plan.md`, plus unconfirmed invented requirements the slice depends on. Ask the user in one batch. Record each answer in `docs/progress.md`. An explicit "proceed with MVP interpretation" waiver is valid only for reversible internal defaults; externally grounded facts and irreversible decisions require an answer (blocking-questions gate, Phase 0 step 5). An unanswered triggered question blocks the slice
    a. tester (Mode A) → failing acceptance tests for the slice's AC-IDs (expected-red)
@@ -175,6 +176,7 @@ Initial request: see Phase 0.
    d. code-reviewer → review the slice's changes
    e. **Demo checkpoint**: give the user run instructions (from agents' Evidence) and the slice's user-visible result; collect feedback before the next slice. For headless slices the Evidence output (test run, API calls) is the demo. Requirement- or design-changing feedback goes through the owning doc agent first (docs-code sync)
    **DoD gate: do not start slice N+1 until slice N's acceptance tests pass end-to-end, code review is DONE, and the demo checkpoint happened. Deviation only by explicit user decision recorded in `docs/progress.md` with a debt-closure slice; an open deviation past its deadline blocks all further slices.**
+7. **CI/CD (optional, always last)**: only after every slice has passed the DoD gate and the local-proof gate holds — every AC-ID verified with fresh local evidence, the full test suite green, the final demo checkpoint accepted by the user — dispatch implementor for CI/CD work. The pipeline encodes only commands already proven green locally (taken from agents' Evidence), and is reviewed by code-reviewer
 
 ---
 
@@ -209,6 +211,7 @@ Initial request: see Phase 0.
 2. **Parallel dispatch**: If subtasks are independent (no shared files, no data dependencies), launch ALL agents in a single message using multiple Agent tool calls
 3. **Sequential dispatch**: If subtask B depends on subtask A's output, wait for A to complete, read its report, then dispatch B with A's results included in the prompt
 4. **Shared file isolation**: Before parallel dispatch, identify shared files (types, utils, config, schemas). Either dispatch implementor FIRST to create shared files then dispatch specialists in parallel, OR assign shared file ownership to ONE agent explicitly in scope boundaries. Never allow two parallel agents to have overlapping file scopes. The test directory belongs to the tester — implementation agents must not touch test files.
+5. **CI/CD local-proof gate**: before dispatching any CI/CD subtask, check `docs/progress.md`: every in-scope AC-ID has passing local evidence, a fresh green full-suite run is recorded, and the final demo checkpoint is accepted. If any proof is missing, do NOT dispatch — tell the user exactly which evidence is missing and what work produces it. When dispatching, include the proven commands from Evidence: the pipeline encodes only checks already green locally.
 
 ### Inter-agent context passing
 
@@ -254,7 +257,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
 **Note**: Individual code reviews already happen inline after each code agent (Phase 2). This phase catches cross-cutting issues that span multiple agents' work.
 
 **Actions**:
-1. **Criteria coverage check**: Re-read `docs/prd.md`. For every AC-ID, find a passing entry in some agent's Criteria/Evidence (the primary source is the traceability matrix in `docs/test-plan.md`). For unverified criteria → dispatch tester to verify them, or list them explicitly as UNVERIFIED in the final report — never silently claim completion. An AC that names a real external integration counts as UNVERIFIED when only mock or stub evidence exists.
+1. **Criteria coverage check**: Re-read `docs/prd.md`. For every AC-ID, find a passing entry in some agent's Criteria/Evidence (the primary source is the traceability matrix in `docs/test-plan.md`). For unverified criteria → dispatch tester to verify them, or list them explicitly as UNVERIFIED in the final report — never silently claim completion. An AC that names a real external integration counts as UNVERIFIED when only mock or stub evidence exists. This check must complete before any CI/CD subtask is dispatched — CI/CD work never precedes criteria coverage (CI/CD last).
 2. **Cross-cutting code review** (if multiple code agents were dispatched):
    - Dispatch code-reviewer with the complete list of ALL files changed by ALL code agents
    - Include the original task requirements and stack context with **exact versions**

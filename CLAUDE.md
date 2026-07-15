@@ -25,6 +25,7 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - **OQ gate**: open questions carry `Confirm before:` triggers; before slice N the coordinator asks the user every question tagged for it (one batch) or records an explicit MVP waiver — an unanswered triggered question blocks the slice
 - **DoD gate + demo checkpoint**: slice N+1 starts only after slice N's acceptance tests pass, code review is DONE, and the user has seen a demo of the increment; deviations are explicit user decisions with a debt-closure slice
 - **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice
+- **CI/CD last**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is never part of scaffolding or intermediate slices — it is planned only as the final subtask and dispatched only after the local-proof gate passes: every AC-ID verified with fresh local evidence, the full test suite green, and the final demo checkpoint accepted by the user. The pipeline encodes only checks already proven green locally. Local dev tooling (docker-compose for a dev database, git hooks, lint config) is not CI/CD and may come earlier
 
 ## Available Agents
 
@@ -56,7 +57,7 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 | `/ask-designer` | ui-ux-designer | Design UI/UX flows and layouts |
 | `/ask-frontend` | frontend-dev | Build UI components, pages, styles |
 | `/ask-backend` | backend-dev | Build API, models, services |
-| `/ask-implementor` | implementor | Scripts, config, CI/CD, utilities |
+| `/ask-implementor` | implementor | Scripts, config, utilities; CI/CD only after local verification is green |
 | `/ask-tester` | tester | Write and run tests |
 | `/ask-reviewer` | code-reviewer | Review code for quality and bugs |
 | `/ask-doc-reviewer` | doc-reviewer | Review documentation quality |

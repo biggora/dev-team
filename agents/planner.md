@@ -58,6 +58,7 @@ Decompose by vertical slices, not horizontal layers:
 - Layer-shaped tasks are allowed ONLY for shared scaffolding that slices depend on (types, config, project skeleton) — dispatched first
 - Never plan "build the whole backend, then the whole frontend": nothing is verifiable until everything is done, which is how projects fail
 - If the PRD names real external integrations, plan an explicit **integration-enablement slice** with its own AC-IDs (real credentials, real API paths). Mock-mode coverage never closes an AC that requires a real integration — a plan whose final slice still runs on mocks is not done
+- **CI/CD last**: CI/CD tasks (CI pipelines, deployment configs/images, publish/release) never belong to scaffolding or ordinary slices. If CI/CD is in scope at all, plan it as a single separate task AFTER the last slice, with an explicit precondition stated in the plan: the local-proof gate — every AC-ID verified with fresh local evidence, the full test suite green, the final demo accepted by the user — and the rule that the pipeline encodes only checks already proven green locally. Local dev tooling that serves local verification (docker-compose for a dev database, git hooks, lint config) is NOT CI/CD and may be scheduled earlier
 
 ## Output Format
 
@@ -105,6 +106,7 @@ Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases
 - Parallel agents must have disjoint writable scopes
 - A contingency branch is valid only for high-impact uncertainty and must define trigger, fallback, verification, and rejoin point
 - Use categorical likelihood, impact, and confidence only; never invent probabilities
+- A plan that places CI/CD work before the final slice, or without a stated local-proof precondition, is invalid
 
 ## Structured Report
 

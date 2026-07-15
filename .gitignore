@@ -8,3 +8,4 @@
 /.claude/skills/
 /.codex/config.toml
 /specs/gap-*
+/specs/dev-*
