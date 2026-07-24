@@ -11,13 +11,14 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - Skills are surfaced by their descriptions; dispatch prompts include stack phrases to help agents pick the relevant ones
 - The coordinator does NOT read project source files — only git status, Glob, and Grep for structure analysis
 - **Every artifact is reviewed inline**: doc-reviewer after each document, code-reviewer after each code agent
-- **Conditional adversarial debate**: in the Full profile, every PRD and execution plan is challenged by the read-only `adversarial-reviewer` before ordinary doc-review; Micro and Standard run zero debate cycles. Downstream agents see only consensus or arbitrated documents
+- **Proportional adversarial debate**: in the Full profile, debate depth is gated by artifact complexity — Light (<5 AC-IDs) skips debate, Standard (5–15) allows 1 cycle, Deep (15+) uses the full 3-cycle budget; Micro and Standard profiles run zero debate cycles. Architecture and design reviews are conditional on novelty. Downstream agents see only consensus or arbitrated documents
 - **Pipeline profiles (Phase 0 triage)**: every task is scored (size, novelty, clarity, reversibility, parallelizability; 0–2 each) and assigned Micro (≤~3 files: implement + 1 review), Standard (thin delta brief + slices + tester + 1 review, no debate), or Full (complete pipeline). Lean is the default; greenfield is always Full; skipped phases carry a recorded reason
 - **Documentation adequacy**: an authoritative user spec or existing code pattern is never re-derived — documents reference it and add only a thin delta brief; a Phase 0 prior-art scan biases toward translating existing in-repo patterns
 - **Blocking-questions gate + ground truth**: externally grounded facts (endpoints, hosts, contracts, IDs) and irreversible decisions halt for one batched user question or are verified against the authoritative source before encoding; only reversible internal defaults may proceed-and-log. Mid-task info patches the brief (append, don't re-gate); only a genuine goal/scope pivot restarts debate
-- **Idempotency + circuit-breaker**: the ledger records profile, rationale, and a run counter; completed/locked artifacts are never re-dispatched without an invalidation reason, and a Micro/Standard task past 8 agent runs auto-escalates to the user
-- **Review-and-rework pattern**: if reviewer finds concerns → original agent is re-dispatched with findings
-- **Evidence gate**: DONE is only accepted with fresh verification output (see Report Protocol)
+- **Idempotency + circuit-breaker**: the ledger records profile, rationale, and a run counter; completed/locked artifacts are never re-dispatched without an invalidation reason. Circuit-breaker thresholds: Micro/Standard 8 runs, Full 40 runs; per-slice sub-breaker at 6 implementation dispatches
+- **Review-and-rework pattern**: if reviewer finds concerns → original agent is re-dispatched with findings; re-dispatch limit of 3 per scope+role with attempt context passed to the agent
+- **Scope-proportional evidence**: DONE requires fresh verification output; failures outside the agent's dispatched scope are accepted as DONE (not re-dispatched) with failures recorded in the ledger
+- **Session continuity**: `/handoff` saves session state to `docs/handoff.md`; `/resume` reconstructs coordinator state and continues from where the previous session stopped
 - **Vertical slices**: the planner decomposes by end-to-end user paths (tracer bullet first), not by layers
 - **Tester-first per slice**: tester writes failing acceptance tests (Mode A) before implementation, then verifies green and extends coverage (Mode B) after
 - **Progress ledger**: the coordinator maintains `docs/progress.md` (goal, AC-IDs, task table with evidence, decisions, open questions with triggers) and re-reads it at every phase start — the file, not conversation memory, is the source of truth
@@ -61,6 +62,8 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 | `/ask-tester` | tester | Write and run tests |
 | `/ask-reviewer` | code-reviewer | Review code for quality and bugs |
 | `/ask-doc-reviewer` | doc-reviewer | Review documentation quality |
+| `/handoff` | coordinator | Save dev-team session state for resumption |
+| `/resume` | coordinator | Resume previously interrupted dev-team session |
 
 **When to use shortcuts vs coordinator:**
 - `/ask-*` — focused tasks with clear scope; PRD and plan shortcuts still enforce their multi-agent document gates (`/ask-prd` and `/ask-planner` always run the full document gate — profile-independent by design)
@@ -85,15 +88,17 @@ Questions: [only if NEEDS_CONTEXT — what information is needed]
 Report rules (canonical copy: `templates/agent-template.md`):
 - **DONE requires Evidence.** No fresh command output (or citations) → the agent may not report DONE.
 - **Red means not DONE.** Any failing test, build, or lint in Evidence → BLOCKED or DONE_WITH_CONCERNS, never DONE.
+- **Scope-aware red.** If the dispatch defines an Evidence scope, failures outside that scope are reported in Concerns as "out-of-scope" and do not block DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome backed by evidence; invented changes and unverified fixes are not.
 
 **Status handling by coordinator:**
 
 | Status | Coordinator Action |
 |--------|-------------------|
-| DONE (with Evidence) | Record in docs/progress.md, proceed to next phase |
+| DONE (with Evidence, all green or out-of-scope only) | Record in docs/progress.md, proceed to next phase |
 | DONE without Evidence | Treat as DONE_WITH_CONCERNS — re-dispatch demanding verification |
-| DONE_WITH_CONCERNS | Re-dispatch original agent with findings to fix |
+| DONE with in-scope failures | Treat as DONE_WITH_CONCERNS — re-dispatch (max 3 per scope+role) |
+| DONE_WITH_CONCERNS | Read concerns, decide if action needed. If yes — re-dispatch. If no — note for final report |
 | BLOCKED | Provide missing info, re-dispatch agent |
 | NEEDS_CONTEXT | Answer questions or ask user, re-dispatch |
 

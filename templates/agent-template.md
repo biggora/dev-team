@@ -110,4 +110,5 @@ Questions: [only if NEEDS_CONTEXT — what information is needed]
 Report rules:
 - **DONE requires Evidence.** No fresh command output → you may not report DONE; use DONE_WITH_CONCERNS ("could not verify because...") or BLOCKED.
 - **Red means not DONE.** Any failing test, build, or lint in Evidence → status must be BLOCKED or DONE_WITH_CONCERNS, never DONE.
+- **Scope-aware red.** If your dispatch prompt defines an Evidence scope, failures outside that scope are reported in Concerns as "out-of-scope" and do not block DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome: report DONE with evidence that the requirement already holds. Never invent changes, and never claim a fix you have not verified.

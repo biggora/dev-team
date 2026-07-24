@@ -7,8 +7,9 @@ The dev-team plugin follows a six-phase (Phase 0–5) coordinator + specialists 
 Core disciplines:
 - **Pipeline profiles**: Phase 0 triage scores the task (0–2 on size, novelty, ambiguity, irreversibility, parallelizability) and selects Micro / Standard / Full; lean is default, greenfield is always Full, and every skipped phase records a reason.
 - **Blocking questions & ground truth**: externally grounded facts and irreversible decisions halt for one batched user question or are verified against the authoritative source; mid-task info patches the brief without restarting debate (append, don't re-gate).
-- **Idempotency & circuit-breaker**: the ledger is the machine-checkable authority — completed/locked artifacts are never re-dispatched without an invalidation reason, and Micro/Standard tasks stop at 8 agent runs for user confirmation.
-- **Evidence gate**: every agent report must contain an `Evidence` field with fresh command output (or file:line citations for read-only agents). A DONE without Evidence is treated as DONE_WITH_CONCERNS.
+- **Idempotency & circuit-breaker**: the ledger is the machine-checkable authority — completed/locked artifacts are never re-dispatched without an invalidation reason. Circuit-breaker thresholds: Micro/Standard 8 runs, Full 40 runs (or 3× slices × 5); per-slice sub-breaker at 6 implementation dispatches.
+- **Scope-proportional evidence**: every agent report must contain an `Evidence` field with fresh command output (or file:line citations for read-only agents). A DONE without Evidence is treated as DONE_WITH_CONCERNS. Failures outside the agent's dispatched scope are accepted as DONE with the failures recorded — not re-dispatched.
+- **Proportional debate**: Full-profile debate depth is gated by artifact complexity — Light (skip debate), Standard (1 cycle max), Deep (full 3-cycle budget). Architecture and design reviews are conditional on novelty.
 - **Adversarial planning gate**: `adversarial-reviewer` attacks PRD and plan assumptions, trade-offs, and plausible failure scenarios. The document creator resolves stable `CH-*` challenges; downstream agents receive the document only after consensus plus ordinary review or successful combined arbitration/full review.
 - **Separated review duties**: `adversarial-reviewer` performs risk-oriented challenge. `doc-reviewer` checks completeness, consistency, and actionability; after debate cycle 3, it also arbitrates unresolved challenges.
 - **Vertical slices**: the planner decomposes into end-to-end user paths (tracer bullet first), mapped to PRD acceptance criterion IDs (AC-001...).
@@ -33,7 +34,7 @@ Before any analysis, the coordinator triages the task: a documentation adequacy 
 | **Standard** | modular feature, mostly known territory | thin delta brief (ordinary doc-review only, no debate) → slices → per slice: tester + dev + 1 code review. |
 | **Full** | large / greenfield / ambiguous / high-risk | the complete workflow below, including the adversarial debate gate. |
 
-Externally grounded facts (endpoint hosts, config shapes, contracts, real IDs) and irreversible decisions are collected into one batched blocking-questions gate: verified against the authoritative source or asked of the user before any dispatch. A cost circuit-breaker stops any Micro/Standard task exceeding 8 agent runs and asks the user whether to continue, escalate to Full, or hand back.
+Externally grounded facts (endpoint hosts, config shapes, contracts, real IDs) and irreversible decisions are collected into one batched blocking-questions gate: verified against the authoritative source or asked of the user before any dispatch. Cost circuit-breaker thresholds: **Micro/Standard: 8 runs; Full: 40 runs** (or 3× planned-slices × 5, whichever is lower). A per-slice sub-breaker stops any slice exceeding 6 implementation dispatches.
 
 ## Full Workflow (Greenfield)
 
@@ -64,7 +65,9 @@ flowchart TD
         subgraph DOC_PHASE["Documentation Phase"]
             direction TB
 
-            PA[product-analyst] -->|docs/prd.md with AC-IDs| ADV1["PRD initial challenge<br/>then max 3 creator/recheck cycles"]
+            PA[product-analyst] -->|docs/prd.md with AC-IDs| DEBATE_DEPTH{"Debate depth?<br/>Light / Standard / Deep"}
+            DEBATE_DEPTH -- Light --> DR1
+            DEBATE_DEPTH -- "Standard / Deep" --> ADV1["PRD challenge<br/>depth-proportional cycles"]
             ADV1 -->|Consensus or arbitration| DR1
             subgraph DR1["Doc Review: PRD"]
                 DR1_R[doc-reviewer]
@@ -75,30 +78,24 @@ flowchart TD
                 DR1_D -- No --> DR1_OK
             end
 
-            DR1 --> ARCH[architect]
-            ARCH -->|docs/architecture.md| DR2
-            subgraph DR2["Doc Review: Architecture"]
-                DR2_R[doc-reviewer]
-                DR2_D{Concerns?}
-                DR2_R --> DR2_D
-                DR2_D -- Yes --> DR2_FIX[re-dispatch architect]
-                DR2_FIX -->|recheck, max 2 reworks| DR2_R
-                DR2_D -- No --> DR2_OK
+            DR1 --> PAR_DOCS
+
+            subgraph PAR_DOCS["Parallel: Architecture + Design"]
+                direction LR
+                ARCH[architect<br/>docs/architecture.md]
+                UI["ui-ux-designer<br/>docs/design.md<br/>(if UI involved)"]
             end
 
-            DR2 --> UI[ui-ux-designer]
-            UI -->|docs/design.md| DR3
-            subgraph DR3["Doc Review: Design"]
-                DR3_R[doc-reviewer]
-                DR3_D{Concerns?}
-                DR3_R --> DR3_D
-                DR3_D -- Yes --> DR3_FIX[re-dispatch ui-ux-designer]
-                DR3_FIX -->|recheck, max 2 reworks| DR3_R
-                DR3_D -- No --> DR3_OK
-            end
+            PAR_DOCS --> REVIEW_DOCS{"Novel?"}
+            REVIEW_DOCS -- "Yes" --> DR2["doc-reviewer:<br/>architecture + design<br/>(max 1 rework each)"]
+            REVIEW_DOCS -- "No (routine)" --> DR2_SKIP["Review skipped"]
+            DR2 --> PL
+            DR2_SKIP --> PL
 
-            DR3 --> PL[planner]
-            PL -->|docs/plan.md: vertical slices| ADV4["Plan initial challenge<br/>then max 3 creator/recheck cycles"]
+            PL[planner]
+            PL -->|docs/plan.md: vertical slices| DEBATE_DEPTH2{"Debate depth?"}
+            DEBATE_DEPTH2 -- Light --> DR4
+            DEBATE_DEPTH2 -- "Standard / Deep" --> ADV4["Plan challenge<br/>depth-proportional cycles"]
             ADV4 -->|Consensus or arbitration| DR4
             subgraph DR4["Doc Review: Plan"]
                 DR4_R[doc-reviewer]
@@ -132,7 +129,8 @@ flowchart TD
             OQGATE -- No --> ASKOQ["Ask user in one batch<br/>or record MVP waiver"]
             ASKOQ --> OQGATE
             OQGATE -- Yes --> TA
-            TA["tester Mode A: failing acceptance tests<br/>(expected-red per AC-ID)"] --> PARALLEL
+            TA["tester Mode A: failing acceptance tests<br/>(expected-red per AC-ID)<br/>Collapse A+B if ≤3 AC-IDs + existing harness"] --> SCOPE_CHECK["Mode A scope check:<br/>flag future-slice tests as expected-red"]
+            SCOPE_CHECK --> PARALLEL
 
             subgraph PARALLEL["Parallel Implementation (disjoint scopes)"]
                 direction LR
@@ -163,7 +161,7 @@ flowchart TD
     P2 --> P3
 
     subgraph P3["Phase 3: Collection"]
-        C0["Evidence gate: DONE without Evidence<br/>= DONE_WITH_CONCERNS"]
+        C0["Evidence gate: scope-proportional<br/>In-scope red → DONE_WITH_CONCERNS<br/>Out-of-scope red → accept DONE"]
         C1[Process agent reports, update docs/progress.md]
         C2{All DONE?}
         C0 --> C1 --> C2
@@ -208,7 +206,7 @@ flowchart TD
 
 ## Adversarial Debate Loop
 
-This loop runs only in the Full profile (and in `/ask-prd`, `/ask-planner`); Micro and Standard use zero debate cycles. The PRD and execution plan use this gate before downstream work. On the consensus path, the artifact then enters ordinary document review. After an unresolved third recheck, the combined arbitration/full-review dispatch replaces that ordinary review; it is not followed by a duplicate review. The creator remains the only writer. The read-only challenger reports stable `CH-*` items with severity, affected requirement or slice, counter-scenario, evidence, impact, and required resolution. The creator records one disposition for every item: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`.
+This loop runs only in the Full profile (and in `/ask-prd`, `/ask-planner`); Micro and Standard use zero debate cycles. Debate depth is proportional to artifact complexity: **Light** (<5 AC-IDs, no external integrations) skips debate entirely; **Standard** (5–15 AC-IDs) allows 1 cycle; **Deep** (15+ AC-IDs with integrations/irreversibility) uses the full 3-cycle budget. The PRD and execution plan use this gate before downstream work. On the consensus path, the artifact then enters ordinary document review. After an unresolved third recheck, the combined arbitration/full-review dispatch replaces that ordinary review; it is not followed by a duplicate review. The creator remains the only writer. The read-only challenger reports stable `CH-*` items with severity, affected requirement or slice, counter-scenario, evidence, impact, and required resolution. The creator records one disposition for every item: `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision`.
 This workflow applies adversarial planning as risk-oriented challenge, not literal competition: trade-off analysis replaces zero-sum scoring; a qualitative maximin check tests the worst plausible outcome; contingency branches are allowed only for high-impact uncertainty and must define a trigger, fallback, verification, and return point. Agents never hide intent. Assumptions, evidence, and residual risks make limited information explicit; likelihood, impact, and confidence stay categorical or `unknown`, never invented probabilities.
 
 ```mermaid
@@ -534,3 +532,7 @@ stateDiagram-v2
     NextPhase --> [*]
     EscalateToUser --> [*]
 ```
+
+## Session Continuity
+
+The `/handoff` skill generates `docs/handoff.md` — a compact session-continuity snapshot capturing the resume point (phase, slice, debate state), artifact states, environment, pending user decisions, and verbal decisions not yet in docs. The `/resume` skill reads the handoff document (or reconstructs state from `docs/progress.md`), validates consistency against the ledger and git history, and continues from the exact next action. The handoff is a convenience snapshot; `docs/progress.md` remains the authority.

@@ -67,10 +67,16 @@ After the user confirms the plan, create `docs/progress.md` (Standard and Full p
 - **Task table**: slice/subtask, assigned agent, status, one-line Evidence summary
 - **Decisions log**: key decisions and why
 - **Open questions**: OQ-IDs from the PRD/plan with trigger ("before Slice N"), status (open / answered / waived), and the user's answer
+- **Session state** (updated by the coordinator at the end of each dispatch cycle, and by the `/handoff` skill):
+  - Current phase and step
+  - Current slice number (0 = pre-implementation, N = slice N, done = all slices complete)
+  - Debate state per artifact (cycle number, last verdict, unresolved CH-* IDs) — only while debate is active
+  - Re-dispatch attempt counts per scope+role (e.g., "slice-2/frontend-dev: 2/3")
+  - Next pending action (one line: what the coordinator should do next)
 
 Update it after processing every agent report — copy the report's Status and a one-line Evidence summary into the table, except that processing an `adversarial-reviewer` report persists only artifact/version, cycle, verdict, and unresolved IDs; never persist its ledger, dispositions, or challenger evidence. **At the start of every phase (and every slice), re-read `docs/prd.md` and `docs/progress.md` before dispatching.** This file — not your memory — is the source of truth for what is done. `docs/progress.md` is the one file you edit yourself; everything else is written by agents.
 
-**Idempotency guard**: before every dispatch, check the ledger. Never re-dispatch an agent for an artifact whose ledger entry is completed or locked unless the ledger records an explicit invalidation reason (what changed and why the artifact is stale). After an interruption, resume from ledger state — do not re-run finished work.
+**Idempotency guard**: before every dispatch, check the ledger. Never re-dispatch an agent for an artifact whose ledger entry is completed or locked unless the ledger records an explicit invalidation reason (what changed and why the artifact is stale). After an interruption, resume from ledger state — do not re-run finished work. If `docs/handoff.md` exists, read it first for the resume point and environment context, then validate against `docs/progress.md`. The handoff document is a convenience snapshot; `docs/progress.md` is the authority.
 
 ## Review and Debate Limits
 
@@ -81,6 +87,11 @@ Update it after processing every agent report — copy the report's Status and a
 ## PRD and Plan Debate Gate (Full Profile)
 
 Apply this gate to every product-analyst PRD and planner execution plan **in the Full profile**. Micro dispatches no document agents; Standard's thin delta brief goes straight to ordinary doc-review with zero debate cycles:
+
+**Debate depth selection** (before dispatching the initial challenge, assess the artifact's complexity):
+- **Light** (fewer than 5 AC-IDs, no external integrations, no irreversible decisions, no invented requirements): skip adversarial debate entirely — go straight to ordinary doc-review. Record "Debate: skipped — light artifact".
+- **Standard** (5–15 AC-IDs OR external integrations OR invented requirements): run the initial challenge only. If CONSENSUS, proceed to doc-review. If REVISE, allow 1 debate cycle (not 3). Record "Debate: standard depth".
+- **Deep** (15+ AC-IDs AND (external integrations OR irreversible decisions OR high ambiguity)): run the full 3-cycle debate budget. Record "Debate: deep".
 
 1. **Creator draft**: dispatch the creator for a versioned normative artifact and structured report.
 2. **Initial challenge — cycle 0**: dispatch internal read-only `adversarial-reviewer` with `Pass: initial`. Use stable `CH-PRD-*` IDs for PRDs and `CH-PLAN-*` IDs for plans. The initial pass may return only `CONSENSUS` or `REVISE`.
@@ -126,7 +137,7 @@ Initial request: $ARGUMENTS
 
 **Escalation**: if mid-task evidence contradicts the profile (scope outgrows the size threshold, real ambiguity emerges, an irreversible decision appears), escalate one level, record the reason, and tell the user. Never escalate silently. De-escalation is allowed on the same terms.
 
-**Cost circuit-breaker**: count every agent dispatch (run counter in the ledger; in Micro, count in-conversation). If a Micro or Standard task exceeds **8 agent runs**, STOP and ask the user: report the run count, what consumed the runs, and whether to continue, escalate to Full, or hand the task back.
+**Cost circuit-breaker**: count every agent dispatch (run counter in the ledger; in Micro, count in-conversation). Thresholds: **Micro/Standard: 8 runs; Full: 40 runs** (or 3× planned-slices × 5, whichever is lower). When the threshold is reached, STOP and ask the user: report the run count, what consumed the runs, the current phase/slice, and whether to continue with a raised ceiling, narrow scope, or hand back. **Per-slice sub-breaker (all profiles)**: if a single slice exceeds **6 implementation dispatches** (excluding the initial Mode A tester and code-reviewer), stop the slice and ask the user whether to continue, skip, or re-plan.
 
 **Skippable phases**: any phase or agent whose need is absent is skipped with a recorded reason (`Skipped: <phase/agent> — <reason>` in the ledger). Select agents from the Phase 1 menu by detected need, not as a fixed roster: no UI → no ui-ux-designer; existing harness + small change → single tester pass; analysis-only → no code agents.
 
@@ -168,16 +179,21 @@ Initial request: see Phase 0.
 
 **Greenfield pipeline** (new project, slice-driven — always Full profile):
 1. product-analyst → PRD with AC-IDs (`docs/prd.md`), adversarial debate, then ordinary doc-review
-2. architect → system design (`docs/architecture.md`), reviewed by doc-reviewer
-3. ui-ux-designer → interface spec if UI is involved (`docs/design.md`), grounded in the input inventory (existing inputs are normative), reviewed by doc-reviewer
-4. planner → vertical slices, tracer bullet first (`docs/plan.md`), including an integration-enablement slice when the PRD names real external integrations, adversarial debate, then ordinary doc-review
+2. **Parallel where independent**: After the PRD passes its gate, dispatch in parallel:
+   a. architect → system design (`docs/architecture.md`), reviewed by doc-reviewer
+   b. ui-ux-designer → interface spec if UI is involved (`docs/design.md`), grounded in the input inventory (existing inputs are normative), reviewed by doc-reviewer
+   Both read the same PRD and write to disjoint files. Review each on completion.
+3. planner → vertical slices, tracer bullet first (`docs/plan.md`), MUST wait for architecture (and design if UI is involved), including an integration-enablement slice when the PRD names real external integrations, adversarial debate, then ordinary doc-review
 5. implementor → shared scaffolding the slices depend on (project skeleton, config, shared types — never CI pipelines, deployment configs, or release tooling; local dev-environment tooling such as docker-compose for a dev database is allowed), reviewed by code-reviewer
 6. Then **per slice**, in order (this per-slice protocol applies to ANY plan with slices — greenfield or feature work on an existing project):
    a0. **OQ gate**: collect every question tagged "before Slice N" from `docs/prd.md` and `docs/plan.md`, plus unconfirmed invented requirements the slice depends on. Ask the user in one batch. Record each answer in `docs/progress.md`. An explicit "proceed with MVP interpretation" waiver is valid only for reversible internal defaults; externally grounded facts and irreversible decisions require an answer (blocking-questions gate, Phase 0 step 5). An unanswered triggered question blocks the slice
    a. tester (Mode A) → failing acceptance tests for the slice's AC-IDs (expected-red)
+   a1. **Mode A scope check**: If Mode A tests reference functionality belonging to a FUTURE slice (not the current slice's AC-IDs), the coordinator flags these tests as "expected-red (future slice)" in the dispatch to implementation agents: "The following tests are expected to remain red because they depend on future slices: [list]. Your Evidence should show these as 'expected-red (future slice)' — they do not block your DONE." Mode B verifies current-slice tests are green and future-slice tests are still red for the right reason.
    b. backend-dev / frontend-dev in parallel (disjoint file scopes; the test directory belongs to the tester)
    c. tester (Mode B) → run the full suite green, extend coverage, update `docs/test-plan.md` (Standard profile: may merge with Mode A into a single pass when an existing harness covers the area)
+   **Tester collapse rule**: When a slice has 3 or fewer AC-IDs AND an existing test harness covers the area, collapse Mode A and Mode B into a single tester dispatch: "Write acceptance tests for [AC-IDs], run them to confirm they fail for the right reason (expected-red), then after implementation verify the full suite is green and extend coverage." This saves 1 dispatch per eligible slice. Record "Tester: collapsed A+B" in the ledger.
    d. code-reviewer → review the slice's changes
+   d1. **Review deferral for trivial slices**: If the slice changed fewer than 3 files and no security-sensitive code was touched (auth, payments, data access), the per-slice code review may be deferred to the Phase 4 cross-cutting review. Record "Slice N review: deferred to Phase 4".
    e. **Demo checkpoint**: give the user run instructions (from agents' Evidence) and the slice's user-visible result; collect feedback before the next slice. For headless slices the Evidence output (test run, API calls) is the demo. Requirement- or design-changing feedback goes through the owning doc agent first (docs-code sync)
    **DoD gate: do not start slice N+1 until slice N's acceptance tests pass end-to-end, code review is DONE, and the demo checkpoint happened. Deviation only by explicit user decision recorded in `docs/progress.md` with a debt-closure slice; an open deviation past its deadline blocks all further slices.**
 7. **CI/CD (optional, always last)**: only after every slice has passed the DoD gate and the local-proof gate holds — every AC-ID verified with fresh local evidence, the full test suite green, the final demo checkpoint accepted by the user — dispatch implementor for CI/CD work. The pipeline encodes only commands already proven green locally (taken from agents' Evidence), and is reviewed by code-reviewer
@@ -210,6 +226,7 @@ Initial request: see Phase 0.
      - Mode A (before implementation): "Work in Mode A: derive failing acceptance tests from docs/prd.md criteria [list the AC-IDs] for this slice. Confirm each fails for the right reason."
      - Mode B (after implementation): "Work in Mode B: run the full suite including the Mode A acceptance tests, extend coverage, update docs/test-plan.md."
      - Include the list of all files created/modified (from agent reports), the detected test framework, and stack-specific phrases
+   - **Attempt context** (when re-dispatching for the same scope): "This is attempt N of maximum 3 for this scope. Previous attempts reported: [status, one-line summary of what failed]. If this is attempt 3, report BLOCKED with what you tried rather than repeating the same approach."
    - **Report reminder**: Every dev-team agent's own prompt already mandates the structured report protocol. Add this single line to every dispatch:
      - "Reminder: Status DONE requires the Evidence field with fresh command output (or citations for read-only work); failing checks forbid DONE."
 2. **Parallel dispatch**: If subtasks are independent (no shared files, no data dependencies), launch ALL agents in a single message using multiple Agent tool calls
@@ -217,12 +234,23 @@ Initial request: see Phase 0.
 4. **Shared file isolation**: Before parallel dispatch, identify shared files (types, utils, config, schemas). Either dispatch implementor FIRST to create shared files then dispatch specialists in parallel, OR assign shared file ownership to ONE agent explicitly in scope boundaries. Never allow two parallel agents to have overlapping file scopes. The test directory belongs to the tester — implementation agents must not touch test files.
 5. **CI/CD local-proof gate**: before dispatching any CI/CD subtask, check `docs/progress.md`: every in-scope AC-ID has passing local evidence, a fresh green full-suite run is recorded, and the final demo checkpoint is accepted. If any proof is missing, do NOT dispatch — tell the user exactly which evidence is missing and what work produces it. When dispatching, include the proven commands from Evidence: the pipeline encodes only checks already green locally.
 
+### Scope-Proportional Evidence
+
+When dispatching implementation agents for a slice, include in the prompt:
+
+"**Evidence scope**: Your scope is [slice N / scaffolding]. Verify ONLY commands and criteria relevant to YOUR scope. A failure OUTSIDE your scope (code not yet written by a future slice, tests for other slices' criteria) does not block DONE — report it as 'out-of-scope: [description]' in Concerns. Failures WITHIN your scope (your files fail to compile, your criteria's tests fail) block DONE as usual."
+
+The coordinator classifies Evidence failures when processing reports:
+- **In-scope failure**: the failing test or build error traces to a file or AC-ID within the agent's dispatched scope → treat as genuine DONE_WITH_CONCERNS, re-dispatch
+- **Out-of-scope failure**: the failure traces to code/tests outside the agent's scope boundaries → accept the report as DONE, record the out-of-scope failure in the ledger's Concerns column, and proceed
+- **Ambiguous**: ask the agent a specific clarifying question via re-dispatch, not a full redo
+
 ### Inter-agent context passing
 
 When dispatching an agent that depends on a previous agent's output (limits: see Review and Debate Limits):
 - **After product-analyst**: In the Full profile, run the PRD and Plan Debate Gate for `docs/prd.md`; in Standard, dispatch doc-reviewer directly on the thin delta brief (ordinary review budget). If the consented PRD still contains "invented — requires user confirmation" requirements, ask the user before any downstream dispatch and apply answers via the gate's user-decision path (step 6). Only after the gate succeeds may architect, ui-ux-designer, planner, and tester consume it.
-- **After architect**: Dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." If DONE_WITH_CONCERNS → re-dispatch architect with all findings to fix the document. Then pass "Read docs/architecture.md" to planner and implementation agents.
-- **After ui-ux-designer**: Dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." If DONE_WITH_CONCERNS → re-dispatch ui-ux-designer with all findings to fix the document. Then pass "Read docs/design.md" to frontend-dev and tester.
+- **After architect**: If the architecture is routine (existing project, well-known patterns, fewer than 5 components), accept without separate doc-reviewer dispatch — downstream agents will surface issues; record "Architecture review: skipped — routine". If novel (greenfield, unfamiliar patterns, 5+ components), dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." Maximum 1 rework (not 2). Then pass "Read docs/architecture.md" to planner and implementation agents.
+- **After ui-ux-designer**: If the design is routine (existing project, minor UI addition, fewer than 3 screens), accept without separate doc-reviewer dispatch; record "Design review: skipped — routine". If substantial (greenfield, 3+ screens, new design system), dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." Maximum 1 rework (not 2). Then pass "Read docs/design.md" to frontend-dev and tester.
 - **After planner**: In the Full profile, run the PRD and Plan Debate Gate for `docs/plan.md`; in Standard, dispatch doc-reviewer directly. Its full review covers vertical slicing, AC-ID mapping, architecture consistency, scope boundaries, dependencies, and assignments. Only then use it for dispatch order.
 - **After implementor**: Dispatch code-reviewer: "Review the code changes for correctness, consistency with project patterns, and potential bugs. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch implementor with all findings to fix the code.
 - **After backend-dev**: Dispatch code-reviewer: "Review the code changes for correctness, type safety, error handling, security, and version-appropriate patterns. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch backend-dev with all findings to fix the code. Then pass API endpoints and response formats to frontend-dev (if dispatched sequentially).
@@ -238,7 +266,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
 
 **Actions**:
 1. Read each agent's structured report
-2. **Evidence gate**: A DONE report **without an Evidence field, or with failing output in Evidence, is treated as DONE_WITH_CONCERNS** — re-dispatch demanding verification. Never trust a bare claim.
+2. **Evidence gate**: A DONE report **without an Evidence field** is treated as DONE_WITH_CONCERNS — re-dispatch demanding verification. A DONE report **with failing output** is classified by scope: in-scope failures → DONE_WITH_CONCERNS and re-dispatch; out-of-scope failures (traced to files or AC-IDs outside the agent's dispatched scope) → accept as DONE with failures recorded in the ledger (see Scope-Proportional Evidence). Never trust a bare claim.
 3. For each report, take action based on status:
 
    | Status | Action |
@@ -249,6 +277,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
    | NEEDS_CONTEXT | Read the questions. If you can answer from project structure — re-dispatch with answers. If not — ask the user |
 
 4. Update `docs/progress.md` after processing each report
+4b. **Re-dispatch limit per scope**: Track re-dispatches per agent per scope (slice + role). After 3 re-dispatches for the same scope+role, do NOT re-dispatch — change strategy: try a different agent, split the scope, or escalate to the user. This limit is independent of the review rework budget.
 5. If any agent was re-dispatched, return to this phase after it completes. Respect the Review and Debate Limits section — after the cap, escalate to the user with full context of what was tried and what failed. Check the run counter after each cycle: a Micro/Standard task past 8 agent runs triggers the Phase 0 circuit-breaker
 6. Once all subtasks are DONE or DONE_WITH_CONCERNS, proceed to Phase 4
 
@@ -295,3 +324,10 @@ When dispatching an agent that depends on a previous agent's output (limits: see
 2. Present in a clean, organized format
 
 ---
+
+## Session Interruption Protocol
+
+When the user ends a session mid-task ("stop for now", "continue later", session ending with in-progress work):
+
+1. Update `docs/progress.md` with the current session state (phase, slice, debate state, attempt counts, next pending action)
+2. Suggest: "Your progress is saved in `docs/progress.md`. Run `/handoff` to generate a full handoff document for the next session, or run `/resume` in a new session to continue from where you left off."
