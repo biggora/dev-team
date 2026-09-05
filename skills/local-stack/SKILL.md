@@ -8,6 +8,39 @@ description: >
   "seed data", "reset the database", "integration tests against containers" — or
   when writing, reviewing, or debugging a docker-compose.yml, a development
   Dockerfile, or .env.example for local verification.
+metadata:
+  priority: 7
+  pathPatterns:
+    - "**/docker-compose*.y*ml"
+    - "**/Dockerfile*"
+    - "**/.env.example"
+    - "**/.env.test"
+    - "**/.dockerignore"
+    - "**/docker-entrypoint-initdb.d/*"
+  bashPatterns:
+    - "docker compose *"
+    - "docker-compose *"
+  promptSignals:
+    phrases:
+      - "local stack"
+      - "docker-compose"
+      - "spin up postgres"
+      - "test against a real database"
+      - "mailhog"
+      - "mailpit"
+      - "minio"
+      - "localstack"
+      - "stripe-mock"
+      - "wiremock"
+      - "service emulator"
+      - "healthcheck"
+      - "seed data"
+      - "reset the database"
+      - "integration tests against containers"
+    allOf:
+      - ["docker", "compose"]
+      - ["local", "stack"]
+    minScore: 6
 ---
 
 # Local Stack

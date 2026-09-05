@@ -61,6 +61,18 @@ extract_min_score() {
   sed -n "/^---/,/^---/p" "$file" | grep 'minScore:' | awk '{print $2}'
 }
 
+discover_metadata_skills() {
+  # Skills whose SKILL.md frontmatter declares eval-matchable signals
+  local skill_file
+  for skill_file in "$PLUGIN_DIR"/skills/*/SKILL.md; do
+    [[ -f "$skill_file" ]] || continue
+    if sed -n "/^---/,/^---/p" "$skill_file" \
+         | grep -qE '^  (pathPatterns|bashPatterns|importPatterns|promptSignals):'; then
+      basename "$(dirname "$skill_file")"
+    fi
+  done | sort
+}
+
 # =============================================================================
 # SKILL MATCHING ENGINE
 # =============================================================================
@@ -238,6 +250,9 @@ run_skill_injection_tests() {
   local total=0 passed=0 failed=0
   local results="[]"
 
+  local skills=()
+  readarray -t skills < <(discover_metadata_skills)
+
   local count
   count=$(jq '.evals | length' "$cases_file")
 
@@ -251,15 +266,16 @@ run_skill_injection_tests() {
     expected_injected=$(jq -r ".evals[$i].expected.injected[]" "$cases_file" 2>/dev/null || true)
     expected_not_injected=$(jq -r ".evals[$i].expected.not_injected[]" "$cases_file" 2>/dev/null || true)
 
-    # Score each skill
-    local nodejs_score python_score
-    nodejs_score=$(match_skill "$PLUGIN_DIR/skills/nodejs-stack" "$signal_type" "$signal_value")
-    python_score=$(match_skill "$PLUGIN_DIR/skills/python-stack" "$signal_type" "$signal_value")
-
-    # Determine which would be injected (score > 0)
+    # Score every discovered skill (parallel to $skills by index)
+    local scores=()
     local injected=()
-    [[ "$nodejs_score" -gt 0 ]] && injected+=("nodejs-stack")
-    [[ "$python_score" -gt 0 ]] && injected+=("python-stack")
+    local skill sc idx=0
+    for skill in "${skills[@]}"; do
+      sc=$(match_skill "$PLUGIN_DIR/skills/$skill" "$signal_type" "$signal_value")
+      scores[$idx]="$sc"
+      [[ "$sc" -gt 0 ]] && injected+=("$skill")
+      idx=$((idx + 1))
+    done
 
     # Check expectations
     local case_passed=true
@@ -291,13 +307,20 @@ run_skill_injection_tests() {
       fi
     done
 
+    local score_str="" idx=0
+    for skill in "${skills[@]}"; do
+      score_str="$score_str ${skill}=${scores[$idx]}"
+      idx=$((idx + 1))
+    done
+    score_str="${score_str# }"
+
     total=$((total + 1))
     if $case_passed; then
       passed=$((passed + 1))
-      printf "  ${GREEN}PASS${NC} %s (%s=%s) nodejs=%d python=%d\n" "$id" "$signal_type" "$signal_value" "$nodejs_score" "$python_score" >&2
+      printf "  ${GREEN}PASS${NC} %s (%s=%s) %s\n" "$id" "$signal_type" "$signal_value" "$score_str" >&2
     else
       failed=$((failed + 1))
-      printf "  ${RED}FAIL${NC} %s (%s=%s) nodejs=%d python=%d %s\n" "$id" "$signal_type" "$signal_value" "$nodejs_score" "$python_score" "$details" >&2
+      printf "  ${RED}FAIL${NC} %s (%s=%s) %s %s\n" "$id" "$signal_type" "$signal_value" "$score_str" "$details" >&2
     fi
 
     local inj_json
@@ -306,13 +329,21 @@ run_skill_injection_tests() {
     else
       inj_json="[]"
     fi
+
+    local scores_json idx=0
+    scores_json=$(
+      for skill in "${skills[@]}"; do
+        printf '%s\t%s\n' "$skill" "${scores[$idx]}"
+        idx=$((idx + 1))
+      done | jq -R -s 'split("\n") | map(select(length > 0) | split("\t")) | map({(.[0]): (.[1] | tonumber)}) | add // {}'
+    )
+
     results=$(echo "$results" | jq \
       --arg id "$id" \
       --argjson passed "$($case_passed && echo true || echo false)" \
-      --argjson ns "$nodejs_score" \
-      --argjson ps "$python_score" \
+      --argjson scores "$scores_json" \
       --argjson inj "$inj_json" \
-      '. + [{"id": $id, "passed": $passed, "nodejs_score": $ns, "python_score": $ps, "injected": $inj}]')
+      '. + [{"id": $id, "passed": $passed, "scores": $scores, "injected": $inj}]')
   done
 
   local accuracy
