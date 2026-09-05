@@ -27,6 +27,7 @@ $ARGUMENTS
    - If existing project: instruct to "Read the codebase to understand current state and derive requirements"
    - Instruct to "Formalize the requirements into a PRD. Save to docs/prd.md"
    - Instruct: "Inventory user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) and cite them as Sources. Mark requirements without a source 'invented — requires user confirmation' and register OQ-IDs with Confirm-before triggers."
+   - Instruct to "Define actors as stable ROLE-IDs (human or system). With two or more human roles, write the use cases to docs/use-cases.md grouped by role with a role × use-case permission matrix; every denied cell cites a denial AC-ID in the PRD, grouped by observable behavior rather than one per cell. With one human role, keep the use cases in the PRD and create no separate file."
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 

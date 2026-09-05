@@ -13,6 +13,7 @@ Generate a compact session-continuity document that enables a new session to res
 1. **Read the progress ledger**: Read `docs/progress.md` for current task state (goal, AC-IDs, task table, decisions, open questions, session state)
 2. **Read active artifacts**: Check which docs/ files exist and their state:
    - `docs/prd.md` — exists? debate state?
+   - `docs/use-cases.md` — exists? roles covered?
    - `docs/architecture.md` — exists? reviewed?
    - `docs/design.md` — exists? reviewed?
    - `docs/plan.md` — exists? debate state?
@@ -55,6 +56,7 @@ Next action: [exactly what the coordinator should do next]
 | Artifact | Path | State | Gate |
 |----------|------|-------|------|
 | PRD | docs/prd.md | [draft/debated/reviewed/final/absent] | [debate cycle N / consensus / reviewed / N/A] |
+| Use cases | docs/use-cases.md | [present / inline in PRD / absent] | reviewed with the PRD |
 | Architecture | docs/architecture.md | ... | ... |
 | Design | docs/design.md | ... | ... |
 | Plan | docs/plan.md | ... | ... |

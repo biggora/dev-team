@@ -62,9 +62,9 @@ Challenge whether:
 - negative scenarios, stakeholder conflicts, dependencies, and NFR gaps are resolved or recorded as residual risks;
 - every FR has an executable, stable AC-ID and assigned AC-IDs were neither renumbered nor reused;
 - success metrics and constraints are measurable without invented requirements;
-- readiness is defined by what the user can do against real integrations (Definition of Ready plus real-integration ACs), not by mock-mode criteria alone.
+- readiness is defined by what the user can do against real integrations (Definition of Ready plus real-integration ACs), not by mock-mode criteria alone;
 - every actor is a stable ROLE-ID, every use case names exactly one actor, and its main flow, alternative flows, and error paths describe observable behavior rather than implementation;
-- the role × use-case permission matrix is complete, every `denied` cell resolves to an executable denial AC-ID, and denial ACs are grouped by observable behavior — a matrix that emits one AC per cell is criteria inflation and must be challenged as such;
+- the role × use-case permission matrix is complete, every `denied` cell resolves to an executable denial AC-ID, and denial ACs are grouped by observable behavior — a matrix that emits one AC per cell is criteria inflation and must be challenged as such.
 
 Use IDs `CH-PRD-001`, `CH-PRD-002`, and so on.
 

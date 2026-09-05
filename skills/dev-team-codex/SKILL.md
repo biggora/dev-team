@@ -85,7 +85,7 @@ For `dev-team` requests:
 
 ### PRD/plan lifecycle (Full profile; always used by /ask-prd and /ask-planner)
 
-1. Spawn the creator for a versioned artifact.
+1. Spawn the creator for a versioned artifact. When the PRD defines two or more human roles, this same gate also covers `docs/use-cases.md` — one debate and one doc-review for both documents together, never a separate artifact gate.
 2. Spawn internal read-only `adversarial-reviewer` with `Pass: initial`. Use `CH-PRD-*` IDs for PRDs and `CH-PLAN-*` IDs for plans. The initial pass may return only `CONSENSUS` or `REVISE` and consumes no cycle.
 3. On `REVISE`, re-spawn the creator with every unresolved ID and require `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision` per ID, then re-spawn the challenger. Each revision + recheck consumes one of cycles 1–3; IDs remain stable, rechecks may assign new IDs only for defects introduced by the revision, and cycle 4 is forbidden.
 4. Challenger `CONSENSUS` requires verified fixes, evidence-backed rejections, no unresolved IDs or `needs_decision`, and mitigation, verification, or explicit acceptance for every residual risk. Then run full ordinary doc-review. On concerns, re-spawn creator and reviewer, maximum 2 ordinary reworks.

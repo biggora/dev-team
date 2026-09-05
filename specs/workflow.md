@@ -31,7 +31,7 @@ Before any analysis, the coordinator triages the task: a documentation adequacy 
 
 | Profile | When | Pipeline |
 |---|---|---|
-| **Micro** | ≤~3 files, spec clear, pattern exists | one implementation agent + 1 code review. No PRD, architecture, plan, debate, or `docs/progress.md`. |
+| **Micro** | ≤~3 files, spec clear, pattern exists | one implementation agent + 1 code review. No PRD, use cases, architecture, plan, debate, or `docs/progress.md`. |
 | **Standard** | modular feature, mostly known territory | thin delta brief (ordinary doc-review only, no debate) → slices → per slice: tester + dev + 1 code review. |
 | **Full** | large / greenfield / ambiguous / high-risk | the complete workflow below, including the adversarial debate gate. |
 
@@ -79,7 +79,7 @@ flowchart TD
         subgraph DOC_PHASE["Documentation Phase"]
             direction TB
 
-            PA[product-analyst] -->|docs/prd.md with AC-IDs| DEBATE_DEPTH{"Debate depth?<br/>Light / Standard / Deep"}
+            PA[product-analyst] -->|docs/prd.md with AC-IDs<br/>+ docs/use-cases.md if 2+ roles| DEBATE_DEPTH{"Debate depth?<br/>Light / Standard / Deep"}
             DEBATE_DEPTH -- Light --> DR1
             DEBATE_DEPTH -- "Standard / Deep" --> ADV1["PRD challenge<br/>depth-proportional cycles"]
             ADV1 -->|Consensus or arbitration| DR1
@@ -292,6 +292,7 @@ flowchart LR
 |---|---|---|---|
 | PRD, consensus path | product-analyst | doc-reviewer ordinary review | 2 |
 | PRD, unresolved after third recheck | product-analyst | doc-reviewer combined arbitration/full review; replaces ordinary review | 2 |
+| Use-case catalogue (part of the PRD gate) | product-analyst | doc-reviewer, in the PRD dispatch | 2 |
 | Architecture | architect | doc-reviewer | 2 |
 | Design spec | ui-ux-designer | doc-reviewer | 2 |
 | Execution plan, consensus path | planner | doc-reviewer ordinary review | 2 |
@@ -309,11 +310,13 @@ The budgets are independent: PRD/plan debate allows at most **3 debate cycles**.
 
 | Participant | Writes artifact | Responsibility |
 |---|---:|---|
-| product-analyst | Yes, PRD only | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; maintains the OQ register with `Confirm before:` triggers and the Definition of Ready; marks sourceless requirements `invented — requires user confirmation`; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. |
+| product-analyst | Yes, PRD and its use-case catalogue | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; maintains the OQ register with `Confirm before:` triggers and the Definition of Ready; marks sourceless requirements `invented — requires user confirmation`; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. Defines actors as stable ROLE-IDs and, with two or more `human` roles, writes `docs/use-cases.md` — use cases grouped by role plus a permission matrix whose `denied` cells cite denial AC-IDs grouped by observable behavior. |
 | planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; carries OQ triggers into the slices they gate, states the DoD gate, and plans an integration-enablement slice when the PRD names real integrations; schedules the infrastructure-enablement task before slice 1 and before shared scaffolding when the project has external runtime dependencies; resolves plan challenges. |
 | adversarial-reviewer | No | Challenges assumptions and plausible failure scenarios in explicit `prd` or `plan` mode; returns the `Debate verdict` field with `CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`. |
 | doc-reviewer | No | Checks completeness, consistency, and actionability; arbitrates unresolved `CH-*` items only after cycle 3. |
 | coordinator or ask-* mini-orchestrator | No | Carries full debate context, enforces budgets, updates round state, and blocks downstream dispatch until the document passes both gates; collects the input inventory and enforces the OQ, DoD, and demo-checkpoint gates. |
+
+The use-case catalogue is part of the PRD gate — never a separate artifact. It is challenged and reviewed in the same dispatches as `docs/prd.md`, it adds no review round of its own, and the denial ACs a permission matrix generates count as a single AC when selecting debate depth.
 
 `/ask-prd` and `/ask-planner` are exceptions to the usual direct-dispatch shortcut shape: each runs creator → adversarial debate, then either consensus plus ordinary doc-review or combined arbitration/full review after an unresolved third recheck. There is no `/ask-adversarial-reviewer` shortcut.
 
@@ -345,7 +348,7 @@ sequenceDiagram
         Note over C,DR: Documentation Phase
         Note over C,U: Invented requirements and triggered OQs need user confirmation before dependent work
         C->>PA: Create PRD (AC-IDs)
-        PA-->>C: docs/prd.md + Evidence
+        PA-->>C: docs/prd.md (+ docs/use-cases.md) + Evidence
         C->>ADV: Initial PRD challenge (outside cycle budget)
         ADV-->>C: CONSENSUS or REVISE
         loop If REVISE: creator response + challenger recheck, maximum 3 cycles

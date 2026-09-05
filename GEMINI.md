@@ -22,6 +22,7 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - **Tester-first per slice**: tester writes failing acceptance tests (Mode A) before implementation, then verifies green and extends coverage (Mode B) after
 - **Progress ledger**: the coordinator maintains `docs/progress.md` (goal, AC-IDs, task table with evidence, decisions, open questions with triggers) and re-reads it at every phase start — the file, not conversation memory, is the source of truth
 - **Input inventory**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) are collected in Phase 1 and are normative; requirements without a source are marked `invented — requires user confirmation` and need the user's answer before dependent work. Where no inputs exist, the decisions they would cover come from the user, not from agents' invention
+- **Use cases per role**: actors are stable `ROLE-###` IDs in the PRD. With two or more `human` roles the product-analyst also writes `docs/use-cases.md` — use cases grouped by role plus a role × use-case permission matrix whose every `denied` cell cites a denial AC-ID; with one role they stay in the PRD and no file is created, and Micro never produces them. The catalogue is part of the PRD gate, not a separate artifact: one debate, one doc-review, no extra dispatch
 - **OQ gate**: open questions carry `Confirm before:` triggers; before slice N the coordinator asks the user every question tagged for it (one batch) or records an explicit MVP waiver — an unanswered triggered question blocks the slice
 - **DoD gate + demo checkpoint**: slice N+1 starts only after slice N's acceptance tests pass, code review is DONE, and the user has seen a demo of the increment; deviations are explicit user decisions with a debt-closure slice
 - **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice
@@ -108,7 +109,7 @@ Every artifact produced in Phase 2 goes through an inline gate before the next a
 
 | Artifact | Creator | Reviewer | On concerns |
 |----------|---------|----------|-------------|
-| PRD | product-analyst | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks |
+| PRD (+ use cases) | product-analyst | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks; the use-case catalogue rides the same dispatches |
 | Architecture | architect | doc-reviewer | Re-dispatch architect |
 | Design spec | ui-ux-designer | doc-reviewer | Re-dispatch ui-ux-designer |
 | Execution plan | planner | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks |
@@ -131,6 +132,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 - **Never dispatch CI/CD to implementor** — CI pipelines, deployment configs, and release tooling go to devops-engineer, and only after the local-proof gate passes
 - Include **context** about what other agents have done
 - Pass the **input inventory** (paths of user-provided briefs, prototypes, brand assets — or "none") to product-analyst and ui-ux-designer; document agents read the inputs, the coordinator does not
+- For products with more than one kind of user: instruct product-analyst to define `ROLE-###` actors and a role × use-case permission matrix, and paste the matrix rows for the current slice into backend-dev and frontend-dev prompts — a `denied` cell is behavior to implement, and agents do not read documents you did not name
 - For PRD/plan debate, include the original request, artifact path and version, cycle number, unresolved `CH-*`, latest dispositions/evidence, and related documents; store only cycle, verdict, and unresolved IDs in `docs/progress.md`
 - Add the **report reminder line** to every dispatch: "Reminder: Status DONE requires the Evidence field with fresh command output; failing checks forbid DONE" (the full protocol lives in each agent's own prompt)
 - Independent tasks → **multiple Agent tool calls in one message** (parallel dispatch); parallel agents must never share writable files

@@ -13,7 +13,7 @@ Resume a dev-team workflow from a prior session's handoff state.
 1. **Locate handoff state** (check in order):
    a. `docs/handoff.md` — dedicated handoff document (most context)
    b. `docs/progress.md` — progress ledger (always authoritative)
-   c. `docs/prd.md`, `docs/plan.md` — artifacts indicating prior work
+   c. `docs/prd.md`, `docs/use-cases.md`, `docs/plan.md` — artifacts indicating prior work
    If none exist, report that no prior session state was found and offer to start fresh with `/dev-team`.
 
 2. **Reconstruct coordinator state**:

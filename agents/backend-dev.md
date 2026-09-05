@@ -94,6 +94,7 @@ Apply these principles in all code:
 - **Run against the real local stack.** The project's dependencies run in containers (`docker compose up -d --wait`); point your code and your manual verification at them through the documented env vars. Never add an in-memory or mocked substitute for a service that exists in `docker-compose.yml`, and never edit `docker-compose.yml`, `Dockerfile*`, or `.env.example` — they belong to `devops-engineer`; report needed changes in Concerns
 - Do not modify frontend code — only backend files within your scope
 - **Docs-code sync**: if the requested change contradicts docs/prd.md, docs/design.md, or docs/plan.md, do not silently implement the difference — name the conflict in Concerns so the owning document is updated in the same slice
+- `docs/use-cases.md` — when it exists, read the permission-matrix rows for the use cases in your scope: every `denied` cell is behavior you must implement (403, redirect, or hidden control), not an omission
 - **Never create, modify, weaken, or skip test files.** Tests are owned by the tester agent. If a test looks wrong, report it in Concerns with evidence — making a red test green by editing the test is forbidden
 - If your dispatch lists tests as "expected-red (future slice)", those failures do not block your DONE — report them in Evidence labeled "expected-red (future slice)" alongside your in-scope passing tests
 

@@ -9,116 +9,548 @@
       "target": "skills/dev-team/SKILL.md",
       "expected": {
         "static": {
-          "required_tokens": ["Initial challenge — cycle 0", "Debate cycles 1–3", "Cycle-3 arbitration/full review", "needs no additional ordinary review", "Only after the gate succeeds"],
-          "ordered_tokens": ["Creator draft", "Initial challenge — cycle 0", "Debate cycles 1–3", "Consensus", "Cycle-3 arbitration/full review", "Downstream gate"]
+          "required_tokens": [
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Cycle-3 arbitration/full review",
+            "needs no additional ordinary review",
+            "Only after the gate succeeds"
+          ],
+          "ordered_tokens": [
+            "Creator draft",
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Consensus",
+            "Cycle-3 arbitration/full review",
+            "Downstream gate"
+          ]
         }
       },
-      "tags": ["universal", "greenfield", "ordering"]
+      "tags": [
+        "universal",
+        "greenfield",
+        "ordering"
+      ]
     },
     {
       "id": "AP-002",
       "kind": "coordinator-contract",
       "target": "skills/dev-team-node/SKILL.md",
-      "expected": {"static": {"required_tokens": ["Initial challenge — cycle 0", "Debate cycles 1–3", "Cycle-3 arbitration/full review", "Only after the gate succeeds"], "ordered_tokens": ["Creator draft", "Initial challenge — cycle 0", "Debate cycles 1–3", "Consensus", "Cycle-3 arbitration/full review", "Downstream gate"]}},
-      "tags": ["node", "greenfield", "parity"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Cycle-3 arbitration/full review",
+            "Only after the gate succeeds"
+          ],
+          "ordered_tokens": [
+            "Creator draft",
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Consensus",
+            "Cycle-3 arbitration/full review",
+            "Downstream gate"
+          ]
+        }
+      },
+      "tags": [
+        "node",
+        "greenfield",
+        "parity"
+      ]
     },
     {
       "id": "AP-003",
       "kind": "coordinator-contract",
       "target": "skills/dev-team-python/SKILL.md",
-      "expected": {"static": {"required_tokens": ["Initial challenge — cycle 0", "Debate cycles 1–3", "Cycle-3 arbitration/full review", "Only after the gate succeeds"], "ordered_tokens": ["Creator draft", "Initial challenge — cycle 0", "Debate cycles 1–3", "Consensus", "Cycle-3 arbitration/full review", "Downstream gate"]}},
-      "tags": ["python", "greenfield", "parity"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Cycle-3 arbitration/full review",
+            "Only after the gate succeeds"
+          ],
+          "ordered_tokens": [
+            "Creator draft",
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Consensus",
+            "Cycle-3 arbitration/full review",
+            "Downstream gate"
+          ]
+        }
+      },
+      "tags": [
+        "python",
+        "greenfield",
+        "parity"
+      ]
     },
     {
       "id": "AP-004",
       "kind": "shortcut-contract",
       "target": "skills/ask-prd/SKILL.md",
-      "expected": {"static": {"required_tokens": ["Initial challenge", "Debate cycles 1–3", "maximum 2 ordinary reworks", "create neither `docs/progress.md` nor a challenge file"], "ordered_tokens": ["Dispatch creator", "Initial challenge", "Debate cycles 1–3", "Ordinary review or arbitration", "Present the result"]}},
-      "tags": ["ask-prd", "mini-orchestrator"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "Initial challenge",
+            "Debate cycles 1–3",
+            "maximum 2 ordinary reworks",
+            "create neither `docs/progress.md` nor a challenge file"
+          ],
+          "ordered_tokens": [
+            "Dispatch creator",
+            "Initial challenge",
+            "Debate cycles 1–3",
+            "Ordinary review or arbitration",
+            "Present the result"
+          ]
+        }
+      },
+      "tags": [
+        "ask-prd",
+        "mini-orchestrator"
+      ]
     },
     {
       "id": "AP-005",
       "kind": "shortcut-contract",
       "target": "skills/ask-planner/SKILL.md",
-      "expected": {"static": {"required_tokens": ["Initial challenge", "Debate cycles 1–3", "maximum 2 ordinary reworks", "create neither `docs/progress.md` nor a challenge file"], "ordered_tokens": ["Dispatch creator", "Initial challenge", "Debate cycles 1–3", "Ordinary review or arbitration", "Present the result"]}},
-      "tags": ["ask-planner", "mini-orchestrator"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "Initial challenge",
+            "Debate cycles 1–3",
+            "maximum 2 ordinary reworks",
+            "create neither `docs/progress.md` nor a challenge file"
+          ],
+          "ordered_tokens": [
+            "Dispatch creator",
+            "Initial challenge",
+            "Debate cycles 1–3",
+            "Ordinary review or arbitration",
+            "Present the result"
+          ]
+        }
+      },
+      "tags": [
+        "ask-planner",
+        "mini-orchestrator"
+      ]
     },
     {
       "id": "AP-006",
       "kind": "bridge-contract",
       "target": "skills/dev-team-codex/SKILL.md",
-      "expected": {"static": {"required_tokens": ["initial pass may return only `CONSENSUS` or `REVISE`", "cycles 1–3", "ARBITRATION_REQUIRED", "without restarting debate", "restarts the initial pass", "create neither `docs/progress.md` nor challenge files"], "ordered_tokens": ["Spawn the creator", "Spawn internal read-only `adversarial-reviewer`", "On `REVISE`", "Challenger `CONSENSUS`", "After an unresolved third recheck", "Block downstream consumers"]}},
-      "tags": ["codex", "parity", "resume"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "initial pass may return only `CONSENSUS` or `REVISE`",
+            "cycles 1–3",
+            "ARBITRATION_REQUIRED",
+            "without restarting debate",
+            "restarts the initial pass",
+            "create neither `docs/progress.md` nor challenge files"
+          ],
+          "ordered_tokens": [
+            "Spawn the creator",
+            "Spawn internal read-only `adversarial-reviewer`",
+            "On `REVISE`",
+            "Challenger `CONSENSUS`",
+            "After an unresolved third recheck",
+            "Block downstream consumers"
+          ]
+        }
+      },
+      "tags": [
+        "codex",
+        "parity",
+        "resume"
+      ]
     },
     {
       "id": "AP-007",
       "kind": "reviewer-behavior",
       "target": "agents/adversarial-reviewer.md",
-      "expected": {"static": {"required_tokens": ["outside the debate-cycle budget", "may return only `CONSENSUS` or `REVISE`", "DONE requires CONSENSUS and Evidence"]}},
-      "tags": ["initial", "consensus", "cycle-zero"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "outside the debate-cycle budget",
+            "may return only `CONSENSUS` or `REVISE`",
+            "DONE requires CONSENSUS and Evidence"
+          ]
+        }
+      },
+      "tags": [
+        "initial",
+        "consensus",
+        "cycle-zero"
+      ]
     },
     {
       "id": "AP-008",
       "kind": "reviewer-behavior",
       "target": "agents/adversarial-reviewer.md",
-      "expected": {"static": {"required_tokens": ["complete prior challenge set", "every resolved and unresolved ID", "Add a new ID during recheck only when the revision creates a new defect", "accepted_and_fixed", "rejected_with_evidence", "needs_decision"]}},
-      "tags": ["stable-ids", "recheck", "dispositions"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "complete prior challenge set",
+            "every resolved and unresolved ID",
+            "Add a new ID during recheck only when the revision creates a new defect",
+            "accepted_and_fixed",
+            "rejected_with_evidence",
+            "needs_decision"
+          ]
+        }
+      },
+      "tags": [
+        "stable-ids",
+        "recheck",
+        "dispositions"
+      ]
     },
     {
       "id": "AP-009",
       "kind": "arbitration-behavior",
       "target": "agents/doc-reviewer.md",
-      "expected": {"static": {"required_tokens": ["After debate cycle 3 only", "Decide each item", "Review the whole document with the normal checklist in the same dispatch", "before allowing the artifact downstream"]}},
-      "tags": ["cycle-3", "arbitration", "full-review"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "After debate cycle 3 only",
+            "Decide each item",
+            "Review the whole document with the normal checklist in the same dispatch",
+            "before allowing the artifact downstream"
+          ]
+        }
+      },
+      "tags": [
+        "cycle-3",
+        "arbitration",
+        "full-review"
+      ]
     },
     {
       "id": "AP-010",
       "kind": "resume-behavior",
       "target": "skills/dev-team/SKILL.md",
-      "expected": {"static": {"required_tokens": ["arbitration returns `NEEDS_CONTEXT`", "non-material answer", "without restarting debate", "material change", "restarts cycle 0"]}},
-      "tags": ["user-intent", "resume", "material-change"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "arbitration returns `NEEDS_CONTEXT`",
+            "non-material answer",
+            "without restarting debate",
+            "material change",
+            "restarts cycle 0"
+          ]
+        }
+      },
+      "tags": [
+        "user-intent",
+        "resume",
+        "material-change"
+      ]
     },
     {
       "id": "AP-011",
       "kind": "ownership",
       "target": "agents/adversarial-reviewer.md",
-      "expected": {"static": {"required_tokens": ["never create, edit, or propose a separate challenge artifact"], "exact_frontmatter_tools": ["Read", "Grep", "Glob"], "glob_absent": ["docs/*challenge*"]}},
-      "tags": ["read-only", "creator-ownership", "no-sidecar"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "never create, edit, or propose a separate challenge artifact"
+          ],
+          "exact_frontmatter_tools": [
+            "Read",
+            "Grep",
+            "Glob"
+          ],
+          "glob_absent": [
+            "docs/*challenge*"
+          ]
+        }
+      },
+      "tags": [
+        "read-only",
+        "creator-ownership",
+        "no-sidecar"
+      ]
     },
     {
       "id": "AP-012",
       "kind": "seeded-defects",
       "target": "evals/fixtures/adversarial-prd/docs/prd.md",
-      "expected": {"static": {"required_tokens": ["DEFECT: contradiction", "DEFECT: invented-requirement", "DEFECT: missing-nfr", "DEFECT: unexecutable-ac", "DEFECT: unknown-dependency", "DEFECT: stakeholder-conflict"]}},
-      "tags": ["prd", "critical-defects"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "DEFECT: contradiction",
+            "DEFECT: invented-requirement",
+            "DEFECT: missing-nfr",
+            "DEFECT: unexecutable-ac",
+            "DEFECT: unknown-dependency",
+            "DEFECT: stakeholder-conflict"
+          ]
+        }
+      },
+      "tags": [
+        "prd",
+        "critical-defects"
+      ]
     },
     {
       "id": "AP-013",
       "kind": "seeded-defects",
       "target": "evals/fixtures/adversarial-plan/docs/plan.md",
-      "expected": {"static": {"required_tokens": ["DEFECT: uncovered-ac", "DEFECT: horizontal-slices", "DEFECT: missing-tracer-bullet", "DEFECT: overlapping-scopes", "DEFECT: bad-dependency-order", "DEFECT: unconditional-branch", "DEFECT: missing-fallback"]}},
-      "tags": ["plan", "critical-defects", "S7-preserved"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "DEFECT: uncovered-ac",
+            "DEFECT: horizontal-slices",
+            "DEFECT: missing-tracer-bullet",
+            "DEFECT: overlapping-scopes",
+            "DEFECT: bad-dependency-order",
+            "DEFECT: unconditional-branch",
+            "DEFECT: missing-fallback"
+          ]
+        }
+      },
+      "tags": [
+        "plan",
+        "critical-defects",
+        "S7-preserved"
+      ]
     },
     {
       "id": "AP-014",
       "kind": "ownership",
       "target": "agents/doc-reviewer.md",
-      "expected": {"static": {"exact_frontmatter_tools": ["Read", "Grep", "Glob"]}},
-      "tags": ["read-only", "doc-reviewer"]
+      "expected": {
+        "static": {
+          "exact_frontmatter_tools": [
+            "Read",
+            "Grep",
+            "Glob"
+          ]
+        }
+      },
+      "tags": [
+        "read-only",
+        "doc-reviewer"
+      ]
     },
     {
       "id": "AP-015",
       "kind": "ownership",
       "target": "agents/product-analyst.md",
-      "expected": {"static": {"required_tokens": ["You are the only writer", "never create a separate challenge artifact"], "exact_frontmatter_tools": ["Read", "Write", "Grep", "Glob"]}},
-      "tags": ["creator-only", "prd"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "You are the only writer",
+            "never create a separate challenge artifact"
+          ],
+          "exact_frontmatter_tools": [
+            "Read",
+            "Write",
+            "Grep",
+            "Glob"
+          ]
+        }
+      },
+      "tags": [
+        "creator-only",
+        "prd"
+      ]
     },
     {
       "id": "AP-016",
       "kind": "ownership",
       "target": "agents/planner.md",
-      "expected": {"static": {"required_tokens": ["You are the only writer", "never create a separate challenge artifact"], "exact_frontmatter_tools": ["Read", "Write", "Grep", "Glob"]}},
-      "tags": ["creator-only", "plan"]
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "You are the only writer",
+            "never create a separate challenge artifact"
+          ],
+          "exact_frontmatter_tools": [
+            "Read",
+            "Write",
+            "Grep",
+            "Glob"
+          ]
+        }
+      },
+      "tags": [
+        "creator-only",
+        "plan"
+      ]
+    },
+    {
+      "id": "AP-017",
+      "kind": "ownership",
+      "target": "agents/product-analyst.md",
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "You are the only writer",
+            "never create a separate challenge artifact",
+            "docs/use-cases.md",
+            "ROLE-001",
+            "Permission matrix",
+            "one AC per (role, denial"
+          ],
+          "exact_frontmatter_tools": [
+            "Read",
+            "Write",
+            "Grep",
+            "Glob"
+          ]
+        }
+      },
+      "tags": [
+        "creator-only",
+        "prd",
+        "use-cases"
+      ]
+    },
+    {
+      "id": "AP-018",
+      "kind": "coordinator-contract",
+      "target": "skills/dev-team/SKILL.md",
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "docs/use-cases.md",
+            "two or more `human` roles",
+            "Actors and use cases",
+            "The denial AC-IDs generated from a permission matrix count as one AC in",
+            "raises the debate depth",
+            "No PRD, use cases, architecture, plan, debate"
+          ],
+          "ordered_tokens": [
+            "Creator draft",
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Consensus",
+            "Cycle-3 arbitration/full review",
+            "Downstream gate"
+          ]
+        }
+      },
+      "tags": [
+        "universal",
+        "use-cases",
+        "ordering"
+      ]
+    },
+    {
+      "id": "AP-019",
+      "kind": "coordinator-contract",
+      "target": "skills/dev-team-node/SKILL.md",
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "docs/use-cases.md",
+            "two or more `human` roles",
+            "Actors and use cases",
+            "The denial AC-IDs generated from a permission matrix count as one AC in",
+            "raises the debate depth",
+            "No PRD, use cases, architecture, plan, debate"
+          ],
+          "ordered_tokens": [
+            "Creator draft",
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Consensus",
+            "Cycle-3 arbitration/full review",
+            "Downstream gate"
+          ]
+        }
+      },
+      "tags": [
+        "node",
+        "use-cases",
+        "parity"
+      ]
+    },
+    {
+      "id": "AP-020",
+      "kind": "coordinator-contract",
+      "target": "skills/dev-team-python/SKILL.md",
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "docs/use-cases.md",
+            "two or more `human` roles",
+            "Actors and use cases",
+            "The denial AC-IDs generated from a permission matrix count as one AC in",
+            "raises the debate depth",
+            "No PRD, use cases, architecture, plan, debate"
+          ],
+          "ordered_tokens": [
+            "Creator draft",
+            "Initial challenge — cycle 0",
+            "Debate cycles 1–3",
+            "Consensus",
+            "Cycle-3 arbitration/full review",
+            "Downstream gate"
+          ]
+        }
+      },
+      "tags": [
+        "python",
+        "use-cases",
+        "parity"
+      ]
+    },
+    {
+      "id": "AP-021",
+      "kind": "reviewer-behavior",
+      "target": "agents/doc-reviewer.md",
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "stable ROLE-ID",
+            "permission matrix fills every role",
+            "cell cites a denial AC-ID",
+            "use-case catalogue"
+          ],
+          "exact_frontmatter_tools": [
+            "Read",
+            "Grep",
+            "Glob"
+          ]
+        }
+      },
+      "tags": [
+        "use-cases",
+        "checklist"
+      ]
+    },
+    {
+      "id": "AP-022",
+      "kind": "reviewer-behavior",
+      "target": "agents/adversarial-reviewer.md",
+      "expected": {
+        "static": {
+          "required_tokens": [
+            "every actor is a stable ROLE-ID",
+            "criteria inflation"
+          ],
+          "exact_frontmatter_tools": [
+            "Read",
+            "Grep",
+            "Glob"
+          ],
+          "glob_absent": [
+            "docs/*use-case*"
+          ]
+        }
+      },
+      "tags": [
+        "use-cases",
+        "challenger-isolation"
+      ]
     },
     {
       "id": "AP-M001",
@@ -139,9 +571,18 @@
         "status": "DONE",
         "debate_verdict": "CONSENSUS",
         "required_dispositions": {},
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "clean", "initial-consensus"]
+      "tags": [
+        "model-backed",
+        "clean",
+        "initial-consensus"
+      ]
     },
     {
       "id": "AP-M002",
@@ -161,11 +602,28 @@
       "expected": {
         "status": "DONE_WITH_CONCERNS",
         "debate_verdict": "REVISE",
-        "carried_challenge_ids": ["CH-PRD-001", "CH-PRD-002", "CH-PRD-003"],
-        "required_dispositions": {"CH-PRD-001": "accepted_and_fixed", "CH-PRD-002": "rejected_with_evidence", "CH-PRD-003": "needs_decision"},
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "carried_challenge_ids": [
+          "CH-PRD-001",
+          "CH-PRD-002",
+          "CH-PRD-003"
+        ],
+        "required_dispositions": {
+          "CH-PRD-001": "accepted_and_fixed",
+          "CH-PRD-002": "rejected_with_evidence",
+          "CH-PRD-003": "needs_decision"
+        },
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "stable-ids", "all-dispositions"]
+      "tags": [
+        "model-backed",
+        "stable-ids",
+        "all-dispositions"
+      ]
     },
     {
       "id": "AP-M003",
@@ -185,11 +643,23 @@
       "expected": {
         "status": "DONE_WITH_CONCERNS",
         "debate_verdict": "ARBITRATION_REQUIRED",
-        "carried_challenge_ids": ["CH-PLAN-001", "CH-PLAN-002"],
+        "carried_challenge_ids": [
+          "CH-PLAN-001",
+          "CH-PLAN-002"
+        ],
         "next_action": "doc-reviewer combined arbitration/full review",
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "cycle-3", "arbitration"]
+      "tags": [
+        "model-backed",
+        "cycle-3",
+        "arbitration"
+      ]
     },
     {
       "id": "AP-M004",
@@ -209,11 +679,23 @@
       "expected": {
         "status": "NEEDS_CONTEXT",
         "review_mode": "arbitration",
-        "arbitration_decisions": {"CH-PRD-001": "upheld", "CH-PRD-002": "user_decision_required"},
+        "arbitration_decisions": {
+          "CH-PRD-001": "upheld",
+          "CH-PRD-002": "user_decision_required"
+        },
         "full_review_performed": true,
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "evidence-vs-intent", "needs-context"]
+      "tags": [
+        "model-backed",
+        "evidence-vs-intent",
+        "needs-context"
+      ]
     },
     {
       "id": "AP-M005",
@@ -236,9 +718,18 @@
         "full_review_performed": true,
         "restart_policy": "resume_without_restart",
         "next_action": "downstream_allowed",
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "non-material", "resume"]
+      "tags": [
+        "model-backed",
+        "non-material",
+        "resume"
+      ]
     },
     {
       "id": "AP-M006",
@@ -257,11 +748,23 @@
       },
       "expected": {
         "restart_policy": "increment_version_and_restart_initial_pass",
-        "ordered_agents": ["product-analyst", "adversarial-reviewer"],
+        "ordered_agents": [
+          "product-analyst",
+          "adversarial-reviewer"
+        ],
         "next_action": "restart_cycle_0_and_block_downstream",
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "material-change", "restart"]
+      "tags": [
+        "model-backed",
+        "material-change",
+        "restart"
+      ]
     },
     {
       "id": "AP-M007",
@@ -281,10 +784,26 @@
       "expected": {
         "status": "DONE_WITH_CONCERNS",
         "debate_verdict": "REVISE",
-        "required_challenge_categories": ["contradiction", "invented-requirement", "missing-nfr", "unexecutable-ac", "unknown-dependency", "stakeholder-conflict"],
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "required_challenge_categories": [
+          "contradiction",
+          "invented-requirement",
+          "missing-nfr",
+          "unexecutable-ac",
+          "unknown-dependency",
+          "stakeholder-conflict"
+        ],
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "prd", "seeded-defects"]
+      "tags": [
+        "model-backed",
+        "prd",
+        "seeded-defects"
+      ]
     },
     {
       "id": "AP-M008",
@@ -304,10 +823,28 @@
       "expected": {
         "status": "DONE_WITH_CONCERNS",
         "debate_verdict": "REVISE",
-        "required_challenge_categories": ["uncovered-ac", "horizontal-slices", "missing-tracer-bullet", "overlapping-scopes", "bad-dependency-order", "unconditional-branch", "missing-fallback"],
-        "ownership": {"expected_mutated_paths": [], "forbidden_artifacts": ["docs/*challenge*"]}
+        "required_challenge_categories": [
+          "uncovered-ac",
+          "horizontal-slices",
+          "missing-tracer-bullet",
+          "overlapping-scopes",
+          "bad-dependency-order",
+          "unconditional-branch",
+          "missing-fallback"
+        ],
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*"
+          ]
+        }
       },
-      "tags": ["model-backed", "plan", "seeded-defects", "S7-preserved"]
+      "tags": [
+        "model-backed",
+        "plan",
+        "seeded-defects",
+        "S7-preserved"
+      ]
     }
   ]
 }

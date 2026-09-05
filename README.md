@@ -394,6 +394,8 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 | Skill selection | Dispatch agent with "typescript" phrases | Agent applies nodejs-stack skill |
 | Evidence gate | Dispatch implementor on a repo with tests | Report contains Evidence with command + exit code |
 | PRD/plan lifecycle | Run `/ask-prd` or `/ask-planner` in Claude Code | Creator, adversarial-reviewer, and doc-reviewer run in order; downstream waits for both gates |
+| Use-case rule | Run `/ask-prd` on a product with anonymous + registered + admin roles | PRD has ROLE-IDs; `docs/use-cases.md` created with a role × use-case matrix; every `denied` cell cites an AC-ID; denial ACs are grouped by behavior, not one per cell |
+| Single-role rule | Run `/ask-prd` on a product with one kind of user | Use cases stay in the PRD; `docs/use-cases.md` is not created |
 
 For Codex specifically:
 
