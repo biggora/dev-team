@@ -845,6 +845,75 @@
         "seeded-defects",
         "S7-preserved"
       ]
+    },
+    {
+      "id": "AP-M009",
+      "kind": "reviewer-behavior",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Review the supplied PRD and its use-case catalogue in Mode: prd, Pass: initial. Return only the required structured report.",
+      "context": {
+        "fixture": "use-cases-roles",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v1",
+        "mode": "prd",
+        "pass": "initial",
+        "original_request": "Build a small blog where anonymous readers browse posts, registered authors write and publish their own posts, and moderators can remove any post. Scheduled publishing runs unattended.",
+        "prior_challenge_transcript": "None: this is the initial pass."
+      },
+      "expected": {
+        "status": "DONE_WITH_CONCERNS",
+        "debate_verdict": "REVISE",
+        "required_dispositions": {},
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*",
+            "docs/roles.md",
+            "docs/permissions.md"
+          ]
+        }
+      },
+      "tags": [
+        "model-backed",
+        "use-cases",
+        "two-plus-roles",
+        "criteria-inflation"
+      ]
+    },
+    {
+      "id": "AP-M010",
+      "kind": "reviewer-behavior",
+      "execution": "model-backed",
+      "target": "agents/adversarial-reviewer.md",
+      "prompt": "Adopt the target agent instructions. Review the supplied PRD in Mode: prd, Pass: initial. Return only the required structured report.",
+      "context": {
+        "fixture": "use-cases-single-role",
+        "artifact": "docs/prd.md",
+        "artifact_version": "v1",
+        "mode": "prd",
+        "pass": "initial",
+        "original_request": "Build a single-operator internal note-taking tool. There is one kind of user; no sharing, no roles, no public access.",
+        "prior_challenge_transcript": "None: this is the initial pass."
+      },
+      "expected": {
+        "status": "DONE",
+        "debate_verdict": "CONSENSUS",
+        "required_dispositions": {},
+        "ownership": {
+          "expected_mutated_paths": [],
+          "forbidden_artifacts": [
+            "docs/*challenge*",
+            "docs/use-cases.md"
+          ]
+        }
+      },
+      "tags": [
+        "model-backed",
+        "use-cases",
+        "single-role",
+        "clean"
+      ]
     }
   ]
 }
