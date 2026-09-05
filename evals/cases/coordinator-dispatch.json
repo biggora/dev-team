@@ -35,7 +35,7 @@
       "context": { "fixture": "greenfield" },
       "expected": {
         "stack": "greenfield",
-        "agents": ["product-analyst", "adversarial-reviewer", "doc-reviewer", "architect", "ui-ux-designer", "planner", "implementor", "backend-dev", "frontend-dev", "tester", "code-reviewer"],
+        "agents": ["product-analyst", "adversarial-reviewer", "doc-reviewer", "architect", "ui-ux-designer", "planner", "devops-engineer", "implementor", "backend-dev", "frontend-dev", "tester", "code-reviewer"],
         "phases": ["analysis", "dispatch", "collection", "review", "report"],
         "dispatch_order": "sequential_then_parallel",
         "document_gate_order": ["product-analyst", "adversarial-reviewer:prd", "doc-reviewer:prd", "architect", "ui-ux-designer", "planner", "adversarial-reviewer:plan", "doc-reviewer:plan"]
@@ -104,6 +104,33 @@
         "skill_phrases": ["playwright", "typescript"]
       },
       "tags": ["testing-only"]
+    },
+    {
+      "id": "CD-009",
+      "tier": 3,
+      "prompt": "Build a booking service from scratch with Postgres, Redis, and email notifications, then add a GitHub Actions pipeline that runs the tests",
+      "context": { "fixture": "greenfield" },
+      "expected": {
+        "stack": "greenfield",
+        "agents": ["product-analyst", "adversarial-reviewer", "doc-reviewer", "architect", "planner", "devops-engineer", "implementor", "backend-dev", "tester", "code-reviewer"],
+        "phases": ["analysis", "dispatch", "collection", "review", "report"],
+        "dispatch_order": ["product-analyst", "architect", "planner", "devops-engineer:local-stack", "implementor", "backend-dev", "tester", "code-reviewer", "devops-engineer:cicd"],
+        "skill_phrases": ["docker compose", "local stack", "health check", "typescript"]
+      },
+      "tags": ["greenfield", "local-stack-gate", "ordering", "cicd-last"]
+    },
+    {
+      "id": "CD-010",
+      "tier": 2,
+      "prompt": "Add the deploy pipeline now",
+      "context": { "fixture": "containerized-project" },
+      "expected": {
+        "stack": "nodejs",
+        "agents": [],
+        "not_agents": ["devops-engineer", "implementor", "backend-dev", "frontend-dev", "tester"],
+        "required_tokens": ["local stack", "local-proof gate", "missing"]
+      },
+      "tags": ["negative", "halt", "local-proof-gate", "cicd-last"]
     }
   ]
 }

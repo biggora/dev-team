@@ -1,6 +1,6 @@
 {
   "name": "dev-team",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Orchestrates a team of specialized AI agents for full-cycle software development with inline quality gates",
   "author": {
     "name": "Aleksejs Gordejevs",
@@ -16,7 +16,9 @@
     "coordinator",
     "code-review",
     "doc-review",
-    "software-development"
+    "software-development",
+    "devops",
+    "docker"
   ],
   "skills": "./skills/",
   "interface": {

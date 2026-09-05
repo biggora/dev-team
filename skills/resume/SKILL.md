@@ -27,12 +27,17 @@ Resume a dev-team workflow from a prior session's handoff state.
    - If `docs/handoff.md` and `docs/progress.md` disagree, trust `docs/progress.md`
    - If files were modified since handoff (git log shows newer commits), note the divergence
 
-4. **Present resume plan to user**:
+4. **Re-verify the local stack** (skip if the ledger records `Local stack: N/A`):
+   - Run `docker compose ps` and confirm every service reports healthy
+   - If the stack is down, run `docker compose up -d --wait`, then re-check
+   - Do this before resuming any slice or dispatching any verification — if the stack cannot be brought up, report that to the user before continuing rather than letting agents fall back to mocks
+
+5. **Present resume plan to user**:
    - "Resuming from Phase [N], [step]. Last completed: [X]. Next action: [Y]."
    - List any pending user decisions from the handoff
    - Ask for confirmation before proceeding
 
-5. **Resume the coordinator workflow**:
+6. **Resume the coordinator workflow**:
    - Apply the idempotency guard: check the ledger for completed artifacts, skip them
    - Continue from the exact next action specified in the handoff
    - Delete `docs/handoff.md` after successful resume (it's a one-time snapshot)

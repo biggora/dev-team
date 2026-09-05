@@ -73,6 +73,7 @@ Pending: [creator revision / challenger recheck / arbitration]
 
 Stack: [detected stack and framework]
 Versions: [key dependency versions]
+Local stack: [up / down / N/A] — services, images and tags, and the last healthy-verification command and result
 Design aesthetic: [if applicable]
 Input inventory: [paths or "none"]
 

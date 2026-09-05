@@ -68,10 +68,11 @@ Provide a structured architecture blueprint:
    - Dependencies on other components
    - Suggested file structure
 3. **Data model**: Entities, relationships, storage
-4. **Data flow**: How data moves through the system (request → processing → response)
-5. **Technical decisions**: Choices made with rationale and trade-offs considered
-6. **File structure**: Proposed directory and file layout
-7. **Implementation sequence**: Recommended build order
+4. **Local runtime topology**: every external dependency the system needs at runtime — database, cache, broker or queue, SMTP, object storage, search engine, identity provider, third-party HTTP API. For each: the concrete service, the container image and pinned tag that provides it locally (or the emulator that does — `stripe-mock`, `localstack`, `wiremock`, `mailpit`), the env var through which the application discovers it, and how its readiness is observed (health check). If a dependency has no local container and no known emulator, say so explicitly and mark it as a decision the user must make. A pure library or CLI project states "none" and says why.
+5. **Data flow**: How data moves through the system (request → processing → response)
+6. **Technical decisions**: Choices made with rationale and trade-offs considered
+7. **File structure**: Proposed directory and file layout
+8. **Implementation sequence**: Recommended build order
 
 ## Quality Standards
 
@@ -83,6 +84,7 @@ Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases
 - Data flow must be traceable from input to output
 - Trade-offs must be stated — no decision without rationale
 - Design must be concrete — specific file names, function signatures, not abstract diagrams
+- Every external dependency named anywhere in the design must appear in the Local runtime topology section with its local container image, discovery env var, and health check
 - For greenfield: include a practical file/directory structure to start with
 
 ## Structured Report

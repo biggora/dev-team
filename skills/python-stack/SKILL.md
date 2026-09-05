@@ -54,7 +54,8 @@ description: >
 - Django: use `@pytest.mark.django_db` for database access
 - Flask: use `app.test_client()` or `pytest-flask`
 - FastAPI: use `TestClient` from `starlette.testclient`
-- Mock with `unittest.mock.patch` or `pytest-mock`
+- Mock with `unittest.mock.patch` or `pytest-mock` — only for pure-internal collaborators
+- Integration tests run against the containerized stack (`docker compose up -d --wait`), never against a mock or an ad-hoc local install of a service that has a container — see the `local-stack` skill
 
 ## Error Handling
 
@@ -83,6 +84,5 @@ description: >
 ## Additional Resources
 
 For framework-specific patterns, consult:
-- **`references/django-patterns.md`** — Django views, models, DRF, migrations
-- **`references/flask-patterns.md`** — Flask blueprints, extensions, app factory
-- **`references/testing-patterns.md`** — pytest fixtures, mocking, parametrize
+- **`references/architecture-patterns.md`** — Django/Flask/FastAPI project structure, service layers, DRF, migrations, task queues, caching, testing strategy
+- **`local-stack` skill** — running Postgres, Redis, Celery brokers, and service emulators in containers for integration tests

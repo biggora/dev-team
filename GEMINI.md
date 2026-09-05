@@ -25,11 +25,12 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - **OQ gate**: open questions carry `Confirm before:` triggers; before slice N the coordinator asks the user every question tagged for it (one batch) or records an explicit MVP waiver — an unanswered triggered question blocks the slice
 - **DoD gate + demo checkpoint**: slice N+1 starts only after slice N's acceptance tests pass, code review is DONE, and the user has seen a demo of the increment; deviations are explicit user decisions with a debt-closure slice
 - **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice
-- **CI/CD last**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is never part of scaffolding or intermediate slices — it is planned only as the final subtask and dispatched only after the local-proof gate passes: every AC-ID verified with fresh local evidence, the full test suite green, and the final demo checkpoint accepted by the user. The pipeline encodes only checks already proven green locally. Local dev tooling (docker-compose for a dev database, git hooks, lint config) is not CI/CD and may come earlier
+- **Local-stack gate**: a project with external runtime dependencies (database, cache, message broker or queue, SMTP, object storage, search engine, identity provider, third-party HTTP API) must have them running locally in version-pinned containers with health checks before slice 1 starts and for every verification afterwards; `devops-engineer` owns that stack. A dependency whose real service cannot run locally gets a containerized emulator (`stripe-mock`, `localstack`, `wiremock`, `mailpit`); if no emulator exists the coordinator halts for one batched user question and the affected AC stays UNVERIFIED until an explicit user waiver is recorded. Evidence produced against a mock, stub, or in-memory substitute for a dependency that has a container equivalent is not local evidence; a project with genuinely no external dependencies records `Local stack: N/A — <reason>`. The pipeline profile never exempts a task from this gate, and when a compose file already covers the whole inventory the gate is satisfied by evidence, not by a dispatch
+- **CI/CD last**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is never part of scaffolding or intermediate slices — it is planned only as the final subtask, owned by `devops-engineer`, and dispatched only after the local-proof gate passes: the local-stack gate is satisfied, every AC-ID verified with fresh evidence produced against the running stack, the full test suite (unit + integration + e2e) green, and the final demo checkpoint accepted by the user. The pipeline encodes only checks already proven green locally, against the same pinned images. Local dev tooling (`docker-compose.yml`, dev Dockerfile, seed and reset scripts, git hooks, lint config) is not CI/CD and comes earlier by design
 
 ## Available Agents
 
-The plugin exposes 11 agents. `adversarial-reviewer` is internal and has no public shortcut.
+The plugin exposes 12 agents. `adversarial-reviewer` is internal and has no public shortcut.
 
 | Agent | Role | Tools | Model | Color |
 |-------|------|-------|-------|-------|
@@ -41,6 +42,7 @@ The plugin exposes 11 agents. `adversarial-reviewer` is internal and has no publ
 | frontend-dev | Builds UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
 | backend-dev | Builds API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utilities | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
+| devops-engineer | Local containerized stack (docker-compose, emulators, seed) and CI/CD after the local-proof gate | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | tester | Writes and runs tests (Mode A red / Mode B green) | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | code-reviewer | Reviews code for quality and bugs | Read, Grep, Glob | opus | red |
 | doc-reviewer | Reviews documentation for quality and completeness | Read, Grep, Glob | opus | cyan |
@@ -57,7 +59,8 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 | `/ask-designer` | ui-ux-designer | Design UI/UX flows and layouts |
 | `/ask-frontend` | frontend-dev | Build UI components, pages, styles |
 | `/ask-backend` | backend-dev | Build API, models, services |
-| `/ask-implementor` | implementor | Scripts, config, utilities; CI/CD only after local verification is green |
+| `/ask-implementor` | implementor | Scripts, config, utilities |
+| `/ask-devops` | devops-engineer | Local stack: docker-compose, emulators, seed data; CI/CD after local proof |
 | `/ask-tester` | tester | Write and run tests |
 | `/ask-reviewer` | code-reviewer | Review code for quality and bugs |
 | `/ask-doc-reviewer` | doc-reviewer | Review documentation quality |
@@ -109,6 +112,7 @@ Every artifact produced in Phase 2 goes through an inline gate before the next a
 | Architecture | architect | doc-reviewer | Re-dispatch architect |
 | Design spec | ui-ux-designer | doc-reviewer | Re-dispatch ui-ux-designer |
 | Execution plan | planner | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks |
+| Local stack (compose, env, seed) | devops-engineer | code-reviewer | Re-dispatch devops-engineer |
 | Scaffold code | implementor | code-reviewer | Re-dispatch implementor |
 | Backend code | backend-dev | code-reviewer | Re-dispatch backend-dev |
 | Frontend code | frontend-dev | code-reviewer | Re-dispatch frontend-dev |
@@ -123,6 +127,8 @@ See `specs/workflow.md` for full mermaid diagrams.
 - **Check the ledger before every dispatch** (idempotency guard) and increment the run counter; respect the 8-run circuit-breaker for Micro/Standard
 - Include the **full task description** — agents cannot see coordinator context
 - Specify **scope boundaries** — which files/directories can be changed; the test directory belongs to the tester
+- Infrastructure files (`docker-compose*.yml`, `Dockerfile*`, `.env.example`, `.dockerignore`, seed and reset scripts) are **devops-engineer's exclusive writable scope** — no other agent may edit them in any dispatch, parallel or not
+- **Never dispatch CI/CD to implementor** — CI pipelines, deployment configs, and release tooling go to devops-engineer, and only after the local-proof gate passes
 - Include **context** about what other agents have done
 - Pass the **input inventory** (paths of user-provided briefs, prototypes, brand assets — or "none") to product-analyst and ui-ux-designer; document agents read the inputs, the coordinator does not
 - For PRD/plan debate, include the original request, artifact path and version, cycle number, unresolved `CH-*`, latest dispositions/evidence, and related documents; store only cycle, verdict, and unresolved IDs in `docs/progress.md`
@@ -139,6 +145,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 - Follow the coding conventions of the project you are working in
 - Always end with the structured report, Evidence included
 - Implementation agents never touch test files; the tester never touches source files
+- Implementation agents verify against the running local stack — never substitute a mock, stub, or in-memory fake for a dependency that has a container in `docker-compose.yml`
 - If blocked, report `BLOCKED` with clear description rather than guessing
 - If missing context, report `NEEDS_CONTEXT` with specific questions
 

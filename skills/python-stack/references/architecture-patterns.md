@@ -185,4 +185,8 @@ project/
 ### Testing Strategy
 - Unit tests: services and models (fast, no HTTP)
 - Integration tests: API endpoints (TestClient/test_client, real database)
+- The real database is a container from the project's `docker-compose.yml` — `docker compose up -d --wait`, healthcheck-gated, pinned image tag; never an ad-hoc local install or a mock
+- The test session connects through env vars (`DATABASE_URL` or `POSTGRES_*`) pointing at that container
+- Per-test isolation: transaction rollback around each test (preferred), otherwise truncate-and-reseed between tests
 - Fixtures: shared test data in conftest.py
+- See the `local-stack` skill for compose recipes, healthchecks, and reset strategies

@@ -2,9 +2,9 @@
 
 Plugin toolkit for orchestrating a team of specialized AI agents for full-cycle software development — from requirements to tested, reviewed code.
 
-The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 11 specialist agents with isolated contexts, and enforces inline quality gates. A Phase 0 triage assigns each task a pipeline profile — Micro, Standard, or Full; lean is the default. In the Full profile every PRD and execution plan passes an adversarial debate before ordinary `doc-reviewer` review; code always passes `code-reviewer` review.
+The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 12 specialist agents with isolated contexts, and enforces inline quality gates. A Phase 0 triage assigns each task a pipeline profile — Micro, Standard, or Full; lean is the default. In the Full profile every PRD and execution plan passes an adversarial debate before ordinary `doc-reviewer` review; code always passes `code-reviewer` review.
 
-Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. The coordinator tracks state in `docs/progress.md`.
+Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. Verification runs against the project's external dependencies running in local containers — a database, cache, queue, or third-party emulator stood up by `devops-engineer` — not against mocks. The coordinator tracks state in `docs/progress.md`.
 
 Skills are surfaced by their descriptions and follow the cross-platform [Agent Skills](https://agentskills.io) standard, so the same skill set installs into Claude Code, Codex CLI, GitHub Copilot CLI, and Gemini CLI.
 
@@ -187,8 +187,12 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 # Implementation:
 /ask-frontend Build responsive user registration form with validation
 /ask-backend Implement JWT authentication with role-based access control
-/ask-implementor Set up GitHub Actions CI/CD pipeline
-#   (the agent first proves the local build/lint/test run green; a red run → BLOCKED, no pipeline)
+/ask-implementor Set up ESLint, Prettier, and husky for the monorepo
+
+# Local stack & delivery:
+/ask-devops Stand up Postgres, Redis, and a mail catcher in docker-compose with health checks
+/ask-devops Set up the GitHub Actions pipeline
+#   (the agent first proves the local stack healthy and the build/lint/test run green; a red run → BLOCKED, no pipeline)
 
 # Quality:
 /ask-tester Write tests for src/auth/ module
@@ -205,6 +209,7 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 | `/ask-frontend` | frontend-dev | sonnet |
 | `/ask-backend` | backend-dev | sonnet |
 | `/ask-implementor` | implementor | sonnet |
+| `/ask-devops` | devops-engineer | sonnet |
 | `/ask-tester` | tester | sonnet |
 | `/ask-reviewer` | code-reviewer | opus |
 | `/ask-doc-reviewer` | doc-reviewer | opus |
@@ -221,10 +226,11 @@ Coordinators (multi-agent)          Focused shortcuts
     +-- adversarial-reviewer (opus)  │   (internal; no shortcut)
     +-- architect        (opus)     ├── /ask-backend
     +-- planner          (opus)     ├── /ask-implementor
-    +-- ui-ux-designer   (sonnet)   ├── /ask-tester
-    +-- frontend-dev     (sonnet)   ├── /ask-reviewer
-    +-- backend-dev      (sonnet)   └── /ask-doc-reviewer
-    +-- implementor      (sonnet)
+    +-- ui-ux-designer   (sonnet)   ├── /ask-devops
+    +-- frontend-dev     (sonnet)   ├── /ask-tester
+    +-- backend-dev      (sonnet)   ├── /ask-reviewer
+    +-- implementor      (sonnet)   └── /ask-doc-reviewer
+    +-- devops-engineer  (sonnet)
     +-- tester           (sonnet)
     +-- code-reviewer    (opus)     ← inline after every code agent
     +-- doc-reviewer     (opus)     ← inline after every doc agent
@@ -238,7 +244,9 @@ Coordinators (multi-agent)          Focused shortcuts
 
 **Evidence gate**: a DONE report without fresh verification output (command → exit code → key lines) is treated as unverified and sent back. Failing checks forbid DONE. "No change was needed" is a valid, evidence-backed outcome (fix-or-abstain).
 
-**CI/CD last**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is always the final subtask — never part of scaffolding or intermediate slices. It is dispatched only after the local-proof gate passes: every AC-ID verified with fresh local evidence, the full test suite green, and the final demo checkpoint accepted by the user. The pipeline encodes only checks already proven green locally. Local dev tooling (docker-compose for a dev database, git hooks, lint config) is not CI/CD.
+**Local-stack gate**: a project with external runtime dependencies (database, cache, message broker or queue, SMTP, object storage, search engine, identity provider, third-party HTTP API) must have them running locally in version-pinned containers with health checks before slice 1 starts and for every verification afterwards; `devops-engineer` owns that stack. A dependency whose real service cannot run locally gets a containerized emulator (`stripe-mock`, `localstack`, `wiremock`, `mailpit`); if no emulator exists the coordinator halts for one batched user question and the affected AC stays UNVERIFIED until an explicit user waiver is recorded. Evidence produced against a mock, stub, or in-memory substitute for a dependency that has a container equivalent is not local evidence; a project with genuinely no external dependencies records `Local stack: N/A — <reason>`. The pipeline profile never exempts a task from this gate, and when a compose file already covers the whole inventory the gate is satisfied by evidence, not by a dispatch.
+
+**CI/CD last**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is always the final subtask — never part of scaffolding or intermediate slices. It is owned by `devops-engineer` and dispatched only after the local-proof gate passes: the local-stack gate is satisfied, every AC-ID verified with fresh evidence produced against the running stack, the full test suite (unit + integration + e2e) green, and the final demo checkpoint accepted by the user. The pipeline encodes only checks already proven green locally, against the same pinned images. Local dev tooling (`docker-compose.yml`, dev Dockerfile, seed and reset scripts, git hooks, lint config) is not CI/CD and comes earlier by design.
 
 **Cost and latency**: process cost is profile-driven. Micro tasks cost ~2–4 agent runs (implement + review); Standard stays within a lean envelope with zero debate cycles; a circuit-breaker stops any Micro/Standard task that exceeds 8 runs and asks the user. In the Full profile, PRD and plan creation require at least one challenger pass and one document review pass: ordinary doc-review on the consensus path, or combined arbitration/full review on the unresolved cycle-3 path. Revisions add creator and challenger dispatches, up to 3 debate cycles; unresolved cycle-3 items may pause for a user decision. Simple documents can reach consensus after the first challenge pass.
 
@@ -257,7 +265,7 @@ dev-team/
 ├── .agents/
 │   └── plugins/
 │       └── marketplace.json     # Repo-local Codex marketplace entry
-├── agents/                      # 11 specialist subagents (Claude Code native)
+├── agents/                      # 12 specialist subagents (Claude Code native)
 │   ├── product-analyst.md       # PRD creator (cyan, opus)
 │   ├── adversarial-reviewer.md  # PRD/plan challenger (red, read-only)
 │   ├── architect.md             # System designer (blue, opus)
@@ -266,17 +274,19 @@ dev-team/
 │   ├── frontend-dev.md          # UI developer (magenta, full tools)
 │   ├── backend-dev.md           # API developer (green, full tools)
 │   ├── implementor.md           # General fallback (green, full tools)
+│   ├── devops-engineer.md       # Local stack & CI/CD (yellow, full tools)
 │   ├── tester.md                # Test writer & runner (yellow, full tools)
 │   ├── code-reviewer.md         # Code reviewer (red, read-only)
 │   └── doc-reviewer.md          # Doc reviewer (cyan, read-only)
-├── skills/                      # 40 skills (Agent Skills standard)
+├── skills/                      # 44 skills (Agent Skills standard)
 │   ├── dev-team/                # /dev-team — universal coordinator (auto-detect)
 │   ├── dev-team-node/           # /dev-team-node — Node.js coordinator
 │   ├── dev-team-python/         # /dev-team-python — Python coordinator
-│   ├── ask-prd/ … ask-doc-reviewer/   # 10 focused workflow shortcuts (/ask-*)
+│   ├── ask-prd/ … ask-doc-reviewer/   # 11 focused workflow shortcuts (/ask-*), incl. ask-devops/
 │   ├── dev-team-codex/          # Codex bridge: coordinator + specialists via spawn_agent
 │   ├── nodejs-stack/            # Node.js/TS patterns (+ references/architecture-patterns.md)
 │   ├── python-stack/            # Python patterns (+ references/architecture-patterns.md)
+│   ├── local-stack/             # Container recipes, compose contract, seed/reset, test wiring
 │   └── …                        # Stack & quality skills: nest/next/vite/tailwindcss best
 │                                #   practices, typescript-expert, django-expert, security-review,
 │                                #   code-review, postgresql-*, redis-development, shadcn,
@@ -299,8 +309,8 @@ dev-team/
 | Phase | Goal | Details |
 |-------|------|---------|
 | 0. Triage | Choose process weight | Score size/novelty/clarity/reversibility/parallelizability (0–2 each); select Micro / Standard / Full; documentation adequacy check, prior-art scan, batched blocking questions for external facts and irreversible decisions |
-| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into vertical slices; create docs/progress.md after user confirms (Standard/Full) |
-| 2. Dispatch | Launch agents with inline review | PRD/plan: creator → debate (max 3 cycles) → consensus + ordinary review (max 2 reworks), or combined arbitration/full review after the third unresolved recheck. Other docs go directly to doc-review. Per slice: tester Mode A → implementation → tester Mode B → code-reviewer. |
+| 1. Analysis | Understand the task | Detect stack, determine specialists, decompose into vertical slices; build the infrastructure inventory (one row per external dependency: image and pinned tag or emulator, health check, discovery env var, AC-IDs it exercises) or record `Local stack: N/A`; create docs/progress.md after user confirms (Standard/Full) |
+| 2. Dispatch | Launch agents with inline review | PRD/plan: creator → debate (max 3 cycles) → consensus + ordinary review (max 2 reworks), or combined arbitration/full review after the third unresolved recheck. Other docs go directly to doc-review. Infrastructure enablement (devops-engineer) before slice 1 and scaffolding. Per slice: tester Mode A → implementation → tester Mode B → code-reviewer. |
 | 3. Collection | Process results | Evidence gate (DONE without Evidence = unverified), handle DONE / BLOCKED / NEEDS_CONTEXT, update docs/progress.md |
 | 4. Final Review | Cross-cutting review | Criteria coverage check (every AC-ID verified or listed UNVERIFIED) + cross-module code consistency + cross-document consistency (if multi-agent) |
 | 5. Report | Summary | AC-IDs verified N/M, files changed, test evidence, review findings, concerns, next steps |
@@ -343,6 +353,7 @@ Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain*
 | frontend-dev | UI: components, pages, styles, a11y | Read, Write, Edit, Grep, Glob, Bash | sonnet | magenta |
 | backend-dev | API: endpoints, models, services, auth | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
 | implementor | General fallback: scripts, config, utils | Read, Write, Edit, Grep, Glob, Bash | sonnet | green |
+| devops-engineer | Local containerized stack (docker-compose, emulators, seed) and CI/CD after the local-proof gate | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | tester | Test writing and execution | Read, Write, Edit, Grep, Glob, Bash | sonnet | yellow |
 | code-reviewer | Code quality review (inline after every code agent) | Read, Grep, Glob | opus | red |
 | doc-reviewer | Doc quality review (inline after every doc agent) | Read, Grep, Glob | opus | cyan |
@@ -362,7 +373,8 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 1. Create `skills/dev-team-<stack>/SKILL.md` — copy `skills/dev-team/SKILL.md` and replace only the frontmatter and the `## Stack Profile` section (detection patterns, greenfield detection, stack-specific dispatch phrases); the rest must stay identical across coordinators (see the SYNC comment at the top)
 2. Create `skills/<stack>-stack/SKILL.md` with a trigger description covering the stack's file types and frameworks
 3. Create `skills/<stack>-stack/references/architecture-patterns.md` — stack-specific architecture patterns for the architect agent
-4. Update the `## Stack Profile` section of `skills/dev-team/SKILL.md` to list the new stack coordinator
+4. Add the stack's typical local services (its usual database, cache, broker, and third-party emulators, with pinned images and health checks) to `skills/local-stack/references/`
+5. Update the `## Stack Profile` section of `skills/dev-team/SKILL.md` to list the new stack coordinator
 
 ## Verification
 
@@ -374,8 +386,9 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 | Copilot CLI skills | `copilot skill add /path/to/dev-team/skills`, then `/skills list` | dev-team skills listed |
 | Gemini CLI skills | `gemini skills install ... --path skills`, then `gemini skills list --all` | Skills listed, no frontmatter warnings |
 | Stack commands (Claude Code) | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
-| Shortcut commands (Claude Code) | Type `/ask-prd` | 10 shortcut commands available |
-| Agents available | Claude suggests agents | 11 agents, including internal read-only adversarial-reviewer |
+| Shortcut commands (Claude Code) | Type `/ask-prd` | 11 shortcut commands available |
+| Agents available | Claude suggests agents | 12 agents, including internal read-only adversarial-reviewer |
+| Local-stack gate | Run /dev-team on a project with a database and no docker-compose | Coordinator dispatches devops-engineer before slice 1 and refuses CI/CD until the stack proof exists |
 | Tools isolation | Dispatch code-reviewer | Write/Edit unavailable |
 | Challenger isolation | Dispatch adversarial-reviewer in `prd` or `plan` mode | Read/Grep/Glob only; no challenge artifact or public shortcut |
 | Skill selection | Dispatch agent with "typescript" phrases | Agent applies nodejs-stack skill |

@@ -73,6 +73,7 @@ In normal mode, verify that adversarial decisions and residual risks appear in t
 - [ ] No architecture or technology decisions embedded in requirements (unless user-specified constraints)
 - [ ] Success metrics are defined and measurable
 - [ ] A Definition of Ready states what the user can do against real external integrations; each named integration has at least one real-integration AC (mock mode never satisfies readiness)
+- [ ] Every external integration states a local-verification route — container image, emulator, or an explicit `no local equivalent — user decision required`
 
 ### Architecture Review
 
@@ -84,6 +85,7 @@ In normal mode, verify that adversarial decisions and residual risks appear in t
 - [ ] Implementation sequence is defined (what to build first)
 - [ ] All PRD functional requirements are addressable by the proposed components
 - [ ] Error handling strategy is defined for each integration point
+- [ ] A "Local runtime topology" section lists every external dependency with its local container image and pinned tag (or named emulator), the env var the app uses to reach it, and its health check — or explicitly states "none" with a reason
 - [ ] No unresolved "TBD" or placeholder decisions
 
 ### Design Spec Review
@@ -117,6 +119,9 @@ In normal mode, verify that adversarial decisions and residual risks appear in t
 - [ ] Residual risks include mitigation, verification, or explicit acceptance
 - [ ] Slice entries list the OQ-IDs that gate them; the DoD gate (tests + review + demo checkpoint) is stated
 - [ ] An integration-enablement slice with its own AC-IDs exists when the PRD names real external integrations
+- [ ] For a project with external runtime dependencies, an infrastructure-enablement task owned by `devops-engineer` precedes slice 1 and shared scaffolding
+- [ ] CI/CD, if in scope, is the final task, assigned to `devops-engineer`, with the local-proof gate stated as its precondition — local stack healthy from a clean state, every AC-ID verified against the containers, full suite green, demo accepted
+- [ ] A document claiming `Local stack: N/A` while the architecture or PRD names a database, queue, mail, storage, or third-party API is a **Critical** inconsistency
 
 ## Arbitration Mode
 

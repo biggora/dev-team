@@ -41,7 +41,8 @@ description: >
 - **Jest**: `describe/it/expect`, `jest.mock()`, `beforeEach/afterEach`
 - **Vitest**: same API as Jest, use `vi.mock()` instead of `jest.mock()`
 - Test file naming: `*.test.ts`, `*.spec.ts`, or `__tests__/` directory
-- Mock external dependencies, test behavior not implementation
+- Unit tests: mock only pure-internal collaborators — test behavior not implementation
+- Integration and e2e tests: run against the containerized stack (`docker compose up -d --wait`), never against a mock of a service that has a container — see the `local-stack` skill
 
 ## Error Handling
 
@@ -61,6 +62,5 @@ description: >
 ## Additional Resources
 
 For framework-specific patterns, consult:
-- **`references/nextjs-patterns.md`** — Next.js App Router patterns, data fetching, caching
-- **`references/nestjs-patterns.md`** — NestJS modules, DI, decorators, guards, pipes
-- **`references/testing-patterns.md`** — Jest/Vitest patterns, mocking strategies
+- **`references/architecture-patterns.md`** — NestJS module structure, Next.js App Router layout, Turborepo monorepos, API design, auth and error-handling architecture
+- **`local-stack` skill** — running Postgres, Redis, queues, and service emulators in containers for integration and e2e tests

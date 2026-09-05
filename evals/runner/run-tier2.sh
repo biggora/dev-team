@@ -141,7 +141,7 @@ Choose the minimum set of agents needed. Use exact agent names from the list abo
         fi
         # Fallback: extract agent names from text
         if [[ -z "$predicted_agents" ]]; then
-          predicted_agents=$(echo "$result_text" | grep -oE '(backend-dev|frontend-dev|implementor|tester|code-reviewer|architect|planner|product-analyst|ui-ux-designer)' | sort -u || true)
+          predicted_agents=$(echo "$result_text" | grep -oE '(backend-dev|frontend-dev|implementor|devops-engineer|tester|code-reviewer|architect|planner|product-analyst|ui-ux-designer)' | sort -u || true)
         fi
 
         # Score this run

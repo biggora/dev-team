@@ -111,6 +111,28 @@
         "not_injected": ["nodejs-stack"]
       },
       "tags": ["import", "python"]
+    },
+    {
+      "id": "SI-011",
+      "tier": 1,
+      "signal_type": "path",
+      "signal_value": "docker-compose.yml",
+      "expected": {
+        "injected": ["local-stack"],
+        "not_injected": ["python-stack"]
+      },
+      "tags": ["path", "local-stack"]
+    },
+    {
+      "id": "SI-012",
+      "tier": 1,
+      "signal_type": "bash",
+      "signal_value": "docker compose up -d --wait",
+      "expected": {
+        "injected": ["local-stack"],
+        "not_injected": ["nodejs-stack", "python-stack"]
+      },
+      "tags": ["bash", "local-stack"]
     }
   ]
 }

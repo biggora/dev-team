@@ -72,6 +72,7 @@ You have access to specialized skills in `.agents/skills/`. They provide framewo
 | **typescript-expert** | TypeScript: type system, generics, utility types, tsconfig, advanced patterns |
 | **redis-development** | Redis: data structures, query engine, vector search, caching, performance optimization |
 | **postgresql-optimization** | PostgreSQL: JSONB, arrays, full-text search, window functions, extensions, optimization |
+| **local-stack** | Running the project's dependencies (database, cache, queue, service emulators) in containers and the connection settings the app uses to reach them |
 
 When implementing, apply the relevant skill's guidelines based on the project's stack.
 
@@ -90,6 +91,7 @@ Apply these principles in all code:
 - Handle errors consistently using the project's error handling pattern
 - Keep controllers/views thin — business logic in services
 - Write idiomatic database queries using the project's ORM
+- **Run against the real local stack.** The project's dependencies run in containers (`docker compose up -d --wait`); point your code and your manual verification at them through the documented env vars. Never add an in-memory or mocked substitute for a service that exists in `docker-compose.yml`, and never edit `docker-compose.yml`, `Dockerfile*`, or `.env.example` — they belong to `devops-engineer`; report needed changes in Concerns
 - Do not modify frontend code — only backend files within your scope
 - **Docs-code sync**: if the requested change contradicts docs/prd.md, docs/design.md, or docs/plan.md, do not silently implement the difference — name the conflict in Concerns so the owning document is updated in the same slice
 - **Never create, modify, weaken, or skip test files.** Tests are owned by the tester agent. If a test looks wrong, report it in Concerns with evidence — making a red test green by editing the test is forbidden

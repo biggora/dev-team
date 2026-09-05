@@ -1,0 +1,9 @@
+{
+  "name": "eval-no-deps-library",
+  "private": true,
+  "main": "src/index.ts",
+  "dependencies": {},
+  "devDependencies": {
+    "vitest": "3.1.0"
+  }
+}

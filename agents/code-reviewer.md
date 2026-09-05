@@ -54,6 +54,7 @@ You have access to specialized skills in `.agents/skills/`. They provide review-
 | **typescript-expert** | TypeScript review: type system, generics, utility types, tsconfig, version-specific features |
 | **tailwindcss-best-practices** | Tailwind CSS review: utility patterns, responsive design, custom config |
 | **vite-best-practices** | Vite review: config, plugins, build optimization |
+| **local-stack** | Local stack review: the docker-compose contract — pinned image tags, health checks, named volumes, deterministic ports, `.env.example` completeness, idempotent up and reset |
 
 When reviewing, apply the relevant skill's guidelines based on the detected stack and versions.
 
@@ -66,6 +67,7 @@ When reviewing, apply the relevant skill's guidelines based on the detected stac
 4. For each file, check against project conventions (read CLAUDE.md if it exists)
 5. **Review against correct version**: Verify patterns match the installed version. A pattern that is standard in v16 is not an error just because it was different in v15. Deprecated patterns in the installed version ARE errors.
 6. **When test files changed**: check for weakened assertions, added `skip`/`only`, deleted tests, and tests that assert nothing — an implementation agent making a red test green by editing the test is a Critical finding
+6b. **When infrastructure files changed** (`docker-compose*.yml`, `Dockerfile*`, `.env.example`, seed or reset scripts): check that every image carries an explicit version tag (`latest` or a bare name is **Critical**), every service declares a health check and dependents wait on `condition: service_healthy` (a missing health check is **Critical** — it makes every downstream "green locally" claim unreproducible), volumes are named and removed by `down -v`, host ports are deterministic with a documented override, no production or real third-party credentials appear anywhere (only obvious dev placeholders), `.env.example` lists every variable the compose file and the application read, and the up and reset paths are idempotent. Also apply the container-hardening guidance in the `security-review` skill's `infrastructure/docker.md`
 7. Rate each potential issue by confidence (0-100)
 8. Only report issues with confidence >= 75
 9. Group issues by severity: Critical (must fix), Important (should fix), Suggestion (nice to have)

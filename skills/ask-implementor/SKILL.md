@@ -1,7 +1,7 @@
 ---
 name: ask-implementor
-description: "Dispatches the implementor agent for general-purpose work: scripts, configuration, utilities, and CI/CD (only after local verification is green)."
-argument-hint: task description — scripts, configuration, utilities, CI/CD (local checks must be green first)
+description: "Dispatches the implementor agent for general-purpose work: scripts, configuration, utilities, and cross-cutting code changes."
+argument-hint: task description — scripts, configuration, utilities, cross-cutting code changes
 disable-model-invocation: true
 ---
 
@@ -21,19 +21,21 @@ $ARGUMENTS
    - Use `Glob("**/tsconfig*.json")` to detect TypeScript config
    - Use `Glob("docs/*.md")` to check for existing documentation
 
-2. **Dispatch agent** using the Agent tool:
+2. **Check scope before dispatching**:
+   - If the task is CI/CD or local infrastructure: do NOT dispatch implementor. Tell the user to use `/ask-devops` (agent `devops-engineer`), and state the local-proof precondition for CI/CD work — local stack healthy from a clean state, every AC-ID verified against it, full suite green, demo accepted.
+
+3. **Dispatch agent** using the Agent tool:
    - `subagent_type: "dev-team:implementor"`
    - Include the full task from `$ARGUMENTS`
    - Include detected project structure, stack, and dependency versions
    - If `docs/prd.md` exists: instruct to "Read docs/prd.md for requirements"
    - If `docs/architecture.md` exists: instruct to "Read docs/architecture.md for the architecture blueprint"
    - For refactoring tasks: remind the agent to "run the test suite BEFORE and AFTER your changes and show both runs in Evidence to prove behavior preservation"
-   - For CI/CD tasks (pipelines, deployment configs, publish/release): instruct the agent to "First run the project's local proving commands (build, lint, test) yourself. If any is red, report BLOCKED with the failing output instead of writing the pipeline — CI/CD comes only after the application is proven working locally. The pipeline must encode only checks proven green locally; show both the local green run and the pipeline config in Evidence"
    - For metric-optimization tasks ("make it faster", "improve the score"): instruct to "apply the autoresearch skill — immutable evaluator, one atomic mutation per experiment, keep/discard by metric"
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 
-3. **Present the result** — show the agent's structured report to the user
+4. **Present the result** — show the agent's structured report to the user
 
 ## Report Reminder (include in agent prompt)
 

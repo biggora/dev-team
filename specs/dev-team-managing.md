@@ -2,7 +2,7 @@
 
 ---
 
-> **Current lifecycle (2026-07):** the plugin has 11 agents. `adversarial-reviewer` is an internal read-only specialist with explicit `prd` and `plan` modes; it has no public shortcut. Every PRD and execution plan follows creator → adversarial debate (maximum 3 cycles). Consensus proceeds to ordinary document review with a separate maximum of 2 reworks. An unresolved third recheck proceeds instead to combined `doc-reviewer` arbitration/full review; after a user decision, the creator updates and `doc-reviewer` resumes that combined review without a second ordinary review. `/ask-prd` and `/ask-planner` run the same mini-orchestration. See `specs/workflow.md` for the normative workflow.
+> **Current lifecycle (2026-07):** the plugin has 12 agents. `devops-engineer` owns the local containerized stack — `docker-compose.yml`, dev `Dockerfile`, `.env.example`, seed and reset scripts, service emulators — and CI/CD; its local-stack gate must report DONE (or `Local stack: N/A — <reason>`) before any scaffolding or slice starts, and CI/CD is dispatched only after the four-conjunct local-proof gate. `adversarial-reviewer` is an internal read-only specialist with explicit `prd` and `plan` modes; it has no public shortcut. Every PRD and execution plan follows creator → adversarial debate (maximum 3 cycles). Consensus proceeds to ordinary document review with a separate maximum of 2 reworks. An unresolved third recheck proceeds instead to combined `doc-reviewer` arbitration/full review; after a user decision, the creator updates and `doc-reviewer` resumes that combined review without a second ordinary review. `/ask-prd` and `/ask-planner` run the same mini-orchestration. See `specs/workflow.md` for the normative workflow.
 
 Current review-role inventory:
 

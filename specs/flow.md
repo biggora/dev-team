@@ -26,7 +26,7 @@ Glob("**/*.ts")             → нет
 **Greenfield detected.** Координатор строит цепочку:
 
 ```
-architect → ui-ux-designer → planner → implementor → [backend-dev, frontend-dev] → tester → code-reviewer
+architect → ui-ux-designer → planner → devops-engineer → implementor → [backend-dev, frontend-dev] → tester → code-reviewer
 ```
 
 Показывает тебе план и спрашивает подтверждение.
@@ -87,31 +87,61 @@ Summary: 5 экранов, 14 цветов в палитре, wireframes для 
 4. **Сохраняет `docs/plan.md`** — подзадачи, зависимости, scope, агенты
 
 ```
-Subtask 1: [implementor] Scaffolding — package.json, tsconfig, docker-compose (локальная dev-среда, не CI/CD), dirs
-Subtask 2: [implementor] Shared types — src/shared/types/, src/shared/config/
-Subtask 3: [backend-dev] Auth module — JWT, guards, user entity      ← параллельно
-Subtask 4: [backend-dev] Task module — CRUD endpoints, task entity   ← параллельно
-Subtask 5: [frontend-dev] Shell layout — nav, sidebar (по wireframes)← параллельно
-Subtask 6: [frontend-dev] Auth pages — login, register               ← параллельно
-Subtask 7: [frontend-dev] Dashboard + Task UI                        ← после 3,4,5
-Subtask 8: [tester] E2E тесты
-Subtask 9: [code-reviewer] Финальный ревью
+Subtask 1: [devops-engineer] Локальный стек — docker-compose (PostgreSQL, mailpit),
+           пинованные теги, health checks, .env.example, seed
+Subtask 2: [implementor] Scaffolding — package.json, tsconfig, dirs
+Subtask 3: [implementor] Shared types — src/shared/types/, src/shared/config/
+Subtask 4: [backend-dev] Auth module — JWT, guards, user entity      ← параллельно
+Subtask 5: [backend-dev] Task module — CRUD endpoints, task entity   ← параллельно
+Subtask 6: [frontend-dev] Shell layout — nav, sidebar (по wireframes)← параллельно
+Subtask 7: [frontend-dev] Auth pages — login, register               ← параллельно
+Subtask 8: [frontend-dev] Dashboard + Task UI                        ← после 4,5,6
+Subtask 9: [tester] E2E тесты
+Subtask 10: [code-reviewer] Финальный ревью
 ```
 
-**CI/CD last**: пайплайны, деплой и release в план не входят — они не были запрошены. Если бы входили, планер обязан поставить их отдельной финальной подзадачей после Subtask 9 с предусловием local-proof gate: все AC подтверждены локально, полный тестовый набор зелёный, финальное demo принято пользователем; пайплайн кодирует только проверки, доказанные зелёными локально.
+**CI/CD last**: пайплайны, деплой и release в план не входят — они не были запрошены. Если бы входили, планер обязан поставить их отдельной финальной подзадачей после Subtask 10, владелец — `devops-engineer`, с предусловием local-proof gate из четырёх конъюнктов: локальный стек поднят с нуля и здоров (`docker compose down -v` → `up -d --wait` зелёный) либо записано `Local stack: N/A`; каждый AC подтверждён свежими доказательствами, полученными **против этого запущенного стека**; полный набор тестов (unit + integration + e2e) зелёный; финальное demo принято пользователем. Пайплайн кодирует только проверки, доказанные зелёными локально.
 
 ```
 Status: DONE
 Files changed: docs/plan.md
-Summary: 9 подзадач, 3 фазы: scaffolding → parallel dev → test+review
+Summary: 10 подзадач, 4 фазы: локальный стек → scaffolding → parallel dev → test+review
 ```
 
 ---
 
-### Phase 2d: Implementor — Scaffolding (sonnet)
+### Phase 2d: DevOps Engineer — Локальный стек (sonnet)
 
-Координатор dispatch (из `docs/plan.md`, subtasks 1+2):
-> *"Scaffold the project and create shared files. Read docs/architecture.md for the file structure. This is a Node.js TypeScript project using Next.js and NestJS. Create: package.json, tsconfig, docker-compose (local dev environment only — no CI pipelines or deployment configs), directory structure, shared types and config files. Scope: project root, src/shared/"*
+Координатор dispatch (из `docs/plan.md`, subtask 1):
+> *"Stand up the local stack for this project. Read docs/architecture.md, section 'Local runtime topology'. Infrastructure inventory: PostgreSQL (primary datastore), mailpit (SMTP capture for the registration flow). Produce docker-compose.yml with pinned image tags, a health check per service and deterministic host ports, plus .env.example and seed/reset scripts. Prove with `docker compose down -v` → `docker compose up -d --wait` → `docker compose ps` healthy, twice from clean. Scope: docker-compose.yml, .env.example, scripts/. Keywords: containerized dependencies, local stack, health check."*
+
+**DevOps-инженер:**
+1. Читает `docs/architecture.md` — раздел «Local runtime topology»
+2. Пишет `docker-compose.yml`: `postgres:16-alpine` и `axllent/mailpit:v1.20`, health check на каждый сервис, именованные тома, фиксированные host-порты
+3. Заполняет `.env.example` — каждая переменная с безопасным дефолтом и однострочным комментарием
+4. Добавляет идемпотентный seed и скрипт reset
+5. Дважды поднимает стек с нуля и подтверждает здоровье сервисов
+
+```
+Status: DONE
+Files changed: docker-compose.yml, .env.example, scripts/seed.sql, scripts/reset.sh
+Evidence:
+  docker compose config -q            → 0
+  docker compose down -v              → 0
+  docker compose up -d --wait         → 0 (18s)
+  docker compose ps                   → postgres (healthy), mailpit (healthy)
+  psql -c 'select 1' / curl :8025     → 0 / 0
+  повтор с нуля: down -v → 0 · up -d --wait → 0 (17s) · ps → оба (healthy)
+```
+
+**Ни один слайс и ни один scaffolding не стартует, пока этот шаг не отчитался DONE** — либо пока в `docs/progress.md` не записано `Local stack: N/A — <причина>`.
+
+---
+
+### Phase 2e: Implementor — Scaffolding (sonnet)
+
+Координатор dispatch (из `docs/plan.md`, subtasks 2+3):
+> *"Scaffold the project and create shared files. Read docs/architecture.md for the file structure. This is a Node.js TypeScript project using Next.js and NestJS. Create: package.json, tsconfig, directory structure, shared types and config files. The local stack — docker-compose.yml, .env.example, seed and reset scripts — already exists from the previous phase and is read-only for you: read it for host ports and env-var names, do not edit it. Scope: project root, src/shared/"*
 
 **Implementor:**
 1. Применяет `brainstorming` — оценивает структуру
@@ -120,14 +150,14 @@ Summary: 9 подзадач, 3 фазы: scaffolding → parallel dev → test+r
 
 ```
 Status: DONE
-Files changed: package.json, tsconfig.json, docker-compose.yml, src/shared/types/...
+Files changed: package.json, tsconfig.json, src/shared/types/...
 ```
 
 ---
 
-### Phase 2e: Параллельный dispatch (4 агента одновременно)
+### Phase 2f: Параллельный dispatch (4 агента одновременно)
 
-Координатор проверяет: **scope не пересекается** (shared files уже созданы implementor-ом).
+Координатор проверяет: **scope не пересекается** (shared files уже созданы implementor-ом). Инфраструктурные файлы — `docker-compose.yml`, `.env.example`, seed- и reset-скрипты — принадлежат devops-engineer: параллельные агенты их только читают (порты, имена переменных), но никогда не правят.
 
 Один message — 4 Agent tool calls:
 
@@ -150,7 +180,7 @@ Files changed: package.json, tsconfig.json, docker-compose.yml, src/shared/types
 
 ---
 
-### Phase 2f: Frontend-dev #3 — Dashboard (после backend)
+### Phase 2g: Frontend-dev #3 — Dashboard (после backend)
 
 Координатор ждёт backend-dev. Получает отчёты: API endpoints готовы. Dispatch:
 
@@ -176,7 +206,7 @@ Frontend-dev #3 получает **API контракты от backend** — han
 
 ---
 
-### Phase 2g: Tester (sonnet)
+### Phase 2h: Tester (sonnet)
 
 Координатор dispatch:
 > *"Write and run tests for this TypeScript/Node.js project using Vitest and Playwright. Read docs/design.md for user flows to use as test scenarios. Files changed: [полный список от всех агентов]. Test the auth flow (register → login → access dashboard) and task CRUD (create → read → update → delete). This is a Next.js 16 / NestJS 11 / TypeScript 5.8 project."*
@@ -224,7 +254,8 @@ Stack: Next.js 16.2, NestJS 11.0, TypeScript 5.8, PostgreSQL
 What was done:
 - Architecture: 6 modules (docs/architecture.md)
 - Design: 5 screens with wireframes and palette (docs/design.md)
-- Plan: 9 subtasks in 3 phases (docs/plan.md)
+- Plan: 10 subtasks in 4 phases (docs/plan.md)
+- Local stack: postgres + mailpit, healthy from clean twice (docker-compose.yml)
 - Backend: Auth + Task modules (12 files)
 - Frontend: Shell + Auth + Dashboard (18 files)
 - Tests: 24 passed, 0 failed
@@ -264,9 +295,13 @@ Next steps:
     │ Planner │ → docs/plan.md               ← читает оба docs/
     └────┬────┘
          │
+    ┌────▼───────────────┐
+    │ DevOps Engineer    │ docker-compose + .env.example + seed
+    └────┬───────────────┘ ← gate: без DONE слайсы не стартуют
+         │
     ┌────▼──────────┐
     │ Implementor   │ scaffolding + shared files
-    └────┬──────────┘
+    └────┬──────────┘   стек читает, но не правит
          │
          │  scope изоляция: shared files уже созданы
          │
@@ -307,6 +342,8 @@ Next steps:
 | Артефакты терялись в контексте | Сохраняются в `docs/` |
 | Handoff = вставка текста в промпт | Handoff = "Read docs/architecture.md" |
 | Параллельные агенты могли конфликтовать | Shared files → implementor первым, scope изоляция |
+| docker-compose и CI/CD делал implementor | Инфраструктура — эксклюзивный writable scope devops-engineer; остальные агенты её только читают |
+| Слайсы стартовали без запущенных зависимостей | Локальный стек поднимается до scaffolding; без DONE (или `Local stack: N/A`) слайсы не стартуют |
 | Re-dispatch мог зациклиться | Максимум 2 попытки → эскалация пользователю |
 | Тестер не знал user flows | Тестер читает `docs/design.md` |
 | Ревьюер не знал версий | Ревьюер читает package.json + получает version-aware скиллы |

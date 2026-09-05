@@ -18,7 +18,8 @@ Core disciplines:
 - **Input inventory**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) are collected in Phase 1 and are normative; requirements without a source are marked `invented — requires user confirmation`. Where no inputs exist, the decisions they would cover come from the user.
 - **OQ and DoD gates**: open questions tagged "before Slice N" must be answered by the user (or explicitly waived as MVP interpretation) before slice N starts; slice N+1 starts only after slice N passes tests, review, and a user demo checkpoint.
 - **Docs-code sync**: a code change that alters requirements, design, or plan updates the owning document in the same slice.
-- **CI/CD last + local-proof gate**: CI/CD work (CI pipelines, deployment configs/images, publish/release) is never part of scaffolding or ordinary slices — it is planned only as the final subtask and dispatched only after every AC-ID has fresh passing local evidence, the full test suite is green, and the final demo checkpoint is accepted by the user. The pipeline encodes only checks already proven green locally. Local dev tooling (docker-compose for a dev database, git hooks, lint config) is not CI/CD.
+- **Real stack before pipelines (local-stack gate)**: any project with external runtime dependencies (database, cache, broker or queue, SMTP, object storage, search engine, identity provider, third-party HTTP API) must have them running locally in version-pinned containers with health checks — owned by `devops-engineer`, replaced by a containerized emulator where no real service can run locally — before slice 1 starts and for every verification afterwards; evidence produced against a mock, stub, or in-memory substitute for a containerizable dependency is not local evidence, and a project with genuinely no external dependencies records `Local stack: N/A — <reason>`.
+- **CI/CD last + local-proof gate**: CI/CD work (CI pipelines, deployment Dockerfiles/images, publish/release, staging/production configs) is never part of scaffolding or ordinary slices — it is planned only as the final subtask, owned by `devops-engineer`, and dispatched only after the local-proof gate passes: the local-stack gate is satisfied (a clean `docker compose down -v` → `docker compose up -d --wait` run is green, or `Local stack: N/A` is recorded with its reason), every in-scope AC-ID has fresh passing evidence produced against that running stack, the full test suite (unit + integration + e2e) is green, and the last slice's demo checkpoint is accepted by the user. The pipeline encodes only checks already proven green locally, against the same pinned images. Local dev tooling (`docker-compose.yml`, dev Dockerfile, seed and reset scripts, git hooks, lint config) is not CI/CD.
 
 Task-type skill routing (Phase 1):
 - **Metric optimization** ("make it faster", "improve the score", tune a measurable number) → implementor dispatched with the `autoresearch` skill: immutable evaluator, one atomic mutation per experiment, keep/discard by metric, every attempt logged.
@@ -35,6 +36,19 @@ Before any analysis, the coordinator triages the task: a documentation adequacy 
 | **Full** | large / greenfield / ambiguous / high-risk | the complete workflow below, including the adversarial debate gate. |
 
 Externally grounded facts (endpoint hosts, config shapes, contracts, real IDs) and irreversible decisions are collected into one batched blocking-questions gate: verified against the authoritative source or asked of the user before any dispatch. Cost circuit-breaker thresholds: **Micro/Standard: 8 runs; Full: 40 runs** (or 3× planned-slices × 5, whichever is lower). A per-slice sub-breaker stops any slice exceeding 6 implementation dispatches.
+
+The local-stack gate is profile-independent: a Micro task that touches a database, queue, mail, or storage dependency is still verified against the containerized stack; only an empty infrastructure inventory exempts it, recorded as `Local stack: N/A — <reason>`. It does not mean an extra dispatch per task: when a `docker-compose*.yml` already covers the whole inventory, the gate is satisfied by evidence — `docker compose up -d --wait` plus `docker compose ps`, recorded — and `devops-engineer` is dispatched only when the stack is missing, incomplete, or unhealthy.
+
+## Gates
+
+| Gate | Scope | Blocks | Satisfied by |
+|---|---|---|---|
+| local-stack gate (enablement) | project | slice 1 and shared scaffolding | devops-engineer's clean-state proof, or a recorded `Local stack: N/A` |
+| DoD gate | slice N | slice N+1 | slice AC tests green against the stack + code review DONE + demo checkpoint |
+| criteria coverage check (Phase 4 step 1) | all AC-IDs | CI/CD dispatch | every AC-ID has passing non-mock evidence, or is listed UNVERIFIED |
+| local-proof gate (Phase 2 action 5) | whole task | CI/CD dispatch | all four conjuncts recorded in the ledger |
+
+The local-stack gate is the first conjunct of the local-proof gate, not a parallel mechanism: the local-proof gate reads the stack proof from the ledger before it looks at AC evidence, the full suite, or the final demo. The gate carries two obligations — **enablement**, the stack proven healthy from a clean state before there is an app to run against it, and **proof**, every later verification (slice acceptance tests, Mode B suites, criteria coverage) executed against that running stack rather than a substitute.
 
 ## Full Workflow (Greenfield)
 
@@ -107,10 +121,24 @@ flowchart TD
             end
         end
 
-        DOC_PHASE --> SCAFFOLD
+        DOC_PHASE --> INFRA
+
+        subgraph INFRA["Local Stack Enablement"]
+            DEV["devops-engineer: docker-compose.yml, .env.example,<br/>seed and reset scripts, emulators where no real service runs locally<br/>(pinned image tags + a health check per service)"] --> CRI
+            subgraph CRI["Infra Review: Local Stack"]
+                CRI_R[code-reviewer]
+                CRI_D{Concerns?}
+                CRI_R --> CRI_D
+                CRI_D -- Yes --> CRI_FIX[re-dispatch devops-engineer]
+                CRI_FIX --> CRI_OK["Stack proven healthy from clean<br/>or Local stack: N/A recorded"]
+                CRI_D -- No --> CRI_OK
+            end
+        end
+
+        INFRA --> SCAFFOLD
 
         subgraph SCAFFOLD["Shared Scaffolding"]
-            IMP["implementor: skeleton, config, shared types<br/>(no CI/CD — pipelines and deploy come last)"] --> CR1
+            IMP["implementor: skeleton, config, shared types<br/>(the local stack already exists — read-only for implementor;<br/>no CI/CD — pipelines and deploy come last)"] --> CR1
             subgraph CR1["Code Review: Scaffold"]
                 CR1_R[code-reviewer]
                 CR1_D{Concerns?}
@@ -125,6 +153,8 @@ flowchart TD
 
         subgraph SLICE_LOOP["Per Slice (tracer bullet first)"]
             direction TB
+            STACKUP["docker compose up -d --wait<br/>all services healthy"]
+            STACKUP --> OQGATE
             OQGATE{"OQ gate: questions tagged<br/>'before Slice N' answered?"}
             OQGATE -- No --> ASKOQ["Ask user in one batch<br/>or record MVP waiver"]
             ASKOQ --> OQGATE
@@ -138,7 +168,7 @@ flowchart TD
                 FE[frontend-dev]
             end
 
-            PARALLEL --> TB2["tester Mode B: full suite green,<br/>extend coverage, update docs/test-plan.md"]
+            PARALLEL --> TB2["tester Mode B: full suite (unit + integration + e2e)<br/>green against containers,<br/>extend coverage, update docs/test-plan.md"]
             TB2 --> CRS
             subgraph CRS["Code Review: Slice"]
                 CRS_R[code-reviewer]
@@ -148,14 +178,14 @@ flowchart TD
                 CRS_FIX --> CRS_OK[Slice done]
                 CRS_D -- No --> CRS_OK
             end
-            CRS --> GATE{"DoD gate: slice AC tests pass<br/>end-to-end + review DONE?"}
+            CRS --> GATE{"DoD gate: slice AC tests pass end-to-end<br/>against the running stack + review DONE?"}
             GATE -- Yes --> DEMO["Demo checkpoint:<br/>show increment to user"]
             DEMO --> NEXT_SLICE[Next slice]
             GATE -- No --> FIX[re-dispatch within rework limits]
             FIX --> TB2
         end
 
-        SLICE_LOOP --> CICD["CI/CD (optional, always last)<br/>local-proof gate: all AC-IDs verified locally,<br/>full suite green, final demo accepted;<br/>pipeline encodes only locally-green checks"]
+        SLICE_LOOP --> CICD["CI/CD — devops-engineer (always last)<br/>local-proof gate: local stack healthy from clean,<br/>all AC-IDs verified against containers,<br/>full suite green, final demo accepted"]
     end
 
     P2 --> P3
@@ -280,7 +310,7 @@ The budgets are independent: PRD/plan debate allows at most **3 debate cycles**.
 | Participant | Writes artifact | Responsibility |
 |---|---:|---|
 | product-analyst | Yes, PRD only | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; maintains the OQ register with `Confirm before:` triggers and the Definition of Ready; marks sourceless requirements `invented — requires user confirmation`; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. |
-| planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; carries OQ triggers into the slices they gate, states the DoD gate, and plans an integration-enablement slice when the PRD names real integrations; resolves plan challenges. |
+| planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; carries OQ triggers into the slices they gate, states the DoD gate, and plans an integration-enablement slice when the PRD names real integrations; schedules the infrastructure-enablement task before slice 1 and before shared scaffolding when the project has external runtime dependencies; resolves plan challenges. |
 | adversarial-reviewer | No | Challenges assumptions and plausible failure scenarios in explicit `prd` or `plan` mode; returns the `Debate verdict` field with `CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`. |
 | doc-reviewer | No | Checks completeness, consistency, and actionability; arbitrates unresolved `CH-*` items only after cycle 3. |
 | coordinator or ask-* mini-orchestrator | No | Carries full debate context, enforces budgets, updates round state, and blocks downstream dispatch until the document passes both gates; collects the input inventory and enforces the OQ, DoD, and demo-checkpoint gates. |
@@ -299,6 +329,7 @@ sequenceDiagram
     participant AR as architect
     participant UD as ui-ux-designer
     participant PL as planner
+    participant DO as devops-engineer
     participant IM as implementor
     participant CR as code-reviewer
     participant BE as backend-dev
@@ -428,7 +459,13 @@ sequenceDiagram
 
     rect rgb(230, 255, 230)
         Note over C,CR: Implementation — per slice, tracer bullet first
-        C->>IM: Scaffold project (shared skeleton)
+        Note over C,DO: Local stack enablement — before any scaffolding or slice
+        C->>DO: Stand up the containerized dependencies (inventory rows, pinned tags, health checks)
+        DO-->>C: docker-compose.yml, .env.example, seed/reset + Evidence (down -v, up -d --wait, ps healthy — twice from clean)
+        C->>CR: Review infrastructure (pins, health checks, named volumes, ports, no production credentials)
+        CR-->>C: DONE or DONE_WITH_CONCERNS
+        Note over C,DO: Empty inventory instead records "Local stack: N/A — reason"
+        C->>IM: Scaffold project (shared skeleton, local stack read-only)
         IM-->>C: Files created + Evidence
         C->>CR: Review scaffold
         CR-->>C: DONE or DONE_WITH_CONCERNS
@@ -453,13 +490,13 @@ sequenceDiagram
             CR-->>C: DONE or DONE_WITH_CONCERNS
             C->>U: Demo checkpoint — run instructions and slice increment
             U-->>C: Feedback (design/requirement changes go through the owning doc agent first)
-            Note over C: DoD gate — slice AC tests pass + review DONE + demo before next slice
+            Note over C: DoD gate — slice AC tests pass against the running stack + review DONE + demo before next slice
         end
 
         opt CI/CD (always last)
-            Note over C: Local-proof gate — all AC-IDs verified locally, full suite green, final demo accepted
-            C->>IM: CI/CD setup (pipeline encodes only locally-green checks)
-            IM-->>C: Files + Evidence (local green run + pipeline config)
+            Note over C: Local-proof gate — local stack healthy from clean, every AC-ID verified against that stack, full suite (unit + integration + e2e) green, final demo accepted
+            C->>DO: CI/CD setup (pipeline encodes only locally-green checks, same pinned images)
+            DO-->>C: Files + Evidence (local green run + pipeline config)
             C->>CR: Review CI/CD config
             CR-->>C: DONE or DONE_WITH_CONCERNS
         end
@@ -535,4 +572,4 @@ stateDiagram-v2
 
 ## Session Continuity
 
-The `/handoff` skill generates `docs/handoff.md` — a compact session-continuity snapshot capturing the resume point (phase, slice, debate state), artifact states, environment, pending user decisions, and verbal decisions not yet in docs. The `/resume` skill reads the handoff document (or reconstructs state from `docs/progress.md`), validates consistency against the ledger and git history, and continues from the exact next action. The handoff is a convenience snapshot; `docs/progress.md` remains the authority.
+The `/handoff` skill generates `docs/handoff.md` — a compact session-continuity snapshot capturing the resume point (phase, slice, debate state), artifact states, environment, pending user decisions, and verbal decisions not yet in docs. The ledger's session state carries the local-stack line — `up` / `down` / `N/A` with the command and result of the last healthy verification — so a resumed session knows whether the containers must be brought up before it can verify anything. The `/resume` skill reads the handoff document (or reconstructs state from `docs/progress.md`), validates consistency against the ledger and git history, and continues from the exact next action. The handoff is a convenience snapshot; `docs/progress.md` remains the authority.

@@ -166,6 +166,28 @@
         "not_agents": ["adversarial-reviewer", "product-analyst", "planner"]
       },
       "tags": ["doc-review", "routing-regression", "internal-challenger"]
+    },
+    {
+      "id": "AT-016",
+      "tier": 1,
+      "prompt": "Set up docker-compose with Postgres and a mail catcher so we can test emails locally",
+      "context": { "fixture": "containerized-project" },
+      "expected": {
+        "agents": ["devops-engineer"],
+        "not_agents": ["implementor", "backend-dev"]
+      },
+      "tags": ["infrastructure", "local-stack", "clear-signal"]
+    },
+    {
+      "id": "AT-017",
+      "tier": 1,
+      "prompt": "Write a GitHub Actions workflow that runs the tests",
+      "context": { "fixture": "containerized-project" },
+      "expected": {
+        "agents": ["devops-engineer"],
+        "not_agents": ["implementor"]
+      },
+      "tags": ["cicd", "ownership-regression", "clear-signal"]
     }
   ]
 }

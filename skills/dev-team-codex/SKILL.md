@@ -32,6 +32,7 @@ Because of that, treat the repository's coordinator skills (`skills/dev-team*/SK
 - Coordinator workflow source: `skills/dev-team/SKILL.md`
 - Stack variants: `skills/dev-team-node/SKILL.md`, `skills/dev-team-python/SKILL.md`
 - Direct specialist flows: `skills/ask-*/SKILL.md`
+- Local infrastructure recipes (docker compose, health checks, emulators, seed and reset): `skills/local-stack/SKILL.md`
 - Specialist prompts: `agents/*.md`
 
 Read only the files needed for the current task. Do not bulk-read the whole plugin.
@@ -70,16 +71,17 @@ For `dev-team` requests:
 3. Detect the stack with lightweight inspection first.
 4. Inventory user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) and pass the path list — or "none" — to document agents; they read the inputs themselves.
 5. Choose the relevant specialist prompts from `agents/` by detected need, never a fixed roster; record a reason for every skipped role.
-6. For multi-slice work, maintain `docs/progress.md` (goal, profile line with triage score and rationale, run counter, acceptance criterion IDs, task table with evidence summaries, decisions, open questions with triggers) and re-read it plus `docs/prd.md` before each dispatch round. **Idempotency guard**: never re-spawn an agent for a completed/locked artifact without a recorded invalidation reason; after an interruption, resume from ledger state. If `docs/handoff.md` exists, read it first for the resume point and environment context, then validate against `docs/progress.md`. The handoff document is a convenience snapshot; `docs/progress.md` is the authority.
+6. For multi-slice work, maintain `docs/progress.md` (goal, profile line with triage score and rationale, run counter, acceptance criterion IDs, infrastructure inventory, local stack proof, task table with evidence summaries, decisions, open questions with triggers) and re-read it plus `docs/prd.md` before each dispatch round. **Idempotency guard**: never re-spawn an agent for a completed/locked artifact without a recorded invalidation reason; after an interruption, resume from ledger state. If `docs/handoff.md` exists, read it first for the resume point and environment context, then validate against `docs/progress.md`. The handoff document is a convenience snapshot; `docs/progress.md` is the authority.
 7. **OQ gate**: before each slice, obtain the user's answers to open questions tagged for that slice and record them in `docs/progress.md`; an explicit "proceed with MVP interpretation" waiver is valid only for reversible internal defaults — externally grounded facts and irreversible decisions require an answer. An unanswered triggered question blocks the slice.
 8. Dispatch independent specialists in parallel when scopes do not overlap. The test directory belongs to the tester — implementation agents must not touch test files.
 9. In the Full profile, run the PRD/plan lifecycle below before downstream use; in Standard, run `doc-reviewer` directly on the thin delta brief; Micro spawns no document agents. For other documents, run `doc-reviewer` directly.
 10. After each code-producing agent, run `code-reviewer`.
 11. **Evidence gate**: a specialist report claiming DONE without an `Evidence` field (fresh command output, or file:line citations for read-only work), or with failing output in Evidence, is treated as DONE_WITH_CONCERNS — re-dispatch demanding verification.
 12. **DoD gate and demo checkpoint**: do not start the next slice until the current slice's acceptance tests pass, review is DONE, and the user saw a demo of the increment. Deviations require an explicit user decision with a debt-closure slice. Doc-affecting code changes update the owning doc in the same slice (docs-code sync).
-13. If a reviewer reports concerns, re-dispatch the original specialist with the findings. Maximum 2 rework dispatches per artifact per gate; after 3 identical failures change strategy once or escalate to the user.
-14. **Circuit-breaker and ground truth**: track the spawned-agent count. Thresholds: Micro/Standard: 8 runs; Full: 40 runs (or 3× planned-slices × 5, whichever is lower). When the threshold is reached, stop and ask the user whether to continue with a raised ceiling, narrow scope, escalate to Full, or hand back. **Per-slice sub-breaker (all profiles)**: if a single slice exceeds 6 implementation dispatches (excluding the initial Mode A tester and code-reviewer), stop the slice and ask the user whether to continue, skip, or re-plan. Any external/factual claim is verified against its authoritative source before encoding; unverifiable facts are blocking questions, not MVP defaults.
-15. Integrate results and report the final outcome succinctly, including the profile, run count, and which acceptance criteria were verified with evidence.
+13. **Local-stack gate + CI/CD last**: if the project has external runtime dependencies, spawn `devops-engineer` (from `agents/devops-engineer.md`) before the first slice to stand them up in containers — pinned tags, health checks, `.env.example`, seed and reset — and require Evidence showing `docker compose down -v` → `up -d --wait` → `ps` healthy from a clean state, twice. Every later verification runs against that stack; a mocked substitute for a containerized dependency does not count as evidence. A dependency with no local container needs a containerized emulator; if none exists, halt and ask the user in one batch, and keep the AC `UNVERIFIED` pending an explicit waiver. CI/CD work (pipelines, deployment images, publish/release) is owned by `devops-engineer`, never `implementor`, and is spawned only as the final task after the local-proof gate: stack healthy from clean, every AC-ID verified against it, full suite (unit + integration + e2e) green, final demo accepted. The pipeline encodes only commands already proven green locally. Record `Local stack: N/A — <reason>` for projects with no external dependencies.
+14. If a reviewer reports concerns, re-dispatch the original specialist with the findings. Maximum 2 rework dispatches per artifact per gate; after 3 identical failures change strategy once or escalate to the user.
+15. **Circuit-breaker and ground truth**: track the spawned-agent count. Thresholds: Micro/Standard: 8 runs; Full: 40 runs (or 3× planned-slices × 5, whichever is lower). When the threshold is reached, stop and ask the user whether to continue with a raised ceiling, narrow scope, escalate to Full, or hand back. **Per-slice sub-breaker (all profiles)**: if a single slice exceeds 6 implementation dispatches (excluding the initial Mode A tester and code-reviewer), stop the slice and ask the user whether to continue, skip, or re-plan. Any external/factual claim is verified against its authoritative source before encoding; unverifiable facts are blocking questions, not MVP defaults.
+16. Integrate results and report the final outcome succinctly, including the profile, run count, and which acceptance criteria were verified with evidence.
 
 ### PRD/plan lifecycle (Full profile; always used by /ask-prd and /ask-planner)
 
@@ -104,6 +106,7 @@ If the user invokes a Claude-style shortcut name, map it directly:
 - `/ask-frontend` -> `agents/frontend-dev.md`
 - `/ask-backend` -> `agents/backend-dev.md`
 - `/ask-implementor` -> `agents/implementor.md`
+- `/ask-devops` -> `agents/devops-engineer.md`
 - `/ask-tester` -> `agents/tester.md`
 - `/ask-reviewer` -> `agents/code-reviewer.md`
 - `/ask-doc-reviewer` -> `agents/doc-reviewer.md`

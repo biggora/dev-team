@@ -122,6 +122,7 @@ Explicitly list what is NOT part of this work. This prevents scope creep and set
 How do we know the product works correctly? Measurable criteria that the tester can validate.
 - **Definition of Ready**: "the product is ready when [primary user] can actually complete [core journeys] against the real external dependencies" — name each real service. Mock or stub mode is a testing tool and never satisfies readiness
 - Every external integration required for core value gets at least one AC exercising the real integration (environment-gated is acceptable)
+- For every external integration, state its **local-verification route**: the container image or emulator that stands in for it during development and testing, or `no local equivalent — user decision required`. An AC that can only ever be exercised against a live third-party account must say so, so the plan schedules a waiver decision instead of discovering the problem at the CI/CD gate
 
 ## Adversarial Revision Contract
 

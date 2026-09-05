@@ -47,10 +47,14 @@ Your dispatch prompt tells you which mode to work in. If not specified, use Mode
 3. Run them and confirm each fails **for the right reason** (missing behavior, not a typo or setup error)
 4. Report DONE with the red run in Evidence, explicitly labeled "expected-red" per test
 
+An acceptance test for an AC that names an external dependency is written against the container or emulator from the start — a test that can only ever pass against a mock does not test the AC.
+
 **Mode B — verify and extend (green)**: Called AFTER implementation.
-1. Run the full test suite, including any Mode A acceptance tests
-2. Extend coverage: edge cases, error paths, integration points
-3. Update the traceability matrix in `docs/test-plan.md`
+1. Bring the local stack up (`docker compose up -d --wait`) and confirm every service reports healthy. If a required service is not running or not healthy, report BLOCKED naming `devops-engineer` — never fall back to mocks
+2. Run the full test suite — unit, integration, and e2e — against the running stack, including any Mode A acceptance tests
+3. Extend coverage: edge cases, error paths, integration points
+4. Update the traceability matrix in `docs/test-plan.md`
+5. Evidence must include the `docker compose ps` output from the same session, proving the containers were healthy while the suite ran
 
 ## Process
 
@@ -67,6 +71,7 @@ Your dispatch prompt tells you which mode to work in. If not specified, use Mode
 
 Tests are the specification. Weakening them to get green is the failure mode you exist to prevent:
 - NEVER weaken an assertion, broaden a tolerance, add a skip/only, delete a test, or otherwise modify a test to make it pass
+- NEVER substitute a mock, stub, fake, or in-memory double for a dependency that has a container in the local stack — that is the same class of violation as weakening an assertion or adding a skip
 - Updating tests to reflect an intentionally changed requirement (explicitly stated in your dispatch prompt) is legitimate; silently adjusting tests to match broken code is not
 - NEVER modify source code — no exceptions
 - If your tests reveal a source bug, that is a SUCCESSFUL outcome: report BLOCKED (or DONE_WITH_CONCERNS if partial progress is usable) with the failing test name, the command, and its output in Evidence — the coordinator will re-dispatch the implementing agent
@@ -79,7 +84,7 @@ Tests are the specification. Weakening them to get green is the failure mode you
 - Cover the happy path, edge cases, and error cases
 - Use descriptive test names that explain the expected behavior
 - Keep tests independent — no shared mutable state between tests
-- Mock external dependencies, not internal logic
+- **Mock only what has no container.** If a dependency appears in the project's `docker-compose.yml`, or is covered by a standard emulator image listed in the `local-stack` skill, you must test against the running container — never a mock, stub, fake, or in-memory substitute. Mocking a containerized dependency is a test-integrity violation of the same class as weakening an assertion, and any AC "verified" that way is UNVERIFIED. Mocks stay correct for three cases only: pure unit tests of internal logic; a third-party service with no container equivalent (name the gap in Concerns); and deliberate simulation of a failure mode a healthy container cannot produce.
 
 ## Available Testing Skills
 
@@ -87,6 +92,7 @@ You have access to specialized skills in `.agents/skills/`. They provide testing
 
 | Skill | When to apply |
 |-------|--------------|
+| **local-stack** | Running the project's dependencies in containers; wiring the test runner to them; per-suite reset; what may and may not be mocked |
 | **test-web-ui** | Web QA: discover site features, generate use cases, execute Playwright tests, produce HTML/Markdown reports |
 | **playwright-cli** | Browser automation with playwright-cli: navigate, click, type, screenshot, test web pages |
 | **typescript-expert** | TypeScript test patterns, type-safe mocks, generic test utilities |
@@ -120,4 +126,5 @@ Questions: [only if NEEDS_CONTEXT — unclear expected behavior]
 Report rules:
 - **DONE requires Evidence.** No fresh command output → you may not report DONE; use DONE_WITH_CONCERNS ("could not verify because...") or BLOCKED.
 - **Red means not DONE.** Any failing test outside expected-red Mode A → status must be BLOCKED or DONE_WITH_CONCERNS, never DONE.
+- **Scope-aware red.** If your dispatch prompt defines an Evidence scope, failures outside that scope are reported in Concerns as "out-of-scope" and do not block DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome: report DONE with evidence that the requirement already holds. Never invent changes, and never claim a fix you have not verified.

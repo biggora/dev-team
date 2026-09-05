@@ -58,7 +58,8 @@ Decompose by vertical slices, not horizontal layers:
 - Layer-shaped tasks are allowed ONLY for shared scaffolding that slices depend on (types, config, project skeleton) — dispatched first
 - Never plan "build the whole backend, then the whole frontend": nothing is verifiable until everything is done, which is how projects fail
 - If the PRD names real external integrations, plan an explicit **integration-enablement slice** with its own AC-IDs (real credentials, real API paths). Mock-mode coverage never closes an AC that requires a real integration — a plan whose final slice still runs on mocks is not done
-- **CI/CD last**: CI/CD tasks (CI pipelines, deployment configs/images, publish/release) never belong to scaffolding or ordinary slices. If CI/CD is in scope at all, plan it as a single separate task AFTER the last slice, with an explicit precondition stated in the plan: the local-proof gate — every AC-ID verified with fresh local evidence, the full test suite green, the final demo accepted by the user — and the rule that the pipeline encodes only checks already proven green locally. Local dev tooling that serves local verification (docker-compose for a dev database, git hooks, lint config) is NOT CI/CD and may be scheduled earlier
+- **Infrastructure enablement before slice 1**: if the project has any external runtime dependency, the plan opens with a single infrastructure-enablement task assigned to `devops-engineer` — containerized dependencies or emulators, health checks, `.env.example`, seed and reset — scheduled before the tracer bullet and before shared scaffolding. It is not a slice and owns no AC-IDs; it is the precondition for all of them. A project with no external dependencies states `Local stack: N/A — <reason>` in the plan
+- **CI/CD last**: CI/CD tasks (CI pipelines, deployment configs/images, publish/release) never belong to scaffolding or ordinary slices. If CI/CD is in scope at all, plan it as a single separate task AFTER the last slice, assigned to `devops-engineer`, with an explicit precondition stated in the plan: the local-proof gate — the local-stack gate satisfied, every AC-ID verified with fresh evidence produced against the running stack, the full test suite (unit + integration + e2e) green, the final demo accepted by the user — and the rule that the pipeline encodes only checks already proven green locally. Local dev tooling that serves local verification (`docker-compose.yml`, a dev Dockerfile, seed and reset scripts, git hooks, lint config) is NOT CI/CD and may be scheduled earlier
 
 ## Output Format
 
@@ -74,6 +75,7 @@ Provide a structured execution plan:
    - Scope boundaries (files/directories) per agent role — no two parallel agents may share files
    - Acceptance-test task for the tester (which criteria to turn into failing tests before implementation)
    - OQ-IDs gating this slice (PRD questions with a `Confirm before:` trigger and unconfirmed invented requirements the slice depends on)
+   - Local-stack services this slice exercises (from the ledger infrastructure inventory), and the tests that prove it
    - Dependencies on other slices or scaffolding tasks
    - Suggested agent roles (backend-dev, frontend-dev, implementor, tester)
 4. **Execution order**: Which tasks are parallel, which are sequential
@@ -106,7 +108,7 @@ Apply **BDUF** (Big Design Up Front): think through all requirements, edge cases
 - Parallel agents must have disjoint writable scopes
 - A contingency branch is valid only for high-impact uncertainty and must define trigger, fallback, verification, and rejoin point
 - Use categorical likelihood, impact, and confidence only; never invent probabilities
-- A plan that places CI/CD work before the final slice, or without a stated local-proof precondition, is invalid
+- A plan is invalid if it places CI/CD work before the final slice, states no local-proof precondition, assigns CI/CD work to any agent other than `devops-engineer`, or — for a project with external runtime dependencies — schedules the first slice or shared scaffolding before an infrastructure-enablement task that stands those dependencies up in containers with health checks
 
 ## Structured Report
 
