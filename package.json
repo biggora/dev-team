@@ -33,6 +33,7 @@
   "author": "Aleksejs Gordejevs",
   "type": "commonjs",
   "scripts": {
+    "test:codex": "node --test evals/codex/contracts.test.cjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

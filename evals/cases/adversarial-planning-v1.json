@@ -147,20 +147,16 @@
       "expected": {
         "static": {
           "required_tokens": [
-            "initial pass may return only `CONSENSUS` or `REVISE`",
-            "cycles 1–3",
-            "ARBITRATION_REQUIRED",
-            "without restarting debate",
-            "restarts the initial pass",
-            "create neither `docs/progress.md` nor challenge files"
+            "skills/dev-team/SKILL.md",
+            "skills/ask-prd/SKILL.md",
+            "skills/ask-planner/SKILL.md",
+            "skills/resume/SKILL.md",
+            "docs/use-cases.md",
+            "Evidence",
+            "out-of-scope"
           ],
-          "ordered_tokens": [
-            "Spawn the creator",
-            "Spawn internal read-only `adversarial-reviewer`",
-            "On `REVISE`",
-            "Challenger `CONSENSUS`",
-            "After an unresolved third recheck",
-            "Block downstream consumers"
+          "forbidden_tokens": [
+            "## Coordinator workflow in Codex"
           ]
         }
       },
@@ -736,7 +732,7 @@
       "kind": "resume-behavior",
       "execution": "model-backed",
       "target": "skills/dev-team-codex/SKILL.md",
-      "prompt": "Adopt the target coordinator instructions. Given the material user decision, describe only the next dispatches and lifecycle state; do not execute or edit files.",
+      "prompt": "Adopt the target Codex bridge and read its selected shared coordinator workflow (skills/dev-team/SKILL.md) as the authoritative lifecycle instructions. Given the material user decision, describe only the next dispatches and lifecycle state; do not execute or edit files. Apply the canonical material-change restart and downstream gates; a bridge reference never waives those gates.",
       "context": {
         "fixture": "adversarial-prd-clean",
         "artifact": "docs/prd.md",

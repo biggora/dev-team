@@ -50,21 +50,17 @@ Verify: type `/dev-team` — the coordinator should be available. Manifests can 
 
 ### In Codex CLI
 
-Codex discovers Agent Skills from `.agents/skills/` (project scope) and `~/.agents/skills/` or `~/.codex/skills/` (user scope). Symlinks are followed.
+Install the complete plugin through its marketplace so the skills can read the bundled `agents/*.md` prompts and references. The commands below are supported by Codex CLI 0.150.1:
 
 ```bash
-git clone https://github.com/biggora/dev-team
-
-# User scope — available in every project:
-ln -s "$(pwd)/dev-team/skills" ~/.agents/skills
-# or copy selectively:
-cp -r dev-team/skills/* ~/.codex/skills/
-
-# Project scope — available in one repository:
-mkdir -p .agents && ln -s /path/to/dev-team/skills .agents/skills
+codex plugin marketplace add biggora/dev-team --ref main
+codex plugin add dev-team@dev-team --json
+codex plugin list --json
 ```
 
-Codex does **not** register Claude-style slash commands or markdown agents natively. The `dev-team-codex` bridge skill covers that gap — invoke it with natural language:
+Confirm that `dev-team` is enabled in the listing, then start a new Codex session. Check the loaded skill's installation path and the version in that package's `.codex-plugin/plugin.json`: a repository checkout and the installed cache can contain different versions. Editing a checkout does not update an installed plugin or an already running session.
+
+The `dev-team-codex` bridge translates the bundled workflows to the available Codex delegation tools. Invoke it with natural language:
 
 ```text
 Use dev-team to plan and implement this feature.
@@ -72,7 +68,9 @@ Use dev-team reviewer flow to inspect my recent changes.
 Use /ask-backend semantics for this API task.
 ```
 
-The skill interprets those phrases, reads the bundled coordinator skills and `agents/*.md` prompt files, and dispatches Codex subagents via `spawn_agent`, preserving the inline review gates.
+The complete package must remain intact; copying only `skills/*` omits the agent prompts. The bridge resolves templates from its installed package and project files from the working project.
+
+For unpublished changes, copy the complete working package to a temporary directory and use a separate temporary local marketplace whose plugin source points to that copy. Use an isolated Codex home to avoid replacing your installed plugin. Adding this repository's marketplace by local path still selects its GitHub source; it does not test uncommitted files. After installation, start a new session in a separate project and verify that the loaded skill path belongs to the temporary package.
 
 To disable an individual skill without deleting it, add to `~/.codex/config.toml` (restart Codex afterwards):
 
@@ -153,23 +151,20 @@ Workspace-scope skills load only in trusted folders (`/trust`, then restart). Th
 
 ### In Codex CLI
 
-Codex does not provide `/dev-team` or `/ask-*` as real slash commands from this plugin. Use the same names as prompt phrases instead:
+Use coordinator and shortcut names as prompt phrases routed through `dev-team-codex`; they do not require Claude-style slash-command registration:
 
 ```text
 Use dev-team to implement authentication with JWT and OAuth2.
 Use dev-team-node semantics to add a NestJS controller and service.
 Use dev-team-python semantics to create a Django model and DRF serializer.
 Use /ask-reviewer semantics to review my recent changes for security and correctness.
+Use dev-team /handoff to save the current coordinator state.
+Use dev-team /resume to continue from docs/handoff.md.
 ```
 
-When those phrases appear, the `dev-team-codex` skill acts as the coordinator bridge:
+The bridge routes all three coordinators, all eleven `ask-*` shortcuts, `handoff`, and `resume` to their bundled workflow templates. Coordinators apply Phase 0 triage; shortcuts retain their focused workflows, including the full document gates for `/ask-prd` and `/ask-planner` regardless of profile. The user's complete task is passed to the selected flow.
 
-1. It interprets the requested coordinator or specialist flow.
-2. It runs Phase 0 triage and picks the pipeline profile (Micro / Standard / Full).
-3. It reads the matching coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` prompts.
-4. It dispatches Codex subagents with `spawn_agent`.
-5. It preserves the inline `code-reviewer` and `doc-reviewer` gates, plus adversarial PRD/plan debate in the Full profile.
-6. It reports back using the same structured report protocol.
+Specialists run through the delegation interface available in the current Codex session, with isolated task context and the same Evidence/report requirements. If the runtime cannot provide the required independent delegation or context isolation, the bridge returns `BLOCKED`. Reviewer write restrictions are prompt instructions unless the runtime enforces them; the bridge checks for file changes after reviews. Claude agent metadata does not create Codex tool permissions.
 
 ### In Claude Code: Shortcut Commands (direct agent dispatch)
 
@@ -382,7 +377,7 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 |-------|-----|----------|
 | Claude Code plugin | Type `/dev-team` | Command available |
 | Manifest validity | `claude plugin validate /path/to/dev-team --strict` | Validation passed |
-| Codex skills | Symlink/copy `skills/` into `~/.agents/skills/`, then prompt `Use dev-team ...` | `dev-team-codex` activates and orchestrates |
+| Codex plugin | `codex plugin list --json`, then prompt `Use dev-team ...` in a new session | Complete package enabled; `dev-team-codex` dispatches the selected flow |
 | Copilot CLI skills | `copilot skill add /path/to/dev-team/skills`, then `/skills list` | dev-team skills listed |
 | Gemini CLI skills | `gemini skills install ... --path skills`, then `gemini skills list --all` | Skills listed, no frontmatter warnings |
 | Stack commands (Claude Code) | Type `/dev-team-node` or `/dev-team-python` | Stack coordinators available |
@@ -399,8 +394,10 @@ To add support for a new technology stack (e.g., Go, Rust, Java):
 
 For Codex specifically:
 
-- `dev-team-codex` should trigger when the prompt includes `dev-team`, `/dev-team`, or `/ask-*` phrases.
-- The skill should dispatch specialists through `spawn_agent` rather than claiming native slash-command support.
+- Run `npm run test:codex` from the plugin repository for static package, routing, and compatibility checks. These checks do not prove live orchestration.
+- In a temporary project, verify natural-language routing and an explicit shortcut, isolated specialist context, execution → review → one rework → completion, unchanged files after review, scope-aware Evidence handling, and resume without repeating completed work.
+- Record the client version, loaded package path/version, and fresh results. Test unpublished packages through the temporary local marketplace described above, from a project outside the plugin checkout.
+- Compare live Claude `/ask-reviewer`, Micro, and document-shortcut runs before and after changes. Keep unavailable live scenarios `UNVERIFIED`; passing static checks alone does not establish compatibility with either runtime.
 
 For debugging: `claude --debug` shows plugin loading and agent dispatch activity.
 

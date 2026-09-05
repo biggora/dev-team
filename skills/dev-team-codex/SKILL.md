@@ -1,122 +1,72 @@
 ---
 name: dev-team-codex
 description: >
-  This skill should be used when the user asks to use "dev-team", "/dev-team",
-  "/dev-team-node", "/dev-team-python", "/ask-backend", "/ask-frontend",
-  "/ask-prd", "/ask-planner", "/ask-reviewer", or wants a coordinator that dispatches specialist agents with
-  inline quality gates inside Codex.
+  In Codex only, run dev-team coordinator workflows and ask-* specialist shortcuts
+  through Codex subagents, including dev-team handoff and resume. Use when the user
+  asks to work with dev-team or its commands. Not for Claude Code, which uses the
+  native workflows, or for ordinary plugin maintenance without a workflow request.
 ---
 
 # dev-team for Codex
 
-Use this skill as the Codex-native bridge for the repository's coordinator + specialists architecture.
+Translate the selected shared workflow into the tools exposed by the current Codex host. This is an execution adapter, not a second workflow definition.
 
-## What Codex can and cannot do
+## Enter once, resolve the installed package
 
-- Codex plugins bundle `skills`, `apps`, and `mcpServers`.
-- Codex plugins do **not** expose Claude-style slash commands.
-- Codex plugins do **not** register markdown agents from `agents/` as native named agent types.
+1. Check the actual host context. **Only activate this adapter in Codex.** If loaded accidentally in Claude Code, defer to the selected native coordinator or shortcut using Claude's native skill mechanism; do not apply the Codex translation below or request Codex tools.
+2. Resolve `PLUGIN_ROOT` from the actual loaded path of this file: two directories above `skills/dev-team-codex/SKILL.md`. Resolve `PROJECT_ROOT` from the user's working project. Never assume the plugin lives in the project or use the current directory to locate plugin templates. If a required template is missing, report `BLOCKED` with its resolved path and the need for a complete plugin installation; do not substitute another installed version.
+3. Preserve the original user request and the selected entrypoint. Treat `$ARGUMENTS` in shared templates as that request's task text, without waiting for Claude expansion or passing the literal placeholder to specialists.
+4. Mark this invocation **adapter active** in the task context, then read the selected workflow below from the same `PLUGIN_ROOT` as a **template**. Its Codex entry block is bypassed while the adapter is active. Apply this to subsequent workflow transitions too; never invoke the adapter recursively. Clear this marker when the workflow ends.
 
-Because of that, treat the repository's coordinator skills (`skills/dev-team*/SKILL.md`, `skills/ask-*/SKILL.md`) and `agents/*.md` files as **prompt templates** and execute the workflow with Codex tools.
+All plugin paths below are relative to `PLUGIN_ROOT`; project artifacts such as `docs/progress.md`, `docs/handoff.md`, `docs/prd.md`, and `docs/use-cases.md` are relative to `PROJECT_ROOT`. Resolve references relative to the plugin skill that owns them. Read only the selected workflow and resources needed by the current step.
 
-## Default operating mode
+## Select the canonical workflow
 
-- If the user asked for `dev-team` or a coordinator workflow, act as the lightweight coordinator.
-- If the user asked for a direct specialist such as `/ask-backend`, `/ask-frontend`, or `/ask-reviewer`, run the matching specialist flow directly.
-- Run Phase 0 triage from the coordinator skill first: score Size / Novelty / Clarity / Reversibility / Parallelizability (0–2 each; 0–2 → Micro, 3–5 → Standard, 6+ → Full; greenfield = Full), check documentation adequacy (never re-derive a provided spec — thin delta brief instead), scan for in-repo prior art, and halt with one batched question set for externally grounded facts or irreversible decisions. Record the profile and rationale.
-- Prefer delegation for substantial work. Use `spawn_agent` with `worker` or `explorer` agents rather than doing all implementation in the root thread.
-- Preserve inline gates: code outputs use `code-reviewer`; ordinary documents use `doc-reviewer`; in the Full profile every PRD and plan uses creator → `adversarial-reviewer` debate → `doc-reviewer`. Micro/Standard run zero debate cycles (Standard's thin brief gets ordinary doc-review only).
+Accept an explicit skill invocation, a slash-style compatibility alias, or a natural-language request for the same workflow. These aliases do not register native Codex slash commands. An unqualified request for dev-team selects the universal coordinator, whose stack detection remains authoritative.
 
-## File mapping
+| Requested entry | Workflow template |
+|---|---|
+| dev-team | `skills/dev-team/SKILL.md` |
+| dev-team-node | `skills/dev-team-node/SKILL.md` |
+| dev-team-python | `skills/dev-team-python/SKILL.md` |
+| /ask-prd | `skills/ask-prd/SKILL.md` |
+| /ask-architect | `skills/ask-architect/SKILL.md` |
+| /ask-planner | `skills/ask-planner/SKILL.md` |
+| /ask-designer | `skills/ask-designer/SKILL.md` |
+| /ask-frontend | `skills/ask-frontend/SKILL.md` |
+| /ask-backend | `skills/ask-backend/SKILL.md` |
+| /ask-implementor | `skills/ask-implementor/SKILL.md` |
+| /ask-devops | `skills/ask-devops/SKILL.md` |
+| /ask-tester | `skills/ask-tester/SKILL.md` |
+| /ask-reviewer | `skills/ask-reviewer/SKILL.md` |
+| /ask-doc-reviewer | `skills/ask-doc-reviewer/SKILL.md` |
+| handoff | `skills/handoff/SKILL.md` |
+| resume | `skills/resume/SKILL.md` |
 
-- Coordinator workflow source: `skills/dev-team/SKILL.md`
-- Stack variants: `skills/dev-team-node/SKILL.md`, `skills/dev-team-python/SKILL.md`
-- Direct specialist flows: `skills/ask-*/SKILL.md`
-- Local infrastructure recipes (docker compose, health checks, emulators, seed and reset): `skills/local-stack/SKILL.md`
-- Specialist prompts: `agents/*.md`
+The selected workflow is the source of truth for phases, triage, role selection, state, gates, and retry limits. Preserve its proportional coordinator debate versus the mandatory document gates of `/ask-prd` and `/ask-planner`, including the joint PRD/use-case catalogue review. Do not create a separate gate for `docs/use-cases.md` or a progress ledger where the shortcut forbids one.
 
-Read only the files needed for the current task. Do not bulk-read the whole plugin.
+Use the canonical Evidence and status rules, including acceptance of recorded **out-of-scope** failures without needless re-dispatch. Required in-scope proof remains mandatory. Keep local-stack requirements, ownership, demo checkpoints, idempotency and circuit-breakers unchanged. On resume, follow the continuity template and authoritative project ledger; retain completed artifacts, run counter, and pending attempts instead of restarting the pipeline.
 
-## How to dispatch specialists in Codex
+## Translate tools, not roles
 
-When a repository instruction says to use a named agent such as `dev-team:backend-dev`, adapt it like this:
+Read the actual tool schema before calling it; names and capabilities vary by host. Translate Claude `Read`, `Glob`, `Grep`, and `Bash` to the available file/search/shell tools without expanding the coordinator's source-reading scope. Translate a Claude `Agent` dispatch as follows:
 
-1. Read the corresponding prompt file from `agents/<name>.md`.
-2. Extract the agent instructions and preserve the report protocol.
-3. Wrap the prompt as delegated work:
+1. Resolve its `dev-team:<role>` to `PLUGIN_ROOT/agents/<role>.md`. Read that prompt and preserve its body and structured report protocol. Claude frontmatter `model`, `color`, and `tools` is metadata, not Codex call parameters or an enforced permission boundary. Inherit the host's model settings; do not translate Claude model names into Codex overrides.
+2. Build a self-contained message with the role instructions, complete user task, `PROJECT_ROOT`, relevant absolute plugin resource paths, allowed writable scope (or **read-only; no writes**), Evidence scope, stack/version facts, input inventory, needed prior outputs, constraints, and the selected workflow's required report reminder. Include applicable decisions and current attempt context. The specialist cannot infer them from coordinator history.
+3. Where the advertised schema is the collaboration interface, call:
 
-```text
-Your task is to perform the following. Follow the instructions below exactly.
+   ```text
+   spawn_agent(task_name="<unique_role_task>", message="<complete dispatch>", fork_turns="none")
+   ```
 
-<agent-instructions>
-[filled contents from agents/<name>.md]
-</agent-instructions>
+   Use a task name permitted by that schema. Explicit `fork_turns="none"` prevents inheritance of coordinator conversation history; shared filesystem access is separate. A legacy `agent_type` argument is allowed only if the actual schema advertises it and its documented context controls support isolated dispatch. Never guess an agent type or an isolation parameter. If independent delegation, context isolation, or a required lifecycle operation is unavailable, report `BLOCKED` naming the missing capability. Do not replace a required specialist with inline coordinator work.
 
-<task-context>
-[full user task, scope boundaries, stack/version context, outputs from prior agents]
-</task-context>
+## Lifecycle and review evidence
 
-Execute this now. Output ONLY the structured response following the required report format.
-```
+- Use `list_agents` and the host's advertised capacity to respect available slots. Dispatch independent, non-overlapping scopes in parallel when capacity permits; otherwise queue them. Capacity pressure does not justify omitting review or reusing a running agent for unrelated work.
+- Collect final reports delivered by the host. `wait_agent` waits for mailbox updates; it is not itself a specialist report. Inspect the delivered report and fresh Evidence before advancing a gate. Use supported legacy equivalents only when their actual schema and semantics provide the same operation.
+- Use `send_message` for context updates to a running specialist; it does not wake an idle agent. Use `followup_task` for a new attempt by the original specialist, with findings and attempt context; it can wake an idle agent. Count each new work dispatch, including follow-ups, in the existing run counter and scope/role retry budget. A status message or wait is not a new run. Preserve the workflow's limits rather than resetting them with a new agent ID.
+- Use `interrupt_agent` when a running task must stop; reconcile completed reports and actual workspace changes before retrying. An interruption is not completion. After session loss, recover from the canonical continuity state; if the old agent is unavailable, dispatch a replacement only for the recorded unfinished attempt, with the reason and counter update.
+- Before each read-only review, capture a project file inventory and content hashes, including tracked and untracked files and index/worktree status; compare with the same snapshot after review. Use file metadata/hashing tools without loading source contents into coordinator context. Preserve existing dirty work. Avoid overlapping writers during this check; if unrelated concurrent changes prevent attribution, record that limitation and repeat the review on a stable snapshot before claiming nonmutation. Any unexpected write fails the read-only check and must be reported, not silently reverted. Instructions and snapshots verify behavior; they do not establish an enforced sandbox.
 
-4. Spawn a Codex sub-agent with `spawn_agent(agent_type="worker", message=...)`.
-5. If the task is exploration-only, prefer `agent_type="explorer"`.
-
-## Coordinator workflow in Codex
-
-For `dev-team` requests:
-
-1. **Triage the task (Phase 0)**: adequacy check, prior-art scan, 0–2 scoring, profile selection (Micro / Standard / Full; greenfield = Full), batched blocking-questions gate for external facts and irreversible decisions. Record profile + rationale; present them with the plan.
-2. Analyze the task and decide whether multi-agent orchestration is warranted.
-3. Detect the stack with lightweight inspection first.
-4. Inventory user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) and pass the path list — or "none" — to document agents; they read the inputs themselves.
-5. Choose the relevant specialist prompts from `agents/` by detected need, never a fixed roster; record a reason for every skipped role.
-6. For multi-slice work, maintain `docs/progress.md` (goal, profile line with triage score and rationale, run counter, acceptance criterion IDs, infrastructure inventory, local stack proof, task table with evidence summaries, decisions, open questions with triggers) and re-read it plus `docs/prd.md` before each dispatch round. **Idempotency guard**: never re-spawn an agent for a completed/locked artifact without a recorded invalidation reason; after an interruption, resume from ledger state. If `docs/handoff.md` exists, read it first for the resume point and environment context, then validate against `docs/progress.md`. The handoff document is a convenience snapshot; `docs/progress.md` is the authority.
-7. **OQ gate**: before each slice, obtain the user's answers to open questions tagged for that slice and record them in `docs/progress.md`; an explicit "proceed with MVP interpretation" waiver is valid only for reversible internal defaults — externally grounded facts and irreversible decisions require an answer. An unanswered triggered question blocks the slice.
-8. Dispatch independent specialists in parallel when scopes do not overlap. The test directory belongs to the tester — implementation agents must not touch test files.
-9. In the Full profile, run the PRD/plan lifecycle below before downstream use; in Standard, run `doc-reviewer` directly on the thin delta brief; Micro spawns no document agents. For other documents, run `doc-reviewer` directly.
-10. After each code-producing agent, run `code-reviewer`.
-11. **Evidence gate**: a specialist report claiming DONE without an `Evidence` field (fresh command output, or file:line citations for read-only work), or with failing output in Evidence, is treated as DONE_WITH_CONCERNS — re-dispatch demanding verification.
-12. **DoD gate and demo checkpoint**: do not start the next slice until the current slice's acceptance tests pass, review is DONE, and the user saw a demo of the increment. Deviations require an explicit user decision with a debt-closure slice. Doc-affecting code changes update the owning doc in the same slice (docs-code sync).
-13. **Local-stack gate + CI/CD last**: if the project has external runtime dependencies, spawn `devops-engineer` (from `agents/devops-engineer.md`) before the first slice to stand them up in containers — pinned tags, health checks, `.env.example`, seed and reset — and require Evidence showing `docker compose down -v` → `up -d --wait` → `ps` healthy from a clean state, twice. Every later verification runs against that stack; a mocked substitute for a containerized dependency does not count as evidence. A dependency with no local container needs a containerized emulator; if none exists, halt and ask the user in one batch, and keep the AC `UNVERIFIED` pending an explicit waiver. CI/CD work (pipelines, deployment images, publish/release) is owned by `devops-engineer`, never `implementor`, and is spawned only as the final task after the local-proof gate: stack healthy from clean, every AC-ID verified against it, full suite (unit + integration + e2e) green, final demo accepted. The pipeline encodes only commands already proven green locally. Record `Local stack: N/A — <reason>` for projects with no external dependencies.
-14. If a reviewer reports concerns, re-dispatch the original specialist with the findings. Maximum 2 rework dispatches per artifact per gate; after 3 identical failures change strategy once or escalate to the user.
-15. **Circuit-breaker and ground truth**: track the spawned-agent count. Thresholds: Micro/Standard: 8 runs; Full: 40 runs (or 3× planned-slices × 5, whichever is lower). When the threshold is reached, stop and ask the user whether to continue with a raised ceiling, narrow scope, escalate to Full, or hand back. **Per-slice sub-breaker (all profiles)**: if a single slice exceeds 6 implementation dispatches (excluding the initial Mode A tester and code-reviewer), stop the slice and ask the user whether to continue, skip, or re-plan. Any external/factual claim is verified against its authoritative source before encoding; unverifiable facts are blocking questions, not MVP defaults.
-16. Integrate results and report the final outcome succinctly, including the profile, run count, and which acceptance criteria were verified with evidence.
-
-### PRD/plan lifecycle (Full profile; always used by /ask-prd and /ask-planner)
-
-1. Spawn the creator for a versioned artifact. When the PRD defines two or more human roles, this same gate also covers `docs/use-cases.md` — one debate and one doc-review for both documents together, never a separate artifact gate.
-2. Spawn internal read-only `adversarial-reviewer` with `Pass: initial`. Use `CH-PRD-*` IDs for PRDs and `CH-PLAN-*` IDs for plans. The initial pass may return only `CONSENSUS` or `REVISE` and consumes no cycle.
-3. On `REVISE`, re-spawn the creator with every unresolved ID and require `accepted_and_fixed`, `rejected_with_evidence`, or `needs_decision` per ID, then re-spawn the challenger. Each revision + recheck consumes one of cycles 1–3; IDs remain stable, rechecks may assign new IDs only for defects introduced by the revision, and cycle 4 is forbidden.
-4. Challenger `CONSENSUS` requires verified fixes, evidence-backed rejections, no unresolved IDs or `needs_decision`, and mitigation, verification, or explicit acceptance for every residual risk. Then run full ordinary doc-review. On concerns, re-spawn creator and reviewer, maximum 2 ordinary reworks.
-5. After an unresolved third recheck, the challenger returns `ARBITRATION_REQUIRED`. Spawn doc-reviewer with the artifact and complete ledger to arbitrate all unresolved IDs and perform the full review together. A successful result needs no additional ordinary review.
-6. If arbitration returns `NEEDS_CONTEXT`, ask the user. For a non-material answer, re-spawn creator to update and doc-reviewer to verify without restarting debate. Only a material change to goals, acceptance criteria, architecture assumptions, slice boundaries, or constraints increments the version and restarts the initial pass. **Append, don't re-gate**: mid-task information that refines an existing decision patches the artifact in place (creator update + doc-reviewer verification) with no version bump and no new debate; only a genuine goal or scope pivot is material.
-7. Block downstream consumers until consensus + successful ordinary review, or successful arbitration/full review.
-
-Each spawn gets the original request; artifact type/path/version; initial pass or cycle/max; complete mode-specific ledger; dispositions/evidence; verdict; unresolved IDs; related documents/decisions; scope; stack/version context; output format; and evidence reminder. Coordinators store only artifact/version, cycle, verdict, and unresolved IDs in `docs/progress.md`; do not create a challenge file.
-
-## Direct specialist mode
-
-If the user invokes a Claude-style shortcut name, map it directly:
-
-- `/ask-prd` -> run the PRD mini-orchestrator: `product-analyst` → PRD/plan lifecycle → `doc-reviewer`
-- `/ask-architect` -> `agents/architect.md`
-- `/ask-planner` -> run the plan mini-orchestrator: `planner` → PRD/plan lifecycle → `doc-reviewer`
-- `/ask-designer` -> `agents/ui-ux-designer.md`
-- `/ask-frontend` -> `agents/frontend-dev.md`
-- `/ask-backend` -> `agents/backend-dev.md`
-- `/ask-implementor` -> `agents/implementor.md`
-- `/ask-devops` -> `agents/devops-engineer.md`
-- `/ask-tester` -> `agents/tester.md`
-- `/ask-reviewer` -> `agents/code-reviewer.md`
-- `/ask-doc-reviewer` -> `agents/doc-reviewer.md`
-
-The `/ask-prd` and `/ask-planner` mini-orchestrators use the same IDs, dispositions, verdicts, cycle limits, arbitration, material-change restart, payload, and independent ordinary-review rules, but keep state in the task context and create neither `docs/progress.md` nor challenge files.
-
-## Important constraints
-
-- Do not claim that Codex exposes `/dev-team` or `/ask-*` as native slash commands.
-- Present them as compatibility aliases that this skill interprets.
-- Keep the main thread focused on orchestration, collection, and final reporting.
-- Use the repository's report protocol from the selected agent file.
-- When the user asks for the Codex adaptation itself, update the Codex-facing files first: this skill, `.codex-plugin/plugin.json`, and Codex sections in `README.md`.
+Return the selected workflow's final report with actual Evidence and explicit UNVERIFIED limitations. Do not claim that a prompt template registers a native named Codex agent or that static package checks prove live orchestration.

@@ -1,0 +1,87 @@
+{
+  "commit": "13f7469a171505f4a4a378d1f56356f487c212ee",
+  "normalization": "CRLF to LF only",
+  "shared": {
+    "dev-team": "816d7ade18a5d5be962f8bc866953cbd4e316fb249da8879720d14605b6fb329",
+    "dev-team-node": "1e76df351d69ee7b3a655aacc6dddc472bdbf7418d137711297a3205074e5798",
+    "dev-team-python": "5f29b2ba1f61be3e7bef4bfa19f4f8f573682ead40126b28d39190ba0a20c80d",
+    "ask-architect": "6da948be2ab474f4a4e0afe830c31b140d1f826ab5897154bb1fb62d8234a45a",
+    "ask-backend": "c06b50585ddf8567f561bf8edaab6884341a3900ce9e11f1bf6b68ee6c49c6f4",
+    "ask-designer": "604e22d612f864d807b0d56c640afaaf606f8c11252ddfcde925bfafac221990",
+    "ask-devops": "1999b8da9d1c62b0317c4db728ad8e8d015164c9eaed96a5ea7db578409fdbf7",
+    "ask-doc-reviewer": "db134fbd78761f094615b872565794e6d274e34eaf59b75fa59d2d216c278b20",
+    "ask-frontend": "7ee3aec2ad59bd9eba06beb3eee68e558b3da857ba8160d392b37250ef57cbd0",
+    "ask-implementor": "0fd0769c056885888439f30458bd5de9bbfe98a841b017a3473ca28e862f9fda",
+    "ask-planner": "186fd7d0d44b80777def29cf87223eb7642a80c73d46da31f07bfefbbcb3843e",
+    "ask-prd": "6613b7508e8c3c80a108a5d8dbcd1895b842836d250187b0a1e6613cc25ccbea",
+    "ask-reviewer": "31d70010d1f518e389be9a100f2ede9de171761d75ae4a25c2ae7b7f5dad29f1",
+    "ask-tester": "3250128367831f22fc484cb2b5f2841b67cf2ccf27b90aba03696f72033d780b"
+  },
+  "preserved": {
+    ".claude-plugin/plugin.json": "eb29c977865ea5373986120a7f0fc619e8b2ff987949c53fc49db34450c029ed",
+    ".claude-plugin/marketplace.json": "cc3acff75b965d785b0a25925503c4822a6170c5f6c69e3e57d7e3ee36952e4d",
+    ".codex-plugin/plugin.json": "d2a7acb705246f6d2c54f475ac669fb26354df704febbca951de0bd7e55099f5",
+    "agents/adversarial-reviewer.md": "16447c2abbfc8f9cbe6bc5c39a454ede26321ef25d3b56c20f7a036c1be84c58",
+    "agents/architect.md": "965e38c00acaef48e3915d71cc508c6f85f26a424fc5fc4ff288eea6b9c6c05f",
+    "agents/backend-dev.md": "6744c504a11a2bcad27999bda2a7f0987ddada98ca5e1962da3e79ea7e1aba20",
+    "agents/code-reviewer.md": "7d88c1bafa85289fd40baa49f2de32a1faba265b3e95af9b4ba57a03a113984f",
+    "agents/devops-engineer.md": "d48fc6d1216b93db4dae95ab7e4e19d8d326813a4db961037917e3277e06626f",
+    "agents/doc-reviewer.md": "8cdc69107a5cdc492aaed56fc8186bea2212e3eb8752a665471232ec94034f08",
+    "agents/frontend-dev.md": "848c184e56412394c24440ccd4d1f388aa7a4e31689ec48f4ad96a424a5ff1a2",
+    "agents/implementor.md": "364d1e60134c30b2501d500353705ffba2fcaf6111185901fb873a6faf9c7b1a",
+    "agents/planner.md": "9cf7583533b6af9e6092bc7ce8329db46e37c236685f8f005864a51ee3a2f301",
+    "agents/product-analyst.md": "1e7f0a472599840f2b37c0ca5175f4dbacfcd93630918ed33569534635d7001e",
+    "agents/tester.md": "a1115a9361388830cfde7f9746ee98cc5ea1b47fdebd0ac5bee5a395e752c446",
+    "agents/ui-ux-designer.md": "986b6f0103c5cff9a7399fc361e67695fa2f077da36d6bf780cee1bb74b2b979",
+    "skills/handoff/SKILL.md": "27bcd7cce5fa048bd3e78b1d60c04aae72748637c5c90eed3c048d9d68dfc88e",
+    "skills/resume/SKILL.md": "3c168c6021d6586fdb69b0614b7eb961e337eaf0c85ebb9101a630b08530e991",
+    "evals/runner/run-tier2.sh": "fe45794130702b10b1501f57d27c19b7508d44f278d48b9cfbffcaffb707faea",
+    "evals/runner/run-tier3.sh": "34f6b469b3edfdbf6687f50868eaaeecbee14aff3e261fdaca8433cbbd4c4941"
+  },
+  "otherAdversarialCases": {
+    "AP-001": "98767fe3ddd3ec22b3f390781646829f5d372adb7a3919d6cfc736a80ddfedb0",
+    "AP-002": "0690df77a11f2958124186cf9267ff1fe895b468f78b471ba65cbe46d5b635cd",
+    "AP-003": "2fd0084e7095a99878f6d6bc8c4cdd695a9d08434a4aaa614b8eef95d5b17d3f",
+    "AP-004": "8728ca9de1176b6c1f16b3341f23baf212181d4d6526d5a331e9e58ad2c1c080",
+    "AP-005": "6d27e12494f9af36db565e3dddb0d852f4ea98b16251ed19d43fc0f407cee8ba",
+    "AP-007": "6e2b791f56447ddce27696ba566d672b81b5639534736e76bcdfd06d1bec01e5",
+    "AP-008": "68dfa3fb32a08fdeebb14b161b1ad1c361a5b0c14e9ada2f73e0a0b2943613a9",
+    "AP-009": "93b2853178d879e30702f2e0034c46d397774493871b37f76c0e7371f06c1970",
+    "AP-010": "3b46b92d8ddfd4609ee19954e46dff9c54255284b635c1d648836098797d2a62",
+    "AP-011": "1b4bf19c20f08c598e1b1e22f9fe061bc88318cb56e3f24cf59e9d2e73cc2219",
+    "AP-012": "45f920a2208c9335e17c81168120761301607f479c684af5f41e652122829127",
+    "AP-013": "22dd6b912975bad25ca7fa19929610742f3f8bb0fd13708ed4354d38f94fcea4",
+    "AP-014": "7cec0ea5de7cce5322e87798bbfa5277a4b89e34bad75c8b0dc1d6b8b7506237",
+    "AP-015": "5dec9104ef5d39207cf222f59a788cf3c2cc6be70ac3b3b396254d6f84067e08",
+    "AP-016": "79e19a44d6360876e33dc9796654d2bc703ba1272d563a3a2a573a46e6eb34d1",
+    "AP-017": "48bcb60293ba45a5b22e91d8904ae9162af4e3605e2110b9ccf39143a5085684",
+    "AP-018": "740f320adae6ec1ff4b393bc2ef89c7cf9c026637ebaa78ce987e11d27ca1a1a",
+    "AP-019": "6befd6a605de7441f49441e5b4ea9b05728fcbc5124be2e5de8e61af74f07738",
+    "AP-020": "7ac1df89ba3205a40dfa96e5d5b7ed6d11df833651ef7c140db3845cee26d2f0",
+    "AP-021": "6198896d5af54d29dfd26475d9a842317979bb9e7c72de5f9b6d9ceb118b1aae",
+    "AP-022": "b33831c8d004e4e98bcde8e48999009e7dff343283629eae1aacc768e395bec6",
+    "AP-M001": "00ba389db04c0b847fd4a03933b641ce258817215fb659f2a0da71ac94f52055",
+    "AP-M002": "0cde041a769910c91bcb213df4301d6add34468bf0b943cae2f8cf643c309453",
+    "AP-M003": "d586688bbcc10dae1d0998ee1395176513084b0fdcdbf3dbcb00f20fdb0f9621",
+    "AP-M004": "bc6e813921c5efc1c230d167794883fd4d2bc0de96bebeca150c770475758c7a",
+    "AP-M005": "a1556a97d02f1f89f4728c43691e944dca5a63e98cde4e82d79ea92a21c0216f",
+    "AP-M007": "6573996c806f3447e4aeea9d2c6daaa2c0dcbf7a8af6035569b2d446734e1fb2",
+    "AP-M008": "426b6d5da97b26fa59fb40b92fb8acb38ff22ff8959ae77a27ce7fdcd131db05",
+    "AP-M009": "1f66d4ca58b9c0a7ad11ceabda778ff1c39b55e21360d8bdd9f4bbf853d50ada",
+    "AP-M010": "c373b5c1ef618d1c5579240bc24bf0b1a573542993ebefe0e7d1e15c6625730b"
+  },
+  "materialRestartExpected": {
+    "restart_policy": "increment_version_and_restart_initial_pass",
+    "ordered_agents": [
+      "product-analyst",
+      "adversarial-reviewer"
+    ],
+    "next_action": "restart_cycle_0_and_block_downstream",
+    "ownership": {
+      "expected_mutated_paths": [],
+      "forbidden_artifacts": [
+        "docs/*challenge*"
+      ]
+    }
+  }
+}

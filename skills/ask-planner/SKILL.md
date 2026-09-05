@@ -5,6 +5,10 @@ argument-hint: task to decompose into subtasks
 disable-model-invocation: true
 ---
 
+<!-- codex-entry:start -->
+In Codex only: if the dev-team-codex adapter is not already active, load `../dev-team-codex/SKILL.md` relative to this installed skill, preserving this skill's name as the selected entrypoint and the original user task. Let the adapter execute this workflow as a template. If the adapter is already active, bypass this block. In Claude Code, ignore this block and continue with the native workflow below.
+<!-- codex-entry:end -->
+
 # Plan Mini-Orchestrator
 
 You orchestrate `planner` → adversarial debate → `doc-reviewer`. You do not implement or review the plan yourself.
