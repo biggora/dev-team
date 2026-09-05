@@ -64,6 +64,7 @@ After the user confirms the plan, create `docs/progress.md` (Standard and Full p
 - **Profile**: chosen pipeline profile, triage score, rationale, and any escalation with its reason
 - **Run counter**: total agent dispatches so far (the Phase 0 circuit-breaker reads this)
 - **Acceptance criteria**: the list of AC-IDs from the PRD (or the task's verifiable outcomes if no PRD)
+- **Actors and use cases**: the ROLE-IDs from the PRD, and where the use cases live — `docs/use-cases.md` (two or more human roles), `inline in docs/prd.md — single role`, or `Skipped: use cases — <reason>`
 - **Infrastructure inventory**: one row per external dependency — dependency · image:tag or emulator · health check · discovery env var · AC-IDs and suites that exercise it · status (`pending` / `up` / `emulated` / `no-equivalent (OQ-nnn)`). A project with no external dependencies records the single line `Local stack: N/A — <reason>` instead of a table.
 - **Local stack proof**: the last clean-state verification — command, exit code, and the `docker compose ps` health summary — refreshed whenever the stack changes and re-checked at the local-proof gate.
 - **Task table**: slice/subtask, assigned agent, status, one-line Evidence summary
@@ -92,6 +93,11 @@ Update it after processing every agent report — copy the report's Status and a
 Apply this gate to every product-analyst PRD and planner execution plan **in the Full profile**. Micro dispatches no document agents; Standard's thin delta brief goes straight to ordinary doc-review with zero debate cycles:
 
 **Debate depth selection** (before dispatching the initial challenge, assess the artifact's complexity):
+
+Count functional AC-IDs only. The denial AC-IDs generated from a permission matrix count as one AC in
+total, no matter how many roles, cells, or use cases the matrix has; a permission matrix never by itself
+raises the debate depth. Role complexity is challenged inside the PRD pass, not by buying more cycles.
+
 - **Light** (fewer than 5 AC-IDs, no external integrations, no irreversible decisions, no invented requirements): skip adversarial debate entirely — go straight to ordinary doc-review. Record "Debate: skipped — light artifact".
 - **Standard** (5–15 AC-IDs OR external integrations OR invented requirements): run the initial challenge only. If CONSENSUS, proceed to doc-review. If REVISE, allow 1 debate cycle (not 3). Record "Debate: standard depth".
 - **Deep** (15+ AC-IDs AND (external integrations OR irreversible decisions OR high ambiguity)): run the full 3-cycle debate budget. Record "Debate: deep".
@@ -131,7 +137,7 @@ Initial request: $ARGUMENTS
 
 | Profile | When | Pipeline |
 |---|---|---|
-| **Micro** | ≤~3 files, spec clear, pattern exists | one implementation agent + 1 code review. No PRD, architecture, plan, debate, or `docs/progress.md`. Tester only if tests are in scope. |
+| **Micro** | ≤~3 files, spec clear, pattern exists | one implementation agent + 1 code review. No PRD, use cases, architecture, plan, debate, or `docs/progress.md`. Tester only if tests are in scope. |
 | **Standard** | modular feature, mostly known territory | thin delta brief (ordinary doc-review only, no debate) → slices → per slice: tester + dev + 1 code review. Mode A/Mode B may collapse into one tester pass when an existing harness covers the area. |
 | **Full** | large / greenfield / ambiguous / high-risk | the complete pipeline below, including the adversarial debate gate. |
 
@@ -184,7 +190,7 @@ Initial request: see Phase 0.
 8. After confirmation, create `docs/progress.md` (see Progress Ledger)
 
 **Greenfield pipeline** (new project, slice-driven — always Full profile):
-1. product-analyst → PRD with AC-IDs (`docs/prd.md`), adversarial debate, then ordinary doc-review
+1. product-analyst → PRD with AC-IDs (`docs/prd.md`) and, when the PRD defines two or more `human` roles, the role-grouped use-case catalogue (`docs/use-cases.md`); both documents pass one adversarial debate and one ordinary doc-review in the same dispatches
 2. **Parallel where independent**: After the PRD passes its gate, dispatch in parallel:
    a. architect → system design (`docs/architecture.md`), reviewed by doc-reviewer
    b. ui-ux-designer → interface spec if UI is involved (`docs/design.md`), grounded in the input inventory (existing inputs are normative), reviewed by doc-reviewer
@@ -223,21 +229,24 @@ Initial request: see Phase 0.
    - **For product-analyst**: Include the user's original request verbatim and the input inventory.
      - "Formalize the requirements into a PRD with AC-IDs for every acceptance criterion. Save to docs/prd.md"
      - "Every requirement carries a Source (request quote, file:line of a user input or project code, or 'invented — requires user confirmation'); register open questions as OQ-IDs with Confirm-before triggers."
+     - "Define actors as stable ROLE-IDs (human or system). With two or more human roles, write the use cases to docs/use-cases.md grouped by role, with a role × use-case permission matrix; every denied cell cites a denial AC-ID in the PRD, grouped by observable behavior rather than one per cell. With one human role, keep the use cases in the PRD and create no separate file."
      - If existing project: "Read the codebase to understand current state and derive requirements for the new feature"
    - **For ui-ux-designer**: Include design context and the input inventory:
      - "Design the UI for this project. Apply premium frontend design principles, visual design quality, and web design review standards."
      - If the inventory has design inputs: "Ground the design in the existing inputs — reference their layout, theme, and UI language; do not invent a competing design."
      - If the inventory is empty, specify the user-confirmed aesthetic: "premium SaaS", "minimalist editorial", "dashboard", etc. — name it explicitly so the designer can pick the matching `design-styles` preset, and pass the same aesthetic name to frontend-dev later so implementation applies the same preset
      - "Include a color palette with hex values and ASCII wireframes for each screen so the design can be reviewed before implementation. Save your design specification to docs/design.md"
+     - If `docs/use-cases.md` exists: "Cover every use case each role is allowed to perform, and state for every denied cell what that role sees instead — hidden control, disabled control, or a 403/redirect view."
    - **For tester**: State the mode explicitly:
-     - Mode A (before implementation): "Work in Mode A: derive failing acceptance tests from docs/prd.md criteria [list the AC-IDs] for this slice. Confirm each fails for the right reason."
-     - Mode B (after implementation): "Work in Mode B: run the full suite including the Mode A acceptance tests, extend coverage, update docs/test-plan.md."
+     - Mode A (before implementation): "Work in Mode A: derive failing acceptance tests from docs/prd.md criteria [list the AC-IDs] for this slice, plus the slice's UC-IDs and the denial ACs for every role the permission matrix marks denied. Confirm each fails for the right reason."
+     - Mode B (after implementation): "Work in Mode B: run the full suite including the Mode A acceptance tests, extend coverage, update docs/test-plan.md including the UC-ID column and one row per denied role."
      - Include the list of all files created/modified (from agent reports), the detected test framework, and stack-specific phrases
    - **For devops-engineer**: state which of the three modes applies:
      - Enablement: "Stand up the local stack for this project. The infrastructure inventory is: [rows]. Read docs/architecture.md 'Local runtime topology'. Produce docker-compose.yml, .env.example, and seed/reset scripts. Prove with `down -v` → `up -d --wait` → `ps` healthy, twice from clean."
      - Maintenance: "Slice N adds [dependency]. Add it to the existing stack, keep every existing service working, re-prove from clean, and update .env.example and the run instructions."
      - CI/CD: "The local-proof gate passed — [evidence lines]. Encode exactly these commands: [list], against these pinned images: [list]. Nothing speculative."
      Always include the phrases "docker compose", "containerized dependencies", "local stack", "health check" so the `local-stack` skill is surfaced, plus the report reminder.
+   - **For backend-dev / frontend-dev**: when `docs/use-cases.md` exists, paste the permission-matrix rows for this slice's UC-IDs into the prompt — a denied cell is behavior to implement, and agents do not read documents you did not name.
    - **Attempt context** (when re-dispatching for the same scope): "This is attempt N of maximum 3 for this scope. Previous attempts reported: [status, one-line summary of what failed]. If this is attempt 3, report BLOCKED with what you tried rather than repeating the same approach."
    - **Report reminder**: Every dev-team agent's own prompt already mandates the structured report protocol. Add this single line to every dispatch:
      - "Reminder: Status DONE requires the Evidence field with fresh command output (or citations for read-only work); failing checks forbid DONE."
@@ -260,9 +269,9 @@ The coordinator classifies Evidence failures when processing reports:
 ### Inter-agent context passing
 
 When dispatching an agent that depends on a previous agent's output (limits: see Review and Debate Limits):
-- **After product-analyst**: In the Full profile, run the PRD and Plan Debate Gate for `docs/prd.md`; in Standard, dispatch doc-reviewer directly on the thin delta brief (ordinary review budget). If the consented PRD still contains "invented — requires user confirmation" requirements, ask the user before any downstream dispatch and apply answers via the gate's user-decision path (step 6). Only after the gate succeeds may architect, ui-ux-designer, planner, and tester consume it.
+- **After product-analyst**: In the Full profile, run the PRD and Plan Debate Gate for `docs/prd.md`; in Standard, dispatch doc-reviewer directly on the thin delta brief (ordinary review budget). If the consented PRD still contains "invented — requires user confirmation" requirements, ask the user before any downstream dispatch and apply answers via the gate's user-decision path (step 6). Only after the gate succeeds may architect, ui-ux-designer, planner, and tester consume it. Contract check (no extra dispatch): if the consented PRD lists two or more `human` ROLE-IDs and `docs/use-cases.md` does not exist, re-dispatch product-analyst once to produce it; if the PRD lists exactly one `human` role, `docs/use-cases.md` must not exist. Record the outcome in the ledger and pass both paths to ui-ux-designer, planner, and tester.
 - **After architect**: If the architecture is routine (existing project, well-known patterns, fewer than 5 components), accept without separate doc-reviewer dispatch — downstream agents will surface issues; record "Architecture review: skipped — routine". If novel (greenfield, unfamiliar patterns, 5+ components), dispatch doc-reviewer: "Review docs/architecture.md for consistency with docs/prd.md, clear component responsibilities, explicit interfaces, and implementation sequence." Maximum 1 rework (not 2). Then pass "Read docs/architecture.md" to planner and implementation agents.
-- **After ui-ux-designer**: If the design is routine (existing project, minor UI addition, fewer than 3 screens), accept without separate doc-reviewer dispatch; record "Design review: skipped — routine". If substantial (greenfield, 3+ screens, new design system), dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, responsive behavior, and accessibility." Maximum 1 rework (not 2). Then pass "Read docs/design.md" to frontend-dev and tester.
+- **After ui-ux-designer**: If the design is routine (existing project, minor UI addition, fewer than 3 screens), accept without separate doc-reviewer dispatch; record "Design review: skipped — routine". If substantial (greenfield, 3+ screens, new design system), dispatch doc-reviewer: "Review docs/design.md for consistency with docs/prd.md, hex color palette, wireframes, component states, role coverage of the use cases, responsive behavior, and accessibility." Maximum 1 rework (not 2). Then pass "Read docs/design.md" to frontend-dev and tester.
 - **After planner**: In the Full profile, run the PRD and Plan Debate Gate for `docs/plan.md`; in Standard, dispatch doc-reviewer directly. Its full review covers vertical slicing, AC-ID mapping, architecture consistency, scope boundaries, dependencies, and assignments. Only then use it for dispatch order.
 - **After implementor**: Dispatch code-reviewer: "Review the code changes for correctness, consistency with project patterns, and potential bugs. Include stack-specific version context." If DONE_WITH_CONCERNS → re-dispatch implementor with all findings to fix the code.
 - **After devops-engineer**: Dispatch code-reviewer: "Review the infrastructure changes — pinned image tags, a health check per service with dependents waiting on `condition: service_healthy`, named volumes removed by `down -v`, deterministic host ports, no production credentials, `.env.example` completeness, idempotent up and reset." If DONE_WITH_CONCERNS → re-dispatch devops-engineer with all findings. Then pass the service names, host ports, and env-var names to backend-dev, frontend-dev, and tester in every later dispatch.
@@ -305,7 +314,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
 **Note**: Individual code reviews already happen inline after each code agent (Phase 2). This phase catches cross-cutting issues that span multiple agents' work.
 
 **Actions**:
-1. **Criteria coverage check**: Re-read `docs/prd.md`. For every AC-ID, find a passing entry in some agent's Criteria/Evidence (the primary source is the traceability matrix in `docs/test-plan.md`). For unverified criteria → dispatch tester to verify them, or list them explicitly as UNVERIFIED in the final report — never silently claim completion. An AC that names a real external integration counts as UNVERIFIED when only mock or stub evidence exists. An AC verified only against a mock, stub, or in-memory substitute for a dependency that has a container equivalent counts as UNVERIFIED, regardless of the test result. This check must complete before any CI/CD subtask is dispatched — CI/CD work never precedes criteria coverage (CI/CD last).
+1. **Criteria coverage check**: Re-read `docs/prd.md`. For every AC-ID, find a passing entry in some agent's Criteria/Evidence (the primary source is the traceability matrix in `docs/test-plan.md`). For unverified criteria → dispatch tester to verify them, or list them explicitly as UNVERIFIED in the final report — never silently claim completion. An AC that names a real external integration counts as UNVERIFIED when only mock or stub evidence exists. An AC verified only against a mock, stub, or in-memory substitute for a dependency that has a container equivalent counts as UNVERIFIED, regardless of the test result. A denial AC-ID counts as verified only when the denied role was actually exercised — evidence from the allowed role does not verify it. This check must complete before any CI/CD subtask is dispatched — CI/CD work never precedes criteria coverage (CI/CD last).
 2. **Cross-cutting code review** (if multiple code agents were dispatched):
    - Dispatch code-reviewer with the complete list of ALL files changed by ALL code agents
    - Include the original task requirements and stack context with **exact versions**
@@ -327,7 +336,7 @@ When dispatching an agent that depends on a previous agent's output (limits: see
 1. Compile the final summary:
    - **Task**: What was requested
    - **What was done**: Summary of all agent work
-   - **Acceptance criteria**: N/M verified, with evidence per AC-ID; UNVERIFIED criteria listed explicitly
+   - **Acceptance criteria**: N/M verified, with evidence per AC-ID; UNVERIFIED criteria listed explicitly; use cases: N/M demonstrated, per role
    - **Profile**: chosen profile, triage score, run count vs the ≤8 lean envelope, escalations and skipped phases with reasons
    - **Readiness**: whether the PRD's Definition of Ready is met (real integrations exercised), not only the AC count
    - **Local stack**: services, images and tags, and the last healthy-verification command and result — or `N/A — <reason>`; plus any dependency with no container equivalent and the status of its waiver
