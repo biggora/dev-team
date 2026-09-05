@@ -222,12 +222,20 @@ match_agent() {
   echo "$score"
 }
 
+is_internal_agent() {
+  # Agents marked coordinator-only are not candidates for direct dispatch
+  local agent_file="$1"
+  sed -n "/^---/,/^---/p" "$agent_file" | grep -qE '^dispatch:[[:space:]]*internal[[:space:]]*$'
+}
+
 find_best_agent() {
   local prompt="$1"
   local best_agent=""
   local best_score=0
 
   for agent_file in "$PLUGIN_DIR"/agents/*.md; do
+    is_internal_agent "$agent_file" && continue
+
     local name
     name=$(basename "$agent_file" .md)
 

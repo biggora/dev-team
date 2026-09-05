@@ -12,6 +12,7 @@
 #
 # Optional fields:
 #   tools:       Restrict available tools (omit for full access)
+#   dispatch:    Set to "internal" for coordinator-only agents; excludes them from direct-dispatch selection
 #
 # Role-based tool presets:
 #   Implementor: Read, Write, Edit, Grep, Glob, Bash

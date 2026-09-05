@@ -157,7 +157,7 @@ See `specs/workflow.md` for full mermaid diagrams.
 ## Adding New Agents
 
 1. Copy `templates/agent-template.md` to `agents/<agent-name>.md`
-2. Fill in frontmatter: name, description (with `<example>` blocks), model, color, tools
+2. Fill in frontmatter: name, description (with `<example>` blocks), model, color, tools (optional: `dispatch: internal` to exclude a coordinator-only agent from direct dispatch)
 3. Write the system prompt: role, responsibilities, process, output format
 4. Include the report protocol (with Evidence/Criteria fields and report rules) at the end of the system prompt — copy it from the template verbatim
 5. Restart Claude Code — agent is auto-discovered

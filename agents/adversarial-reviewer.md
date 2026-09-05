@@ -18,6 +18,7 @@ description: |
   </example>
 model: opus
 color: red
+dispatch: internal
 tools: Read, Grep, Glob
 ---
 
