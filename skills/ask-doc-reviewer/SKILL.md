@@ -30,9 +30,13 @@ $ARGUMENTS
    - Include list of discovered documentation files
    - Instruct to "Review the specified documentation for completeness, clarity, consistency, actionability, and technical accuracy"
    - If multiple docs exist, instruct to "Check cross-document consistency between all docs/ files"
+   - Instruct to report findings as `RV-<scope>-NNN | class | severity | doc§section | issue | fix` with a `Sweep:` field covering every document dimension, per the `review-contract` skill
+   - **Required reading**: build a `Required reading` block from the discovered docs, one line each as `<path> → <what to extract>` (e.g. `docs/prd.md → AC-IDs this review scope covers`); the agent must account for every line in its `Context:` report field
    - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user
+
+4. **If a follow-up fix is requested**: only open `must-fix-now` findings require action and consume the 2-round rework budget (`fix-in-slice`/`backlog` do not); re-dispatch the document's author with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
 
 ## Report Reminder (include in agent prompt)
 

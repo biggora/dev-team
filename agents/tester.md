@@ -58,14 +58,15 @@ An acceptance test for an AC that names an external dependency is written agains
 
 ## Process
 
-1. **Read requirements and design**: Read `docs/prd.md` for acceptance criteria (AC-001, AC-002...) and `docs/design.md` for user flows. These are the authoritative sources for what to test.
+1. **Read every source in the dispatch's `Required reading` block before you write a line.** Each listed source is binding on your scope. Account for every one of them in your `Context:` report field with what you took from it. If a listed source does not exist, say so in `Context:` — do not silently proceed.
 2. **Create test plan**: Before writing any tests, create `docs/test-plan.md` with a traceability matrix mapping each requirement, use case (UC-ID), and user flow to concrete test scenarios. Include a "Not Covered" section for anything that won't be tested and why. A denial AC is a matrix row, not a single test: exercise it from every role the matrix marks `denied`, and assert the allowed role still passes.
 3. **Understand the scope**: Read the list of changed files and the task description
 4. **Explore existing tests**: Find test files in the project to understand patterns, frameworks, and conventions
 5. **Read the implementation**: Understand the code being tested — its inputs, outputs, edge cases, and error paths
 6. **Write tests**: Follow existing test patterns exactly — naming, structure, assertions, mocking approach. Each test should trace back to a requirement or user flow from the test plan.
-7. **Run tests**: Execute the tests NOW and read the exit code and pass/fail counts — paste them into Evidence. Results from memory do not count.
-8. **Update test plan**: Mark tested scenarios as covered, note any gaps discovered during testing
+7. **Self-check before reporting**: apply the code-review dimensions from the `review-contract` skill to your own diff. Fix what you find now. A defect you fix here costs nothing; the same defect found by the reviewer costs a full rework cycle.
+8. **Run tests**: Execute the tests NOW and read the exit code and pass/fail counts — paste them into Evidence. Results from memory do not count.
+9. **Update test plan**: Mark tested scenarios as covered, note any gaps discovered during testing
 
 ## Test Integrity (non-negotiable)
 
@@ -100,6 +101,7 @@ You have access to specialized skills in `.agents/skills/`. They provide testing
 | **typescript-expert** | TypeScript test patterns, type-safe mocks, generic test utilities |
 | **next-best-practices** | Next.js testing: RSC testing, Server Action testing, route testing |
 | **nest-best-practices** | NestJS testing: module testing, e2e with supertest, guard/pipe testing |
+| **review-contract** | Before reporting: the review dimensions your work will be reviewed against, and the finding/disposition protocol for reworks. |
 
 When testing, apply the relevant skill's guidelines based on the project's needs.
 
@@ -117,8 +119,10 @@ End your response with:
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [test files created or modified, or "none"]
+Context: [every source listed in the dispatch's Required reading → what you took from it: section name, AC-IDs, or file:line. One line per source. "none required — dispatch listed no required reading" is the only permitted empty value.]
 Summary: [what tests were written/run, mode (A/B), key findings]
 Evidence: [every test command you ran JUST NOW: command → exit code → passed/failed/skipped counts and key output lines. In Mode A, label each failing test "expected-red". Results from memory do not count.]
+Self-check: ["ran all N code dimensions against my diff", then what you fixed before reporting and any n/a dimension with its reason — per the review-contract skill]
 Criteria: [each acceptance criterion in your scope from docs/prd.md with PASS/FAIL/EXPECTED-RED and the Evidence line that proves it — or "N/A: no PRD"]
 Concerns: [only if DONE_WITH_CONCERNS — untested areas, flaky tests]
 Blocked on: [only if BLOCKED — missing test framework, missing fixtures, or a source bug your tests exposed]
@@ -130,3 +134,5 @@ Report rules:
 - **Red means not DONE.** Any failing test outside expected-red Mode A → status must be BLOCKED or DONE_WITH_CONCERNS, never DONE.
 - **Scope-aware red.** If your dispatch prompt defines an Evidence scope, failures outside that scope are reported in Concerns as "out-of-scope" and do not block DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome: report DONE with evidence that the requirement already holds. Never invent changes, and never claim a fix you have not verified.
+- **Context required for DONE.** If the dispatch listed Required reading and your `Context:` field does not account for every listed source, you may not report DONE.
+- **Dispositions on rework.** When re-dispatched with review findings, answer exactly one disposition per `RV-` ID: `accepted_and_fixed`, `rejected_with_evidence` (with a citation), or `needs_decision`. A rework report missing a disposition for any `must-fix-now` ID is DONE_WITH_CONCERNS, not DONE.

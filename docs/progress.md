@@ -80,3 +80,42 @@ Decisions: keep existing Claude runners/scorer/baselines and `npm test` unchange
 ### Final disposition
 
 Status: DONE_WITH_CONCERNS. Approved source changes and offline checks are complete, independent code/document review passed, and the normal plugin installation was not changed. Runtime sign-off remains partial for the two external blockers above. Re-run the blocked Codex scenarios in a profile where ordinary file reads are permitted, and re-run the PRD comparison after provider availability returns; do not treat the current static successes as that missing proof. No publishing, version bump, commit, or update of the normal installed plugin was performed.
+
+## v2.0.0 review contract — 2026-09-15
+
+This section tracks the review-contract change set (three report fields `Context`/`Self-check`/`Sweep`, the `RV-<scope>-NNN` finding schema, the late-finding rule, the disposition protocol, and the document-agent Step 0 inventory) independently of the historical work above.
+
+- Goal: add a mandatory review contract across all 12 agent prompts, the three coordinator skills, the eleven `ask-*` shortcuts, and `specs/workflow.md`, then correct the defects two independent reviews found before this documentation pass.
+- Profile: Full, by inspection — no Phase 0 triage record predates this ledger entry, but the change touches all 12 agent prompts, all 3 coordinator skills, all 11 shortcuts, and `specs/workflow.md`, and is a breaking change to every agent's report contract (new required `Context:` field, `Self-check:`/`Sweep:` for the agents that carry them), which is well past the Full-profile threshold on size and reversibility alone.
+- Run counter: 15/40 (Full circuit-breaker). Basis, since no per-dispatch ledger rows exist for this change set: 6 build subtasks S1–S6 (the only subtask numbering the tree itself records, in `evals/codex/README.md`'s re-anchor note) that landed the `review-contract` skill, the 12 agent prompts, the 3 coordinator skills, the 11 `ask-*` shortcuts, and `specs/workflow.md`; 1 correction to S1; 2 independent final reviews (code-reviewer and doc-reviewer, which together found 33 defects); 4 fix subtasks correcting the contract, the agent prompts, the coordinator skills, and the `ask-*` shortcuts plus `specs/workflow.md`; this documentation pass (G1); and the pending G2 (contract tests + baseline re-anchor) = 15. Discrepancy: the dispatch that requested this ledger entry framed the build work as "seven build subtasks S1–S7" and the fix work as "F1–F5"; the tree evidences only S1–S6 (`evals/codex/README.md`) and names no F-numbers anywhere, so this count uses S1–S6 and "4 fix subtasks" per the files, not the S1–S7/F1–F5 framing — see the G1 agent report's Concerns.
+- Baseline: `evals/codex/baseline.json` was deliberately re-anchored from the 1.9.0 baseline at commit `13f7469a171505f4a4a378d1f56356f487c212ee` to the current working tree, for `agents/*.md` (all 12), the three coordinator skills, and the three plugin manifests — every file whose hashed content subtasks S1–S6 actually changed; files they did not touch kept their prior hash. Its `commit` field is the placeholder `uncommitted-worktree — re-anchor pending the v2.0.0 commit` (`evals/codex/README.md`).
+- Local stack: N/A — this plugin ships instructions and offline static contract checks; it has no runtime service dependencies.
+
+| Task | Agent | Status | Evidence |
+|---|---|---|---|
+| `skills/review-contract/` (SKILL.md + 3 references) | implementor (S1) + 1 correction | DONE | `skills/review-contract/SKILL.md`, `references/code-dimensions.md`, `references/doc-dimensions.md`, `references/finding-schema.md` present in the tree |
+| 12 agent prompts — Context/Self-check/Sweep fields, RV-ID contract | implementor (S2–S4) | DONE | `git diff --stat`: all 12 `agents/*.md` modified |
+| 3 coordinator skills — Required reading, Context gate (Phase 3 step 3b), review contract | implementor (S5) | DONE | `git diff --stat`: `skills/dev-team*/SKILL.md` each +26/-14 |
+| 11 `ask-*` shortcuts — Required reading / review-state passthrough | implementor (S6) | DONE | `git diff --stat`: all `skills/ask-*/SKILL.md` modified |
+| `specs/workflow.md` — Gates table, rework-limit table, RV-ID mermaid nodes | implementor (S6, same batch) | DONE | `git diff --stat`: `specs/workflow.md` 150 lines changed |
+| Independent review 1 | code-reviewer | DONE_WITH_CONCERNS | part of the 33 defects found across both reviewers; per-reviewer split not recorded in this ledger |
+| Independent review 2 | doc-reviewer | DONE_WITH_CONCERNS | part of the 33 defects found across both reviewers |
+| Fix pass (4 subtasks: contract, agent prompts, coordinator skills, `ask-*` + `specs/workflow.md`) | implementor | DONE | corrections verified in the current tree, e.g. `skills/dev-team/SKILL.md:303` (Context gate at Phase 3 step 3b), `skills/dev-team/SKILL.md:231` (Required reading extended to reviewer/debate/Phase 4 dispatches), `agents/doc-reviewer.md:193,195` (`reclassified` state, `Introduced by:`/`Pre-existing Critical:` rationale lines) |
+| Documentation pass (this entry) | technical writer (G1) | DONE | see the G1 agent report's Evidence field |
+| Contract tests + baseline re-anchor | tester (G2) | PENDING | scheduled after G1 per dispatch order |
+
+### Decisions
+
+- `skills/review-contract/` is locally authored and carries no `skills-lock.json` entry — `skills-lock.json` tracks provenance for vendored (externally sourced) skills only; this repository's own coordinator and `ask-*` skills carry no lock entries either.
+- No Tier 1 (`evals/runner/run-tier1.sh`) case was added for `review-contract`: Tier 1 tests natural-language phrase routing to user-facing skills, but `review-contract` is invoked by other agents' own process steps (Self-check/Sweep), never by direct user phrasing, so it doesn't fit that methodology. Its invariants are instead covered by `evals/codex/contracts.test.cjs` CX-005–CX-011 (the `Context:` field on all 12 agents; `Self-check:`/`Sweep:` scoping; the RV-ID schema and its three classes; the late-finding rationale rule; `adversarial-reviewer`'s CH-*-only exemption; the three coordinator skills' byte-identical review contract; the four document agents' Step 0 inventory; and the skill package's existence).
+- `evals/codex/baseline.json` was deliberately re-anchored rather than incrementally patched, because subtasks S1–S6 changed the hashed content of every preserved/shared file the baseline tracks; re-anchoring keeps the preservation check meaningful instead of permanently red against a baseline that no longer describes the tree. G2 owns re-running this after its own changes and setting the real `commit` value.
+
+### Open Items
+
+- `evals/codex/baseline.json`'s `commit` field is the placeholder `uncommitted-worktree — re-anchor pending the v2.0.0 commit`; it must be set to the commit that actually lands v2.0.0 once that commit is made — a user decision, not an agent's.
+- See `### Technical debt` below for two known-unfixed asymmetries review found and this pass deliberately did not fix.
+
+### Technical debt
+
+- `specs/workflow.md`'s rework-limit table (`specs/workflow.md:303-304`) gives Architecture and Design spec a rework limit of 2, while `skills/dev-team/SKILL.md` (and the Node/Python coordinators) states "Maximum 1 rework (not 2)" for those same two artifact types. This asymmetry pre-dates v2.0.0 and was not introduced by this change set; a decision is owed on which number governs.
+- `.claude-plugin/marketplace.json` carries `version: 1.5.0` and `.copilot-plugin/marketplace.json` carries `version: 1.4.0`, while every plugin manifest (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.copilot-plugin/plugin.json`) and `package.json` now read `2.0.0`. Pre-existing drift; a decision is owed on whether marketplace-file versions track the plugin version at all.

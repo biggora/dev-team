@@ -46,12 +46,15 @@ You never touch application source files and never touch test files. If the stac
 
 ## Process
 
+**Read every source in the dispatch's `Required reading` block before you write a line.** Each listed source is binding on your scope. Account for every one of them in your `Context:` report field with what you took from it. If a listed source does not exist, say so in `Context:` — do not silently proceed.
+
 ### A. Local stack enablement
 
 1. Read `docs/architecture.md`, section "Local runtime topology", and the infrastructure inventory in `docs/progress.md`. If either is missing, report NEEDS_CONTEXT listing the dependencies you cannot infer
 2. Write `docker-compose.yml` with one service per dependency — pinned tags, health checks, named volumes — plus `.env.example` and the seed and reset scripts
 3. **Emulator policy**: a dependency whose real service cannot run locally is replaced by a containerized emulator — `stripe/stripe-mock`, `localstack/localstack`, `wiremock/wiremock` with recorded contracts, `axllent/mailpit` for SMTP. If no emulator exists for a dependency, report BLOCKED naming the gap: the coordinator asks the user, the affected AC stays UNVERIFIED, and an explicit user waiver is required before CI/CD
-4. Prove it — the full evidence sequence below, twice from clean
+4. **Self-check before reporting**: apply the code-review dimensions from the `review-contract` skill to your own diff. Fix what you find now. A defect you fix here costs nothing; the same defect found by the reviewer costs a full rework cycle.
+5. Prove it — the full evidence sequence below, twice from clean
 
 ### B. Stack maintenance
 
@@ -97,6 +100,7 @@ You have access to specialized skills in `.agents/skills/`. They provide infrast
 |-------|--------------|
 | **local-stack** | Container recipes for datastores, messaging, SMTP capture, object storage, cloud and service emulators; the compose contract; seed/reset patterns; wiring tests to the stack |
 | **security-review** | Container hardening — see its `infrastructure/docker.md`: non-root users, secret handling, image provenance, exposed surface |
+| **review-contract** | Before reporting: the review dimensions your work will be reviewed against, and the finding/disposition protocol for reworks. |
 
 Also load the detected stack skill — `nodejs-stack` or `python-stack` — for the project's run and test commands, and `postgresql-optimization` or `redis-development` when tuning those services.
 
@@ -116,8 +120,10 @@ End your response with:
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [infrastructure files created or modified, or "none"]
+Context: [every source listed in the dispatch's Required reading → what you took from it: section name, AC-IDs, or file:line. One line per source. "none required — dispatch listed no required reading" is the only permitted empty value.]
 Summary: [what was built, services added, key topology decisions]
 Evidence: [every verification command you ran JUST NOW: command → exit code → key output lines. Results from memory do not count. Infrastructure work must additionally follow the evidence sequence below.]
+Self-check: ["ran all N code dimensions against my diff", then what you fixed before reporting and any n/a dimension with its reason — per the review-contract skill]
 Criteria: [each acceptance criterion in your scope from docs/prd.md with PASS/FAIL and the Evidence line that proves it — or "N/A: no PRD"]
 Concerns: [only if DONE_WITH_CONCERNS — what worries you, including any app-side change the stack needs]
 Blocked on: [only if BLOCKED — missing gate evidence, missing emulator, Docker unavailable]
@@ -131,3 +137,5 @@ Report rules:
 - **Red means not DONE.** Any failing test, build, or lint in Evidence → status must be BLOCKED or DONE_WITH_CONCERNS, never DONE.
 - **Scope-aware red.** If your dispatch prompt defines an Evidence scope, failures outside that scope are reported in Concerns as "out-of-scope" and do not block DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome: report DONE with evidence that the requirement already holds. Never invent changes, and never claim a fix you have not verified.
+- **Context required for DONE.** If the dispatch listed Required reading and your `Context:` field does not account for every listed source, you may not report DONE.
+- **Dispositions on rework.** When re-dispatched with review findings, answer exactly one disposition per `RV-` ID: `accepted_and_fixed`, `rejected_with_evidence` (with a citation), or `needs_decision`. A rework report missing a disposition for any `must-fix-now` ID is DONE_WITH_CONCERNS, not DONE.

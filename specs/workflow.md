@@ -8,7 +8,8 @@ Core disciplines:
 - **Pipeline profiles**: Phase 0 triage scores the task (0–2 on size, novelty, ambiguity, irreversibility, parallelizability) and selects Micro / Standard / Full; lean is default, greenfield is always Full, and every skipped phase records a reason.
 - **Blocking questions & ground truth**: externally grounded facts and irreversible decisions halt for one batched user question or are verified against the authoritative source; mid-task info patches the brief without restarting debate (append, don't re-gate).
 - **Idempotency & circuit-breaker**: the ledger is the machine-checkable authority — completed/locked artifacts are never re-dispatched without an invalidation reason. Circuit-breaker thresholds: Micro/Standard 8 runs, Full 40 runs (or 3× slices × 5); per-slice sub-breaker at 6 implementation dispatches.
-- **Scope-proportional evidence**: every agent report must contain an `Evidence` field with fresh command output (or file:line citations for read-only agents). A DONE without Evidence is treated as DONE_WITH_CONCERNS. Failures outside the agent's dispatched scope are accepted as DONE with the failures recorded — not re-dispatched.
+- **Scope-proportional evidence**: every agent report must contain `Evidence` (fresh command output, or file:line citations for read-only agents), plus `Context` (every `Required reading` source accounted for), and `Self-check` (implementation agents, before reporting) or `Sweep` (code-reviewer/doc-reviewer, one line per dimension) per the `review-contract` skill. A DONE without Evidence, or whose `Context` omits a listed source, is treated as DONE_WITH_CONCERNS. Failures outside the agent's dispatched scope are accepted as DONE with the failures recorded — not re-dispatched.
+- **Review contract**: ordinary code/doc review findings carry stable `RV-<scope>-NNN` IDs with class `must-fix-now` (blocks, consumes the rework budget), `fix-in-slice` (fixed at the agent's next scheduled dispatch, never a dedicated rework), or `backlog` (recorded, never blocks). Only `must-fix-now` triggers a rework dispatch. The late-finding rule caps what a recheck may newly raise as `must-fix-now`: only a defect the rework introduced (`Introduced by:`) or a pre-existing Critical correctness/security defect (`Pre-existing Critical:`) — anything else first noticed on a recheck is `backlog`. `adversarial-reviewer` keeps its own `CH-*` protocol and budget, entirely separate from `RV-*`.
 - **Proportional debate**: Full-profile debate depth is gated by artifact complexity — Light (skip debate), Standard (1 cycle max), Deep (full 3-cycle budget). Architecture and design reviews are conditional on novelty.
 - **Adversarial planning gate**: `adversarial-reviewer` attacks PRD and plan assumptions, trade-offs, and plausible failure scenarios. The document creator resolves stable `CH-*` challenges; downstream agents receive the document only after consensus plus ordinary review or successful combined arbitration/full review.
 - **Separated review duties**: `adversarial-reviewer` performs risk-oriented challenge. `doc-reviewer` checks completeness, consistency, and actionability; after debate cycle 3, it also arbitrates unresolved challenges.
@@ -43,6 +44,7 @@ The local-stack gate is profile-independent: a Micro task that touches a databas
 
 | Gate | Scope | Blocks | Satisfied by |
 |---|---|---|---|
+| Context gate (Phase 3 step 3b) | per dispatch | acceptance of that report | `Context:` accounts for every source in that dispatch's `Required reading` block |
 | local-stack gate (enablement) | project | slice 1 and shared scaffolding | devops-engineer's clean-state proof, or a recorded `Local stack: N/A` |
 | DoD gate | slice N | slice N+1 | slice AC tests green against the stack + code review DONE + demo checkpoint |
 | criteria coverage check (Phase 4 step 1) | all AC-IDs | CI/CD dispatch | every AC-ID has passing non-mock evidence, or is listed UNVERIFIED |
@@ -84,11 +86,11 @@ flowchart TD
             DEBATE_DEPTH -- "Standard / Deep" --> ADV1["PRD challenge<br/>depth-proportional cycles"]
             ADV1 -->|Consensus or arbitration| DR1
             subgraph DR1["Doc Review: PRD"]
-                DR1_R[doc-reviewer]
-                DR1_D{Concerns?}
+                DR1_R["doc-reviewer: Sweep<br/>RV-PRD-NNN + class"]
+                DR1_D{Open must-fix-now?}
                 DR1_R --> DR1_D
-                DR1_D -- Yes --> DR1_FIX[re-dispatch product-analyst]
-                DR1_FIX -->|recheck, max 2 reworks| DR1_R
+                DR1_D -- Yes --> DR1_FIX["re-dispatch product-analyst<br/>one disposition per RV-ID"]
+                DR1_FIX -->|recheck, max 2 must-fix-now reworks| DR1_R
                 DR1_D -- No --> DR1_OK
             end
 
@@ -112,11 +114,11 @@ flowchart TD
             DEBATE_DEPTH2 -- "Standard / Deep" --> ADV4["Plan challenge<br/>depth-proportional cycles"]
             ADV4 -->|Consensus or arbitration| DR4
             subgraph DR4["Doc Review: Plan"]
-                DR4_R[doc-reviewer]
-                DR4_D{Concerns?}
+                DR4_R["doc-reviewer: Sweep<br/>RV-PLAN-NNN + class"]
+                DR4_D{Open must-fix-now?}
                 DR4_R --> DR4_D
-                DR4_D -- Yes --> DR4_FIX[re-dispatch planner]
-                DR4_FIX -->|recheck, max 2 reworks| DR4_R
+                DR4_D -- Yes --> DR4_FIX["re-dispatch planner<br/>one disposition per RV-ID"]
+                DR4_FIX -->|recheck, max 2 must-fix-now reworks| DR4_R
                 DR4_D -- No --> DR4_OK
             end
         end
@@ -126,8 +128,8 @@ flowchart TD
         subgraph INFRA["Local Stack Enablement"]
             DEV["devops-engineer: docker-compose.yml, .env.example,<br/>seed and reset scripts, emulators where no real service runs locally<br/>(pinned image tags + a health check per service)"] --> CRI
             subgraph CRI["Infra Review: Local Stack"]
-                CRI_R[code-reviewer]
-                CRI_D{Concerns?}
+                CRI_R["code-reviewer: Sweep<br/>RV-INFRA-NNN + class"]
+                CRI_D{Open must-fix-now?}
                 CRI_R --> CRI_D
                 CRI_D -- Yes --> CRI_FIX[re-dispatch devops-engineer]
                 CRI_FIX --> CRI_OK["Stack proven healthy from clean<br/>or Local stack: N/A recorded"]
@@ -140,8 +142,8 @@ flowchart TD
         subgraph SCAFFOLD["Shared Scaffolding"]
             IMP["implementor: skeleton, config, shared types<br/>(the local stack already exists — read-only for implementor;<br/>no CI/CD — pipelines and deploy come last)"] --> CR1
             subgraph CR1["Code Review: Scaffold"]
-                CR1_R[code-reviewer]
-                CR1_D{Concerns?}
+                CR1_R["code-reviewer: Sweep<br/>RV-SCAFFOLD-NNN + class"]
+                CR1_D{Open must-fix-now?}
                 CR1_R --> CR1_D
                 CR1_D -- Yes --> CR1_FIX[re-dispatch implementor]
                 CR1_FIX --> CR1_OK[Scaffold ready]
@@ -171,8 +173,8 @@ flowchart TD
             PARALLEL --> TB2["tester Mode B: full suite (unit + integration + e2e)<br/>green against containers,<br/>extend coverage, update docs/test-plan.md"]
             TB2 --> CRS
             subgraph CRS["Code Review: Slice"]
-                CRS_R[code-reviewer]
-                CRS_D{Concerns?}
+                CRS_R["code-reviewer: Sweep<br/>RV-SLICEn-NNN + class"]
+                CRS_D{Open must-fix-now?}
                 CRS_R --> CRS_D
                 CRS_D -- Yes --> CRS_FIX[re-dispatch responsible agent]
                 CRS_FIX --> CRS_OK[Slice done]
@@ -192,9 +194,10 @@ flowchart TD
 
     subgraph P3["Phase 3: Collection"]
         C0["Evidence gate: scope-proportional<br/>In-scope red → DONE_WITH_CONCERNS<br/>Out-of-scope red → accept DONE"]
+        C0b["Context gate: Context field accounts<br/>for every Required reading source?"]
         C1[Process agent reports, update docs/progress.md]
         C2{All DONE?}
-        C0 --> C1 --> C2
+        C0 --> C0b --> C1 --> C2
         C2 -- "BLOCKED / NEEDS_CONTEXT" --> C3[Re-dispatch with info]
         C3 --> C1
         C2 -- Yes --> C4[Proceed]
@@ -206,16 +209,16 @@ flowchart TD
         direction TB
         F0["Criteria coverage check:<br/>every AC-ID has passing evidence<br/>or is listed UNVERIFIED"]
         F0 --> F1{Multiple code agents?}
-        F1 -- Yes --> F2[code-reviewer: cross-cutting review + test integrity]
-        F2 --> F2D{Concerns?}
+        F1 -- Yes --> F2["code-reviewer: cross-cutting Sweep<br/>+ test integrity, RV-CROSSCODE-NNN"]
+        F2 --> F2D{Open must-fix-now?}
         F2D -- Yes --> F2FIX[re-dispatch code agent]
         F2FIX --> F3
         F2D -- No --> F3
         F1 -- No --> F3
 
         F3{Docs created?}
-        F3 -- Yes --> F4[doc-reviewer: cross-doc consistency]
-        F4 --> F4D{Concerns?}
+        F3 -- Yes --> F4["doc-reviewer: cross-doc Sweep<br/>RV-CROSSDOC-NNN"]
+        F4 --> F4D{Open must-fix-now?}
         F4D -- Yes --> F4FIX[re-dispatch doc agent]
         F4FIX --> F5[Review complete]
         F4D -- No --> F5
@@ -272,23 +275,27 @@ Each dispatch includes the original request, artifact path and version, cycle nu
 
 ## Ordinary Review Loop
 
-Artifacts without an adversarial gate, and PRDs/plans whose challenger reaches consensus, follow the ordinary review-and-rework pattern below. A cycle-3 combined arbitration/full-review result follows the same status discipline and rework limit, but substitutes for the ordinary PRD/plan review rather than preceding it. Only `DONE` with Evidence permits acceptance or downstream dispatch.
+Artifacts without an adversarial gate, and PRDs/plans whose challenger reaches consensus, follow the ordinary review-and-rework pattern below, governed by the `review-contract` skill. A cycle-3 combined arbitration/full-review result follows the same status discipline and rework limit, but substitutes for the ordinary PRD/plan review rather than preceding it. Only `DONE` with Evidence and a `Context` field that accounts for every `Required reading` source permits acceptance or downstream dispatch.
+
+The reviewer's `Sweep` reports findings as `RV-<scope>-NNN | class | severity | locator | issue | fix`, exactly one class per finding: `must-fix-now` (blocks, consumes the rework budget), `fix-in-slice` (real, fixed at the same agent's next scheduled dispatch, never a dedicated rework round), or `backlog` (recorded as debt, never blocks). **Only an open `must-fix-now` finding routes to rework.** On a recheck the reviewer carries every prior RV-ID forward with a state (`resolved`, `rejected_with_evidence`, `open`, or `reclassified`) and may raise a **new** `must-fix-now` only if the rework introduced it (`Introduced by:`) or it is a pre-existing Critical correctness/security defect (`Pre-existing Critical:`); everything else newly noticed on a recheck is `backlog`. The rework dispatch carries the complete finding list, and the creator returns exactly one disposition per ID: `accepted_and_fixed`, `rejected_with_evidence` (with citation), or `needs_decision`.
 
 ```mermaid
 flowchart LR
-    AGENT[Agent creates artifact] --> REVIEWER[Reviewer checks]
-    REVIEWER --> STATUS{Report status and Evidence}
-    STATUS -- DONE with Evidence --> PASS[Artifact accepted]
-    STATUS -- DONE_WITH_CONCERNS or DONE without Evidence --> REWORK[Re-dispatch original agent\nwith all findings]
-    REWORK -->|fewer than 2 reworks| REVIEWER
-    REWORK -->|2 reworks exhausted| ESCALATE[Change strategy once or escalate]
+    AGENT[Agent creates artifact] --> REVIEWER["Reviewer runs Sweep<br/>RV-scope-NNN + class"]
+    REVIEWER --> STATUS{Report status, Evidence, Context}
+    STATUS -- DONE, Evidence + Context complete --> OPENCHECK{Open must-fix-now findings?}
+    OPENCHECK -- No --> PASS["Artifact accepted<br/>(fix-in-slice/backlog recorded, non-blocking)"]
+    OPENCHECK -- Yes --> REWORK["Re-dispatch original agent<br/>full finding list, one disposition per ID"]
+    REWORK -->|fewer than 2 must-fix-now reworks| REVIEWER
+    REWORK -->|2 must-fix-now reworks exhausted| ESCALATE[Change strategy once or escalate]
+    STATUS -- DONE without Evidence, or Context incomplete --> REWORK
     STATUS -- NEEDS_CONTEXT --> CONTEXT[Obtain missing context]
     CONTEXT --> REVIEWER
     STATUS -- BLOCKED --> STOP[Stop and report blocker]
     PASS --> NEXT[Continue workflow]
 ```
 
-| Artifact type | Creator agents | Reviewer | Rework limit |
+| Artifact type | Creator agents | Reviewer | Rework limit (open must-fix-now only) |
 |---|---|---|---|
 | PRD, consensus path | product-analyst | doc-reviewer ordinary review | 2 |
 | PRD, unresolved after third recheck | product-analyst | doc-reviewer combined arbitration/full review; replaces ordinary review | 2 |
@@ -302,9 +309,11 @@ flowchart LR
 | Frontend code | frontend-dev | code-reviewer | 2 |
 | Test code | tester | code-reviewer | 2 |
 
+`fix-in-slice` findings never consume the limit above — closed (fixed, or explicitly re-classed `backlog` with a reason) before the owning slice's DoD gate, or before the task is reported complete in a final/cross-cutting review. `backlog` findings never consume it either — recorded in `docs/progress.md`'s Technical debt section (or, under Micro, in the coordinator's final report) and never trigger a dispatch.
+
 After 3 identical failure signatures: change strategy once (different agent, narrower scope, split the task) or escalate to the user with the full attempt history.
 
-The budgets are independent: PRD/plan debate allows at most **3 debate cycles**. The consensus path then allows at most **2 creator rework dispatches** in ordinary doc-review. The cycle-3 path instead allows at most **2 creator reworks** while completing the combined arbitration/full review; that dispatch replaces ordinary review, so no second review budget is opened.
+The budgets are independent: PRD/plan debate allows at most **3 debate cycles** on `CH-*` items — `adversarial-reviewer`'s own protocol, never merged with `RV-*`. The consensus path then allows at most **2 creator rework dispatches**, counted on open `must-fix-now` findings, in ordinary doc-review. The cycle-3 path instead allows at most **2 creator reworks** on the same basis while completing the combined arbitration/full review; that dispatch replaces ordinary review, so no second review budget is opened.
 
 ## Documentation Gate Roles
 
@@ -312,8 +321,8 @@ The budgets are independent: PRD/plan debate allows at most **3 debate cycles**.
 |---|---:|---|
 | product-analyst | Yes, PRD and its use-case catalogue | Defines traceable requirements, stable AC-IDs, assumptions, scope options, trade-offs, negative scenarios, decisions, and residual risks; maintains the OQ register with `Confirm before:` triggers and the Definition of Ready; marks sourceless requirements `invented — requires user confirmation`; resolves PRD challenges. Assigned AC-IDs are never renumbered or reused. Defines actors as stable ROLE-IDs and, with two or more `human` roles, writes `docs/use-cases.md` — use cases grouped by role plus a permission matrix whose `denied` cells cite denial AC-IDs grouped by observable behavior. |
 | planner | Yes, plan only | Defines tracer-bullet-first vertical slices, complete AC-ID mapping, dependency and uncertainty registers, worst-case analysis, and bounded contingency branches; carries OQ triggers into the slices they gate, states the DoD gate, and plans an integration-enablement slice when the PRD names real integrations; schedules the infrastructure-enablement task before slice 1 and before shared scaffolding when the project has external runtime dependencies; resolves plan challenges. |
-| adversarial-reviewer | No | Challenges assumptions and plausible failure scenarios in explicit `prd` or `plan` mode; returns the `Debate verdict` field with `CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`. |
-| doc-reviewer | No | Checks completeness, consistency, and actionability; arbitrates unresolved `CH-*` items only after cycle 3. |
+| adversarial-reviewer | No | Challenges assumptions and plausible failure scenarios in explicit `prd` or `plan` mode; returns the `Debate verdict` field with `CONSENSUS`, `REVISE`, or `ARBITRATION_REQUIRED`. Keeps its own `CH-*` protocol and debate budget, entirely independent of the `RV-*` review contract below. |
+| doc-reviewer | No | Runs a full `Sweep` (`review-contract` skill — one verdict per document dimension, findings as `RV-<scope>-NNN` with class `must-fix-now`/`fix-in-slice`/`backlog`) to check completeness, consistency, and actionability; arbitrates unresolved `CH-*` items only after cycle 3, on the separate `CH-*` budget. |
 | coordinator or ask-* mini-orchestrator | No | Carries full debate context, enforces budgets, updates round state, and blocks downstream dispatch until the document passes both gates; collects the input inventory and enforces the OQ, DoD, and demo-checkpoint gates. |
 
 The use-case catalogue is part of the PRD gate — never a separate artifact. It is challenged and reviewed in the same dispatches as `docs/prd.md`, it adds no review round of its own, and the denial ACs a permission matrix generates count as a single AC when selecting debate depth.
@@ -359,11 +368,11 @@ sequenceDiagram
         end
         alt Challenger reached CONSENSUS
             C->>DR: Ordinary PRD review
-            DR-->>C: DONE or DONE_WITH_CONCERNS
-            loop While concerns remain, maximum 2 ordinary reworks
-                C->>PA: Fix PRD (all review findings attached)
-                PA-->>C: Updated PRD + Evidence
-                C->>DR: Recheck PRD
+            DR-->>C: DONE + Sweep (RV-PRD-NNN + class), or DONE_WITH_CONCERNS
+            loop While open must-fix-now remains, maximum 2 reworks
+                C->>PA: Fix PRD (complete RV-ID list, one disposition each)
+                PA-->>C: Updated PRD + dispositions + Evidence
+                C->>DR: Recheck PRD (carry every prior RV-ID forward)
                 DR-->>C: DONE or DONE_WITH_CONCERNS
             end
         else ARBITRATION_REQUIRED after third recheck
@@ -377,13 +386,13 @@ sequenceDiagram
                 C->>DR: Resume and verify combined arbitration/full review
                 DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
             else DONE_WITH_CONCERNS
-                loop Creator/reviewer rework, maximum 2
-                    C->>PA: Fix arbitration/full-review concerns
-                    PA-->>C: Updated PRD + Evidence
+                loop Creator/reviewer rework, maximum 2 must-fix-now reworks
+                    C->>PA: Fix arbitration/full-review findings (RV-PRD-NNN, one disposition each)
+                    PA-->>C: Updated PRD + dispositions + Evidence
                     C->>DR: Resume combined arbitration/full review
                     DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
                 end
-                Note over C,DR: After 2 concern reworks, change strategy or escalate
+                Note over C,DR: After 2 must-fix-now reworks, change strategy or escalate
             else BLOCKED
                 Note over C,DR: Stop — do not dispatch downstream
             else DONE with Evidence
@@ -395,22 +404,22 @@ sequenceDiagram
         C->>AR: Design architecture (read PRD)
         AR-->>C: docs/architecture.md + Evidence
         C->>DR: Review architecture
-        DR-->>C: DONE or DONE_WITH_CONCERNS
-        loop While concerns remain, maximum 2 ordinary reworks
-            C->>AR: Fix architecture
-            AR-->>C: docs/architecture.md updated + Evidence
-            C->>DR: Recheck architecture
+        DR-->>C: DONE + Sweep (RV-ARCH-NNN + class), or DONE_WITH_CONCERNS
+        loop While open must-fix-now remains, maximum 2 reworks
+            C->>AR: Fix architecture (complete RV-ID list, one disposition each)
+            AR-->>C: docs/architecture.md updated + dispositions + Evidence
+            C->>DR: Recheck architecture (carry every prior RV-ID forward)
             DR-->>C: DONE or DONE_WITH_CONCERNS
         end
 
         C->>UD: Design UI/UX (read PRD)
         UD-->>C: docs/design.md + Evidence
         C->>DR: Review design
-        DR-->>C: DONE or DONE_WITH_CONCERNS
-        loop While concerns remain, maximum 2 ordinary reworks
-            C->>UD: Fix design
-            UD-->>C: docs/design.md updated + Evidence
-            C->>DR: Recheck design
+        DR-->>C: DONE + Sweep (RV-DESIGN-NNN + class), or DONE_WITH_CONCERNS
+        loop While open must-fix-now remains, maximum 2 reworks
+            C->>UD: Fix design (complete RV-ID list, one disposition each)
+            UD-->>C: docs/design.md updated + dispositions + Evidence
+            C->>DR: Recheck design (carry every prior RV-ID forward)
             DR-->>C: DONE or DONE_WITH_CONCERNS
         end
 
@@ -426,11 +435,11 @@ sequenceDiagram
         end
         alt Challenger reached CONSENSUS
             C->>DR: Ordinary plan review
-            DR-->>C: DONE or DONE_WITH_CONCERNS
-            loop While concerns remain, maximum 2 ordinary reworks
-                C->>PL: Fix plan (all review findings attached)
-                PL-->>C: Updated plan + Evidence
-                C->>DR: Recheck plan
+            DR-->>C: DONE + Sweep (RV-PLAN-NNN + class), or DONE_WITH_CONCERNS
+            loop While open must-fix-now remains, maximum 2 reworks
+                C->>PL: Fix plan (complete RV-ID list, one disposition each)
+                PL-->>C: Updated plan + dispositions + Evidence
+                C->>DR: Recheck plan (carry every prior RV-ID forward)
                 DR-->>C: DONE or DONE_WITH_CONCERNS
             end
         else ARBITRATION_REQUIRED after third recheck
@@ -444,13 +453,13 @@ sequenceDiagram
                 C->>DR: Resume and verify combined arbitration/full review
                 DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
             else DONE_WITH_CONCERNS
-                loop Creator/reviewer rework, maximum 2
-                    C->>PL: Fix arbitration/full-review concerns
-                    PL-->>C: Updated plan + Evidence
+                loop Creator/reviewer rework, maximum 2 must-fix-now reworks
+                    C->>PL: Fix arbitration/full-review findings (RV-PLAN-NNN, one disposition each)
+                    PL-->>C: Updated plan + dispositions + Evidence
                     C->>DR: Resume combined arbitration/full review
                     DR-->>C: DONE with Evidence, DONE_WITH_CONCERNS, NEEDS_CONTEXT, or BLOCKED
                 end
-                Note over C,DR: After 2 concern reworks, change strategy or escalate
+                Note over C,DR: After 2 must-fix-now reworks, change strategy or escalate
             else BLOCKED
                 Note over C,DR: Stop — do not dispatch downstream
             else DONE with Evidence
@@ -523,7 +532,7 @@ sequenceDiagram
 
 ## Status Handling
 
-Canonical report statuses remain `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, and `NEEDS_CONTEXT`. `Debate verdict` is an agent-specific field, not a new public status. For `adversarial-reviewer`, `DONE` is valid only with `Debate verdict: CONSENSUS` and file:line Evidence.
+Canonical report statuses remain `DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, and `NEEDS_CONTEXT`. `Debate verdict` is an agent-specific field, not a new public status. For `adversarial-reviewer`, `DONE` is valid only with `Debate verdict: CONSENSUS` and file:line Evidence. Every report additionally carries `Context` (accounting for the dispatch's `Required reading`), and `Self-check` (implementation agents) or `Sweep` (code-reviewer, doc-reviewer), per the `review-contract` skill. A `DONE` whose `Context` omits a listed source fails the Context gate (Phase 3 step 3b) and is treated as `DONE_WITH_CONCERNS`, independent of the Evidence gate; a `Sweep` that omits a dimension is not a valid `DONE` at all — BLOCKED with a proposed split instead.
 
 ```mermaid
 stateDiagram-v2
@@ -531,31 +540,34 @@ stateDiagram-v2
 
     AgentWorking --> EvidenceCheck: Report received
     EvidenceCheck --> DebateCheck: Challenge report with Evidence
-    EvidenceCheck --> DONE: Status DONE, Evidence present, checks green
-    EvidenceCheck --> Rework: DONE_WITH_CONCERNS or DONE without Evidence
+    EvidenceCheck --> ContextGateCheck: Status DONE, Evidence present, checks green
+    EvidenceCheck --> Rework: DONE_WITH_CONCERNS, or DONE without Evidence, or open must-fix-now findings
     EvidenceCheck --> BlockedState: Status BLOCKED
     EvidenceCheck --> ContextState: Status NEEDS_CONTEXT
+
+    ContextGateCheck --> DONE: Context accounts for every Required reading source
+    ContextGateCheck --> Rework: Context omits a listed source (Phase 3 step 3b)
 
     DebateCheck --> OrdinaryDocReview: CONSENSUS and Evidence
     DebateCheck --> CreatorRevision: REVISE and cycle fewer than 3
     CreatorRevision --> DebateCheck: Creator dispositions plus challenger recheck
     DebateCheck --> Arbitration: ARBITRATION_REQUIRED after third recheck
     Arbitration --> DONE: Combined review returns DONE with Evidence
-    Arbitration --> Rework: DONE_WITH_CONCERNS or DONE without Evidence
+    Arbitration --> Rework: DONE_WITH_CONCERNS, DONE without Evidence, or open must-fix-now findings
     Arbitration --> UserDecision: NEEDS_CONTEXT for product intent or unavailable evidence
     Arbitration --> BlockedState: BLOCKED
     UserDecision --> Arbitration: Non-material answer, creator update, resume combined review
     UserDecision --> DebateCheck: Material scope change, new version and initial pass
-    OrdinaryDocReview --> DONE: Ordinary review returns DONE with Evidence
-    OrdinaryDocReview --> Rework: DONE_WITH_CONCERNS or DONE without Evidence
+    OrdinaryDocReview --> ContextGateCheck: Ordinary review returns DONE with Evidence
+    OrdinaryDocReview --> Rework: DONE_WITH_CONCERNS, DONE without Evidence, or open must-fix-now findings
     OrdinaryDocReview --> ContextState: NEEDS_CONTEXT
     OrdinaryDocReview --> BlockedState: BLOCKED
 
     DONE --> NextPhase: Record in docs/progress.md
-    Rework --> ReviewerRecheck: Creator updates artifact
-    ReviewerRecheck --> DONE: Reviewer returns DONE with Evidence
-    ReviewerRecheck --> Rework: Concerns remain and reworks fewer than 2
-    ReviewerRecheck --> ChangeStrategy: Concerns remain after 2 reworks
+    Rework --> ReviewerRecheck: Creator dispositions every RV-ID, one per ID
+    ReviewerRecheck --> DONE: Reviewer returns DONE, no open must-fix-now remains
+    ReviewerRecheck --> Rework: Open must-fix-now remains and reworks fewer than 2
+    ReviewerRecheck --> ChangeStrategy: Open must-fix-now remains after 2 reworks
     ReviewerRecheck --> ContextState: NEEDS_CONTEXT
     ReviewerRecheck --> BlockedState: BLOCKED
     ChangeStrategy --> EscalateToUser: Change strategy once or escalate

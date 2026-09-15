@@ -34,10 +34,13 @@ $ARGUMENTS
    - If `docs/design.md` exists: instruct to "Read docs/design.md for user flows"
    - Instruct to "Create docs/test-plan.md with traceability matrix before writing tests."
    - **State the mode**: Mode A ("derive failing acceptance tests from the PRD criteria before implementation — expected-red") when tests are wanted ahead of code; Mode B ("run the full suite, extend coverage, update docs/test-plan.md") when verifying existing code. Default to Mode B
+   - **Required reading**: turn the sources above into a `Required reading` block, one line each as `<path> → <what to extract>` (e.g. `docs/prd.md → acceptance criteria under test`); the agent must account for every line in its `Context:` report field (`review-contract` skill).
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user
+
+4. **If a follow-up fix is requested**: findings and rework follow the `review-contract` skill — `RV-<scope>-NNN` IDs with class `must-fix-now` (blocks, consumes the 2-round rework budget), `fix-in-slice`, or `backlog`; re-dispatch with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
 
 ## Report Reminder (include in agent prompt)
 

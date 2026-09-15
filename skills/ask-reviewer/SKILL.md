@@ -31,10 +31,14 @@ $ARGUMENTS
    - Include detected project structure, stack, and **exact dependency versions**
    - Include list of changed files from git status/diff
    - Instruct to "Review this code for correctness, consistency with project patterns, version-appropriate patterns, and potential bugs"
+   - Instruct to report findings as `RV-<scope>-NNN | class | severity | file:line | issue | fix` with a `Sweep:` field covering every code dimension, per the `review-contract` skill
+   - **Required reading**: if `docs/prd.md` or `docs/architecture.md` exist, add a `Required reading` block, one line each as `<path> → <what to extract>` (e.g. `docs/prd.md → acceptance criteria touched by this diff`); the agent must account for every line in its `Context:` report field
    - Include stack-specific phrases matching the detected stack to trigger skill injection (e.g., "typescript 5.x", "next.js 16", "nestjs 11")
    - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user
+
+4. **If a follow-up fix is requested**: only open `must-fix-now` findings require action and consume the 2-round rework budget (`fix-in-slice`/`backlog` do not); re-dispatch the implementing agent with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
 
 ## Report Reminder (include in agent prompt)
 

@@ -4,7 +4,7 @@ Plugin toolkit for orchestrating a team of specialized AI agents for full-cycle 
 
 The coordinator (`/dev-team`) decomposes tasks into vertical slices, dispatches 12 specialist agents with isolated contexts, and enforces inline quality gates. A Phase 0 triage assigns each task a pipeline profile — Micro, Standard, or Full; lean is the default. In the Full profile every PRD and execution plan passes an adversarial debate before ordinary `doc-reviewer` review; code always passes `code-reviewer` review.
 
-Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. Verification runs against the project's external dependencies running in local containers — a database, cache, queue, or third-party emulator stood up by `devops-engineer` — not against mocks. The coordinator tracks state in `docs/progress.md`.
+Every agent report must carry an `Evidence` field — fresh command output proving the work (a bare "DONE" is never trusted) — plus a `Context` field accounting for every source named in the dispatch's `Required reading` block. Ordinary code and document reviews report findings as stable `RV-<scope>-NNN` IDs classed `must-fix-now`, `fix-in-slice`, or `backlog`; only `must-fix-now` blocks a gate and consumes the rework budget, and a late-finding rule stops reviewers from drip-feeding findings across reworks (see the `review-contract` skill). The tester writes failing acceptance tests before implementation (Mode A) and verifies green after (Mode B); implementation agents are forbidden from touching test files. Verification runs against the project's external dependencies running in local containers — a database, cache, queue, or third-party emulator stood up by `devops-engineer` — not against mocks. The coordinator tracks state in `docs/progress.md`.
 
 Skills are surfaced by their descriptions and follow the cross-platform [Agent Skills](https://agentskills.io) standard, so the same skill set installs into Claude Code, Codex CLI, GitHub Copilot CLI, and Gemini CLI.
 
@@ -237,6 +237,8 @@ Coordinators (multi-agent)          Focused shortcuts
 
 **Inline quality gates**: In the Full profile, `adversarial-reviewer` attacks assumptions and plausible failure scenarios in every PRD and plan; the creator resolves stable `CH-*` items for at most 3 debate cycles. Consensus proceeds to ordinary `doc-reviewer` review with a separate 2-rework budget. After an unresolved third recheck, `doc-reviewer` arbitrates and performs the full review in one dispatch; successful arbitration needs no second ordinary review. Product intent or unavailable evidence is escalated to the user, then the creator updates and `doc-reviewer` resumes the combined review. Code uses `code-reviewer`. Downstream waits for either successful path. See `specs/workflow.md` for full diagrams.
 
+**Review contract**: `code-reviewer` and `doc-reviewer` follow the `review-contract` skill — findings carry stable `RV-<scope>-NNN` IDs (the coordinator owns the scope tag and passes the prior RV-ID list into every recheck), each classed `must-fix-now` (blocks the gate, consumes the rework budget), `fix-in-slice` (real but non-blocking; fixed, or explicitly reclassed `backlog`, before that slice's DoD gate), or `backlog` (recorded in `docs/progress.md`'s `### Technical debt` section, or the coordinator's final report under the Micro profile, which has no ledger — never blocks). A late-finding rule caps rechecks: the reviewer carries every prior RV-ID forward with a state (`resolved`, `rejected_with_evidence`, `open`, or `reclassified → <new class>`) and may raise a new `must-fix-now` on a recheck only with a rationale line — `Introduced by:` if the rework itself introduced it, `Pre-existing Critical:` if it is a Critical correctness/security defect the rework did not introduce — anything else first noticed on a recheck is `backlog`, not a fresh rework cycle. Under the Micro profile a review emits only `must-fix-now` and `backlog`, scope tag `MICRO`. Implementation agents (`backend-dev`, `frontend-dev`, `implementor`, `devops-engineer`, `tester`) run the same code dimensions against their own diff as a `Self-check` before reporting. Every dispatch also names its sources in a `Required reading` block (`<path> → <what to extract>`), readable with the target agent's tool grant; a report's `Context` field must account for every one of them — a source the agent's tools cannot reach is accounted for as `<path> → unreachable with this agent's tools` and does not fail the gate — or the coordinator treats the report as `DONE_WITH_CONCERNS` and re-dispatches. `adversarial-reviewer` keeps its own `CH-*` debate protocol, unaffected.
+
 **Evidence gate**: a DONE report without fresh verification output (command → exit code → key lines) is treated as unverified and sent back. Failing checks forbid DONE. "No change was needed" is a valid, evidence-backed outcome (fix-or-abstain).
 
 **Local-stack gate**: a project with external runtime dependencies (database, cache, message broker or queue, SMTP, object storage, search engine, identity provider, third-party HTTP API) must have them running locally in version-pinned containers with health checks before slice 1 starts and for every verification afterwards; `devops-engineer` owns that stack. A dependency whose real service cannot run locally gets a containerized emulator (`stripe-mock`, `localstack`, `wiremock`, `mailpit`); if no emulator exists the coordinator halts for one batched user question and the affected AC stays UNVERIFIED until an explicit user waiver is recorded. Evidence produced against a mock, stub, or in-memory substitute for a dependency that has a container equivalent is not local evidence; a project with genuinely no external dependencies records `Local stack: N/A — <reason>`. The pipeline profile never exempts a task from this gate, and when a compose file already covers the whole inventory the gate is satisfied by evidence, not by a dispatch.
@@ -273,12 +275,13 @@ dev-team/
 │   ├── tester.md                # Test writer & runner (yellow, full tools)
 │   ├── code-reviewer.md         # Code reviewer (red, read-only)
 │   └── doc-reviewer.md          # Doc reviewer (cyan, read-only)
-├── skills/                      # 44 skills (Agent Skills standard)
+├── skills/                      # 45 skills (Agent Skills standard)
 │   ├── dev-team/                # /dev-team — universal coordinator (auto-detect)
 │   ├── dev-team-node/           # /dev-team-node — Node.js coordinator
 │   ├── dev-team-python/         # /dev-team-python — Python coordinator
 │   ├── ask-prd/ … ask-doc-reviewer/   # 11 focused workflow shortcuts (/ask-*), incl. ask-devops/
 │   ├── dev-team-codex/          # Codex bridge: coordinator + specialists via spawn_agent
+│   ├── review-contract/         # RV-ID finding schema, classes, late-finding rule, Context/Self-check/Sweep fields
 │   ├── nodejs-stack/            # Node.js/TS patterns (+ references/architecture-patterns.md)
 │   ├── python-stack/            # Python patterns (+ references/architecture-patterns.md)
 │   ├── local-stack/             # Container recipes, compose contract, seed/reset, test wiring
@@ -318,6 +321,7 @@ Every agent ends with a structured report:
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [files or "none"]
+Context: [every source the dispatch's Required reading block listed → what was taken from it]
 Summary: [what was done]
 Evidence: [verification commands run JUST NOW: command → exit code → key output. Read-only agents cite file:line instead]
 Criteria: [each acceptance criterion in scope: PASS/FAIL + evidence — or "N/A: no PRD"]
@@ -326,7 +330,7 @@ Blocked on: [if BLOCKED]
 Questions: [if NEEDS_CONTEXT]
 ```
 
-Rules: **DONE requires Evidence** · **red means not DONE** · **fix-or-abstain** ("no change needed" is a valid, evidence-backed outcome). Canonical copy: `templates/agent-template.md`.
+Implementation agents add `Self-check` after `Evidence`; `code-reviewer`/`doc-reviewer` add `Sweep` after `Evidence` (one line per review dimension). Rules: **DONE requires Evidence** · **Context required for DONE** · **red means not DONE** · **fix-or-abstain** ("no change needed" is a valid, evidence-backed outcome). Canonical copy: `templates/agent-template.md`.
 
 ## Adding a New Agent
 

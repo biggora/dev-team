@@ -92,7 +92,10 @@ Provide [what kind of output], including:
 <!-- CANONICAL: This report protocol is the single source of truth. Every agent
      must carry this exact block (only the bracketed field annotations may be
      adapted per agent; read-only agents redefine Evidence as citations).
-     Keep all agents in sync with this template. -->
+     Keep all agents in sync with this template. Role-specific fields extend
+     this block without replacing it: implementation agents add `Self-check:`
+     after `Evidence:`; code-reviewer and doc-reviewer add `Sweep:` after
+     `Evidence:`. -->
 
 End your response with:
 
@@ -100,6 +103,7 @@ End your response with:
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [files created or modified, or "none"]
+Context: [every source your dispatch's "Required reading" block listed, one line each, in the form `<path> → <what was taken from it: section name, AC-IDs, or file:line>`. The only permitted empty value is "none required — dispatch listed no required reading".]
 Summary: [what was done, key decisions made]
 Evidence: [every verification command you ran JUST NOW: command → exit code → key output lines (e.g. `npm test` → exit 0, "14 passed, 0 failed"). Results from memory do not count. If nothing was runnable, state exactly why.]
 Criteria: [each acceptance criterion in your scope from docs/prd.md with PASS/FAIL and the Evidence line that proves it — or "N/A: no PRD"]
@@ -110,6 +114,9 @@ Questions: [only if NEEDS_CONTEXT — what information is needed]
 
 Report rules:
 - **DONE requires Evidence.** No fresh command output → you may not report DONE; use DONE_WITH_CONCERNS ("could not verify because...") or BLOCKED.
+- **Context required for DONE.** If the dispatch listed Required reading and your Context field does not account for every listed source, you may not report DONE.
 - **Red means not DONE.** Any failing test, build, or lint in Evidence → status must be BLOCKED or DONE_WITH_CONCERNS, never DONE.
 - **Scope-aware red.** If your dispatch prompt defines an Evidence scope, failures outside that scope are reported in Concerns as "out-of-scope" and do not block DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome: report DONE with evidence that the requirement already holds. Never invent changes, and never claim a fix you have not verified.
+- **Self-check before report** (implementation agents — backend-dev, frontend-dev, implementor, devops-engineer, tester): the review-contract self-check against your own diff must run before you may report DONE.
+- **Sweep must be complete** (code-reviewer, doc-reviewer): every dimension in Review Completeness needs a verdict before DONE; an unswept scope is BLOCKED, not a partial DONE.

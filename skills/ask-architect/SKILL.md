@@ -32,10 +32,13 @@ $ARGUMENTS
    - If `docs/prd.md` exists: instruct to "Read docs/prd.md for the product requirements document"
    - Instruct to "Read references/architecture-patterns.md for architecture patterns"
    - Instruct to "Explore at least two architectural alternatives before committing; state why the chosen one wins."
+   - **Required reading**: turn the sources above into a `Required reading` block, one line each as `<path> → <what to extract>` (e.g. `docs/prd.md → acceptance criteria`, `references/architecture-patterns.md → applicable pattern`); the agent must account for every line in its `Context:` report field (`review-contract` skill).
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 
 3. **Present the result** — show the agent's structured report to the user
+
+4. **If a follow-up fix is requested**: findings and rework follow the `review-contract` skill — `RV-<scope>-NNN` IDs with class `must-fix-now` (blocks, consumes the 2-round rework budget), `fix-in-slice`, or `backlog`; re-dispatch with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
 
 ## Report Reminder (include in agent prompt)
 

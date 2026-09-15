@@ -11,6 +11,105 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 > Those entries are therefore summaries of what the commits state, not complete release notes.
 > The repository carries no git tags, so there are no comparison links.
 
+## [2.0.0] - 2026-09-15
+
+### Breaking
+
+- **Every agent's structured report gained required fields.** All 12 agents now carry a
+  `Context:` field (immediately after `Files changed:`) listing every source their dispatch's
+  `Required reading` block named, one line each as `<path> → <what was taken from it>`. A
+  `DONE` report that omits `Context:` when the dispatch listed Required reading is no longer
+  valid — the coordinator's new Context gate treats it as `DONE_WITH_CONCERNS` and
+  re-dispatches. The five implementation agents (`backend-dev`, `frontend-dev`,
+  `implementor`, `devops-engineer`, `tester`) additionally carry `Self-check:` after
+  `Evidence:`; `code-reviewer` and `doc-reviewer` additionally carry `Sweep:` after
+  `Evidence:`, and omitting a sweep dimension is forbidden. The canonical block in
+  `templates/agent-template.md` reflects this; any external tooling or dashboard that parses
+  agent reports by fixed field order must account for the new fields.
+- **Coordinator dispatch prompts must now name a `Required reading` block.** Writing "read
+  the documentation" is no longer sufficient — agents do not read documents the coordinator
+  did not name, and a path without an extraction instruction is read superficially. This
+  obligation governs every dispatch prompt the three coordinator skills construct — the
+  Phase 2 dispatch-prompt checklist, the per-agent reviewer dispatches under `### Inter-agent
+  context passing`, PRD/plan debate dispatches, and the Phase 4 cross-cutting review
+  dispatches alike.
+
+### Upgrading
+
+Agent prompts and skills load at session start, not on file edit — an installed plugin keeps
+running the version it loaded until refreshed, and editing a checkout does not update an
+installed plugin or a running session (see Installation in `README.md`). Reinstall or update
+the plugin for your platform and start a new session before the `Context:`, `Self-check:`, and
+`Sweep:` report fields and the Context gate take effect. Until then, a session still running
+the 1.9.0-loaded agent prompts will keep emitting reports without the new fields while a
+2.0.0-loaded coordinator enforces the gate against them — re-dispatching them repeatedly for a
+field they were never told to produce.
+
+### Added
+
+- **`skills/review-contract/`** — new locally-authored skill (not vendored; no
+  `skills-lock.json` entry) that is the single source of truth for the three report fields
+  (`Context`, `Self-check`, `Sweep`), the `RV-<scope>-NNN` finding schema, the three finding
+  classes, the late-finding rule, and the disposition protocol. `SKILL.md` plus
+  `references/code-dimensions.md` (11 dimensions), `references/doc-dimensions.md` (9
+  dimensions), and `references/finding-schema.md` (grammar, worked examples, a worked
+  recheck).
+- **Ordinary review contract.** Findings from `code-reviewer` and `doc-reviewer` carry stable
+  `RV-<scope>-NNN` IDs, never renumbered or reused, each classed exactly one of:
+  `must-fix-now` (blocks the gate — the only class that triggers a rework dispatch and
+  consumes the rework budget), `fix-in-slice` (a real but non-blocking defect, fixed by that
+  agent's next scheduled dispatch in the same slice, never a dedicated rework round), or
+  `backlog` (debt, recorded, never blocks). The rework budget stays 2 rounds per artifact per
+  gate but is now counted on open `must-fix-now` findings instead of on dispatches.
+- **Late-finding rule.** On a recheck, the reviewer carries every prior `RV-ID` forward with a
+  state (`resolved`, `rejected_with_evidence`, `open`) and may raise a new `must-fix-now`
+  finding only when the rework itself introduced it (with a rationale line naming the change)
+  or when it is a Critical correctness or security defect. Anything else noticed for the
+  first time on a recheck is filed as `backlog` — this is the cycle cap that stops reviewers
+  from delivering findings in batches across successive reworks. `adversarial-reviewer` keeps
+  its own `CH-*` debate protocol and budget, explicitly unchanged and separate from `RV-*`.
+- **Rework packet.** A creator re-dispatched with review findings answers with exactly one
+  disposition per `RV-ID` — `accepted_and_fixed`, `rejected_with_evidence` (cited), or
+  `needs_decision`. A rework report missing a disposition for any `must-fix-now` ID is
+  `DONE_WITH_CONCERNS`, not `DONE`.
+- **Document-agent inventory (Process Step 0).** `product-analyst`, `architect`, `planner`,
+  and `ui-ux-designer` now run `Glob('docs/**/*.md')` and read every document it returns
+  before producing new content; an existing normative document is binding and a conflict with
+  it is named in `Concerns` with the owning document and affected IDs, never silently
+  overridden. `agents/architect.md`, which previously never mentioned the PRD in its process
+  at all, now derives requirements from `docs/prd.md` AC-IDs in both its greenfield and
+  existing-project variants, and requires every AC-ID to be addressable by a component.
+- **Context gate (coordinator Phase 3).** A report whose `Context:` field does not account for
+  every source listed in that dispatch's `Required reading` is treated as `DONE_WITH_CONCERNS`
+  and re-dispatched naming the unaccounted sources.
+- Progress ledger (`docs/progress.md`) task table gained two columns: open `RV-` IDs with
+  their class, and the attempt count per scope+role. No new table or section was added.
+
+### Changed
+
+- **Coordinator size.** Despite all of the above, the three coordinator skills absorbed the
+  new contract without growing materially, because the five near-identical per-agent "dispatch
+  code-reviewer for X" briefs under `### Inter-agent context passing` collapsed into one rule
+  that delegates to the `review-contract` skill's rubric. The design constraint: added process
+  must displace existing process.
+- `## Review and Debate Limits` in all three coordinator skills now describes the ordinary
+  review contract (`RV-` IDs, classes, late-finding rule, rework packet) in place of the old
+  undifferentiated "2 creator-rework + reviewer-recheck dispatches" budget description; the
+  numeric budget itself (2 rounds per artifact per gate) is unchanged, only what it counts.
+- Every dispatch this skill constructs — the Phase 2 dispatch-prompt checklist, the per-agent
+  reviewer dispatches under `### Inter-agent context passing`, debate dispatches, and the
+  Phase 4 cross-cutting review dispatches — gained a **Required reading** line; Phase 3 gained
+  a **Context gate** step (3b).
+- `backend-dev`, `frontend-dev`, `implementor`, `devops-engineer`, and `tester` gained a
+  **Self-check before reporting** process step, applying the `review-contract` skill's code
+  dimensions to their own diff before writing their report.
+- `code-reviewer` and `doc-reviewer` gained a **Review Completeness** section (the sweep
+  dimensions), a **Finding Schema** section, and a **Late-Finding Rule** section, replacing
+  their previous free-form "Output Format" section; `code-reviewer`'s status list gained
+  `BLOCKED` for an oversized scope.
+- `planner` and `product-analyst` gained the same Process Step 0 document inventory as
+  `architect` and `ui-ux-designer`.
+
 ## [1.9.0] - 2026-09-05
 
 ### Breaking

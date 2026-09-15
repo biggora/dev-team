@@ -16,12 +16,15 @@ This plugin implements a "coordinator + specialists" architecture with inline qu
 - **Documentation adequacy**: an authoritative user spec or existing code pattern is never re-derived — documents reference it and add only a thin delta brief; a Phase 0 prior-art scan biases toward translating existing in-repo patterns
 - **Blocking-questions gate + ground truth**: externally grounded facts (endpoints, hosts, contracts, IDs) and irreversible decisions halt for one batched user question or are verified against the authoritative source before encoding; only reversible internal defaults may proceed-and-log. Mid-task info patches the brief (append, don't re-gate); only a genuine goal/scope pivot restarts debate
 - **Idempotency + circuit-breaker**: the ledger records profile, rationale, and a run counter; completed/locked artifacts are never re-dispatched without an invalidation reason, and a Micro/Standard task past 8 agent runs auto-escalates to the user
-- **Review-and-rework pattern**: if reviewer finds concerns → original agent is re-dispatched with findings
+- **Review-and-rework pattern**: only open `must-fix-now` findings trigger a rework dispatch — the creator returns exactly one disposition per RV-ID (`accepted_and_fixed`, `rejected_with_evidence`, `needs_decision`)
 - **Evidence gate**: DONE is only accepted with fresh verification output (see Report Protocol)
+- **Review contract**: ordinary code and document reviews report findings as stable `RV-<scope>-NNN` IDs — the coordinator, not the reviewer, owns the scope tag and passes the full prior RV-ID list into every recheck — each with exactly one class: `must-fix-now` (blocks the gate and consumes the rework budget), `fix-in-slice` (a real but non-blocking defect, fixed or explicitly reclassed `backlog` before that slice's DoD gate), or `backlog` (recorded in `docs/progress.md`'s `### Technical debt` section — or the coordinator's final report under Micro, which has no ledger — never blocks). Late-finding rule: on a recheck the reviewer carries every prior RV-ID forward with a state — `resolved`, `rejected_with_evidence`, `open`, or `reclassified → <new class>` — and may raise a new `must-fix-now` only with a rationale line, `Introduced by:` when the rework caused it or `Pre-existing Critical:` when it is a Critical correctness/security defect the rework did not introduce; anything else noticed for the first time is `backlog`. Under Micro a review emits only `must-fix-now` and `backlog`, scope tag `MICRO`. `adversarial-reviewer` keeps its own `CH-*` debate protocol and budget, unchanged and separate from `RV-*`
+- **Required reading + Context gate**: every dispatch prompt names its sources in a `Required reading` block (`<path> → <what to extract>`), readable with the target agent's tool grant — agents do not read documents the coordinator did not name, and writing "read the documentation" is forbidden. A report whose `Context:` field does not account for every listed source is treated as DONE_WITH_CONCERNS and re-dispatched; a source the agent's tools cannot reach is accounted for as `<path> → unreachable with this agent's tools` and does not fail the gate
 - **Vertical slices**: the planner decomposes by end-to-end user paths (tracer bullet first), not by layers
 - **Tester-first per slice**: tester writes failing acceptance tests (Mode A) before implementation, then verifies green and extends coverage (Mode B) after
 - **Progress ledger**: the coordinator maintains `docs/progress.md` (goal, AC-IDs, task table with evidence, decisions, open questions with triggers) and re-reads it at every phase start — the file, not conversation memory, is the source of truth
 - **Input inventory**: user-provided inputs (briefs, prototypes, mockups, brand assets, existing docs) are collected in Phase 1 and are normative; requirements without a source are marked `invented — requires user confirmation` and need the user's answer before dependent work. Where no inputs exist, the decisions they would cover come from the user, not from agents' invention
+- **Document-agent inventory**: product-analyst, architect, planner, and ui-ux-designer run Process Step 0 — read the five normative documents (`docs/prd.md`, `docs/use-cases.md`, `docs/architecture.md`, `docs/design.md`, `docs/plan.md`) in full when present, then `Glob('docs/**/*.md')` and skim every other document it returns — before producing new content; an existing normative document is binding and is never silently contradicted, a conflict is named in Concerns with the owning document and affected IDs
 - **Use cases per role**: actors are stable `ROLE-###` IDs in the PRD. With two or more `human` roles the product-analyst also writes `docs/use-cases.md` — use cases grouped by role plus a role × use-case permission matrix whose every `denied` cell cites a denial AC-ID; with one role they stay in the PRD and no file is created, and Micro never produces them. The catalogue is part of the PRD gate, not a separate artifact: one debate, one doc-review, no extra dispatch
 - **OQ gate**: open questions carry `Confirm before:` triggers; before slice N the coordinator asks the user every question tagged for it (one batch) or records an explicit MVP waiver — an unanswered triggered question blocks the slice
 - **DoD gate + demo checkpoint**: slice N+1 starts only after slice N's acceptance tests pass, code review is DONE, and the user has seen a demo of the increment; deviations are explicit user decisions with a debt-closure slice
@@ -72,12 +75,13 @@ Use `ask-*` commands for focused workflows that bypass the full coordinator. Mos
 
 ## Report Protocol
 
-Every agent MUST end its response with a structured report:
+Every agent MUST end its response with a structured report. Role-specific fields extend the block without replacing it: the five implementation agents (backend-dev, frontend-dev, implementor, devops-engineer, tester) add `Self-check:` after `Evidence:`; code-reviewer and doc-reviewer add `Sweep:` after `Evidence:` — one line per review dimension, `checked, N findings` | `checked, clean` | `n/a — <reason>`, omitting a dimension is forbidden:
 
 ```
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 Files changed: [files created or modified, or "none"]
+Context: [every source the dispatch's "Required reading" block listed, one line each, `<path> → <what was taken from it>`; "none required — dispatch listed no required reading" is the only permitted empty value]
 Summary: [what was done, key decisions made]
 Evidence: [every verification command run JUST NOW: command → exit code → key output lines. Read-only agents cite file:line for every claim instead. Results from memory do not count.]
 Criteria: [each acceptance criterion in scope from docs/prd.md with PASS/FAIL and the Evidence line that proves it — or "N/A: no PRD"]
@@ -88,8 +92,11 @@ Questions: [only if NEEDS_CONTEXT — what information is needed]
 
 Report rules (canonical copy: `templates/agent-template.md`):
 - **DONE requires Evidence.** No fresh command output (or citations) → the agent may not report DONE.
+- **Context required for DONE.** If the dispatch listed Required reading and the Context field does not account for every listed source, the agent may not report DONE.
 - **Red means not DONE.** Any failing test, build, or lint in Evidence → BLOCKED or DONE_WITH_CONCERNS, never DONE.
 - **Fix-or-abstain.** "No change was needed" is a valid outcome backed by evidence; invented changes and unverified fixes are not.
+- **Self-check before report.** Implementation agents run the `review-contract` skill's code dimensions against their own diff before reporting, fixing what they find.
+- **Sweep must be complete.** code-reviewer and doc-reviewer give every review dimension in the `review-contract` skill a verdict; an oversized scope is BLOCKED with a proposed split, never delivered as a partial review.
 
 **Status handling by coordinator:**
 
@@ -101,11 +108,13 @@ Report rules (canonical copy: `templates/agent-template.md`):
 | BLOCKED | Provide missing info, re-dispatch agent |
 | NEEDS_CONTEXT | Answer questions or ask user, re-dispatch |
 
-**Independent limits**: PRD/plan debate allows at most 3 creator-response/challenger-recheck cycles. The subsequent ordinary doc-review keeps its separate limit of 2 rework dispatches. Other artifact gates allow 2 reworks. If the same ordinary-review failure signature appears 3 times, change strategy once or escalate with the attempt history. Never loop.
+**Independent limits**: PRD/plan debate allows at most 3 creator-response/challenger-recheck cycles. Ordinary review — governed by the `review-contract` skill — allows at most 2 rework dispatches per artifact per gate, counted on open `must-fix-now` findings rather than on dispatches; `fix-in-slice` and `backlog` findings never consume this budget. If the same ordinary-review failure signature appears 3 times, change strategy once or escalate with the attempt history. Never loop.
 
 ## Inline Review Workflow
 
 Every artifact produced in Phase 2 goes through an inline gate before the next agent consumes it. For PRDs and plans, `adversarial-reviewer` attacks assumptions and failure scenarios; `doc-reviewer` then validates completeness, consistency, and actionability. After debate cycle 3, `doc-reviewer` first arbitrates unresolved `CH-*` items and escalates product intent or unavailable evidence to the user.
+
+Ordinary reviews (code-reviewer, doc-reviewer) report findings as stable `RV-<scope>-NNN` IDs classed `must-fix-now`, `fix-in-slice`, or `backlog` — only `must-fix-now` blocks the gate and consumes the rework budget. On a recheck the reviewer carries every prior RV-ID forward with a state (`resolved`, `rejected_with_evidence`, `open`, or `reclassified → <new class>`) and may raise a new `must-fix-now` only with a rationale line (`Introduced by:` or `Pre-existing Critical:`); anything else noticed for the first time is `backlog`. This finding contract is separate from `adversarial-reviewer`'s `CH-*` debate protocol, which is unchanged.
 
 | Artifact | Creator | Reviewer | On concerns |
 |----------|---------|----------|-------------|
@@ -131,6 +140,8 @@ See `specs/workflow.md` for full mermaid diagrams.
 - Infrastructure files (`docker-compose*.yml`, `Dockerfile*`, `.env.example`, `.dockerignore`, seed and reset scripts) are **devops-engineer's exclusive writable scope** — no other agent may edit them in any dispatch, parallel or not
 - **Never dispatch CI/CD to implementor** — CI pipelines, deployment configs, and release tooling go to devops-engineer, and only after the local-proof gate passes
 - Include **context** about what other agents have done
+- Every dispatch prompt carries a **Required reading** block: one line per source, `<path> → <what to extract>`. Writing "read the documentation" is forbidden — agents do not read documents you did not name, and a path without an extraction instruction is read superficially
+- **Context gate**: a report whose `Context:` field does not account for every source listed in that dispatch's Required reading is treated as DONE_WITH_CONCERNS — re-dispatch naming the sources that were not accounted for
 - Pass the **input inventory** (paths of user-provided briefs, prototypes, brand assets — or "none") to product-analyst and ui-ux-designer; document agents read the inputs, the coordinator does not
 - For products with more than one kind of user: instruct product-analyst to define `ROLE-###` actors and a role × use-case permission matrix, and paste the matrix rows for the current slice into backend-dev and frontend-dev prompts — a `denied` cell is behavior to implement, and agents do not read documents you did not name
 - For PRD/plan debate, include the original request, artifact path and version, cycle number, unresolved `CH-*`, latest dispositions/evidence, and related documents; store only cycle, verdict, and unresolved IDs in `docs/progress.md`

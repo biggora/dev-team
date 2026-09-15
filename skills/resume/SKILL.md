@@ -17,8 +17,12 @@ Resume a dev-team workflow from a prior session's handoff state.
    If none exist, report that no prior session state was found and offer to start fresh with `/dev-team`.
 
 2. **Reconstruct coordinator state**:
-   - Read `docs/handoff.md` for resume point, pending actions, environment, debate state
+   - Read `docs/handoff.md` for resume point, pending actions, environment, debate state, and
+     review state
    - Read `docs/progress.md` for authoritative task table, AC-IDs, decisions, open questions
+   - If handoff's Review State section is present, carry every listed `RV-` ID and its class
+     forward into the next review or rework dispatch, and resume the rework count from the
+     recorded value — never restart it at 0
    - Read any artifacts listed in handoff to verify they exist and match expected state
    - Run `git log --oneline -10` and `git status` to check for changes since handoff
 
@@ -48,5 +52,6 @@ Resume a dev-team workflow from a prior session's handoff state.
 - **No handoff but progress.md exists**: reconstruct from the task table — find the last DONE entry, determine the next logical step
 - **Stale handoff (code changed since)**: warn the user, show relevant git diff, ask whether to proceed or re-assess
 - **Mid-debate resume**: re-read the artifact and unresolved CH-* IDs; re-dispatch from the pending action
+- **Mid-review resume**: re-read the artifact and every open `RV-` ID from handoff's Review State section; re-dispatch the pending creator disposition or reviewer recheck with the full prior RV-ID list, not a fresh review
 - **User wants to change direction**: if $ARGUMENTS override the next action, update the ledger accordingly
 - **Micro profile (no docs/progress.md)**: if only code artifacts exist with no ledger, offer to start fresh or ask the user to describe where they left off

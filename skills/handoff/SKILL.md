@@ -22,6 +22,9 @@ Generate a compact session-continuity document that enables a new session to res
    - Current phase (0–5) and sub-step
    - Current slice number (if in implementation)
    - Debate state (if mid-debate: cycle, unresolved CH-* IDs, pending action)
+   - Review state (if mid-review or mid-rework): every open `RV-<scope>-NNN` ID with its
+     class (`must-fix-now`/`fix-in-slice`/`backlog`) and state, plus the rework count already
+     spent per artifact+gate
    - Re-dispatch attempt counts per scope
    - Pending dispatches (what was about to happen next)
    - User decisions made verbally but not yet in docs
@@ -70,6 +73,13 @@ Cycle: [0–3]
 Unresolved: [CH-*-001, CH-*-002, ...]
 Last verdict: [CONSENSUS/REVISE/ARBITRATION_REQUIRED]
 Pending: [creator revision / challenger recheck / arbitration]
+
+## Review State (if mid-review or mid-rework)
+
+Artifact+gate: [e.g. SLICE2/code-reviewer]
+Open RV-IDs: [RV-SLICE2-003 | must-fix-now | open, RV-SLICE2-004 | fix-in-slice | open, ...]
+Rework count: [N/2 for this artifact+gate]
+Pending: [creator disposition / reviewer recheck]
 
 ## Environment
 

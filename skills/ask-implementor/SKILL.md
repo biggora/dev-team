@@ -34,12 +34,15 @@ $ARGUMENTS
    - Include detected project structure, stack, and dependency versions
    - If `docs/prd.md` exists: instruct to "Read docs/prd.md for requirements"
    - If `docs/architecture.md` exists: instruct to "Read docs/architecture.md for the architecture blueprint"
+   - **Required reading**: turn the sources above into a `Required reading` block, one line each as `<path> → <what to extract>` (e.g. `docs/prd.md → requirements in scope`); the agent must account for every line in its `Context:` report field (`review-contract` skill).
    - For refactoring tasks: remind the agent to "run the test suite BEFORE and AFTER your changes and show both runs in Evidence to prove behavior preservation"
    - For metric-optimization tasks ("make it faster", "improve the score"): instruct to "apply the autoresearch skill — immutable evaluator, one atomic mutation per experiment, keep/discard by metric"
    - Include stack-specific phrases matching the detected stack to trigger skill injection
    - Include the report reminder (below)
 
 4. **Present the result** — show the agent's structured report to the user
+
+5. **If a follow-up fix is requested**: findings and rework follow the `review-contract` skill — `RV-<scope>-NNN` IDs with class `must-fix-now` (blocks, consumes the 2-round rework budget), `fix-in-slice`, or `backlog`; re-dispatch with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
 
 ## Report Reminder (include in agent prompt)
 
