@@ -316,3 +316,98 @@ test('STATIC CX-020: all eleven ask-* skills carry the Required-reading obligati
     assert.match(text, /rework budget/, `${name}: missing rework-budget language`);
   }
 });
+
+// -----------------------------------------------------------------------------
+// Technical-debt closure (2026-09-16): the marketplace-version drift and the
+// architecture/design-spec rework-limit contradiction, both closed by T1.
+// -----------------------------------------------------------------------------
+
+test('STATIC CX-021: package version is echoed identically across every manifest, agreement not a pinned literal', () => {
+  const pkg = JSON.parse(read('package.json'));
+  const manifestFiles = [
+    '.claude-plugin/plugin.json',
+    '.claude-plugin/marketplace.json',
+    '.codex-plugin/plugin.json',
+    '.copilot-plugin/plugin.json',
+    '.copilot-plugin/marketplace.json',
+  ];
+  for (const file of manifestFiles) {
+    const manifest = JSON.parse(read(file));
+    assert.equal(manifest.version, pkg.version, `${file}: version must match package.json's ${pkg.version}`);
+    // Marketplace manifests carry a nested per-plugin entry; if it ever grows
+    // its own `version` field, that field must agree too.
+    if (Array.isArray(manifest.plugins)) {
+      manifest.plugins.forEach((plugin, i) => {
+        if (Object.prototype.hasOwnProperty.call(plugin, 'version')) {
+          assert.equal(plugin.version, pkg.version, `${file}: plugins[${i}].version must match package.json's ${pkg.version}`);
+        }
+      });
+    }
+  }
+});
+
+test('STATIC CX-022: architecture and design-spec gates canonically allow 1 rework everywhere the rule is stated; the generic 2-rework budget survives', () => {
+  const oneReworkPhrase = 'Maximum 1 rework (not 2)';
+
+  // Coordinators: the authoritative rule, worded identically across all three.
+  for (const name of ['dev-team', 'dev-team-node', 'dev-team-python']) {
+    const text = read(`skills/${name}/SKILL.md`);
+    const architectLine = text.split('\n').find(l => l.startsWith('- **After architect**:'));
+    const designLine = text.split('\n').find(l => l.startsWith('- **After ui-ux-designer**:'));
+    assert.ok(architectLine, `${name}: missing "After architect" bullet`);
+    assert.ok(designLine, `${name}: missing "After ui-ux-designer" bullet`);
+    assert.ok(architectLine.includes(oneReworkPhrase), `${name}: After-architect bullet must state "${oneReworkPhrase}"`);
+    assert.ok(designLine.includes(oneReworkPhrase), `${name}: After-ui-ux-designer bullet must state "${oneReworkPhrase}"`);
+  }
+
+  // specs/workflow.md: rework-limit table and both mermaid recheck loops.
+  const workflow = read('specs/workflow.md');
+  const archRow = workflow.split('\n').find(l => l.startsWith('| Architecture | architect | doc-reviewer |'));
+  const designRow = workflow.split('\n').find(l => l.startsWith('| Design spec | ui-ux-designer | doc-reviewer |'));
+  assert.ok(archRow && /\|\s*1\s*\(/.test(archRow), 'specs/workflow.md: Architecture rework-limit row must read 1');
+  assert.ok(designRow && /\|\s*1\s*\(/.test(designRow), 'specs/workflow.md: Design spec rework-limit row must read 1');
+  assert.match(workflow, /loop While open must-fix-now remains, maximum 1 rework\n\s+C->>AR: Fix architecture/, 'specs/workflow.md: architecture recheck loop must cap at 1 rework');
+  assert.match(workflow, /loop While open must-fix-now remains, maximum 1 rework\n\s+C->>UD: Fix design/, 'specs/workflow.md: design recheck loop must cap at 1 rework');
+
+  // Platform instruction files: Inline Review Workflow table rows and the
+  // Independent-limits sentence; the generic 2-rework budget must survive.
+  for (const file of ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md']) {
+    const text = read(file);
+    assert.match(text, /\| Architecture \| architect \| doc-reviewer \| Re-dispatch architect; max 1 rework \|/, `${file}: Inline Review Workflow Architecture row must cap at 1`);
+    assert.match(text, /\| Design spec \| ui-ux-designer \| doc-reviewer \| Re-dispatch ui-ux-designer; max 1 rework \|/, `${file}: Inline Review Workflow Design spec row must cap at 1`);
+    assert.match(text, /except the architecture and design-spec gates, which allow 1 \(deliberately tighter\)/, `${file}: Independent limits sentence must carve out 1 for these two gates`);
+    assert.match(text, /allows at most 2 rework dispatches per artifact per gate/, `${file}: generic 2-rework budget for every other gate must survive`);
+  }
+
+  // The two ask-* shortcuts that own these gates.
+  for (const name of ['ask-architect', 'ask-designer']) {
+    const text = read(`skills/${name}/SKILL.md`);
+    assert.match(text, /consumes the 1-round rework budget for this gate — tighter than the generic 2/, `${name}: must state the tightened 1-round budget for its own gate`);
+  }
+
+  // Repo-wide regression guard: no file may restate 2 reworks specifically for
+  // the architecture or design-spec gates (the exact defect that survived review).
+  const dangerPatterns = [
+    /Architecture \| architect \| doc-reviewer \|\s*2\s*[|(]/,
+    /Design spec \| ui-ux-designer \| doc-reviewer \|\s*2\s*[|(]/,
+    /After architect\*\*:[\s\S]{0,400}?Maximum 2 rework/,
+    /After ui-ux-designer\*\*:[\s\S]{0,400}?Maximum 2 rework/,
+    /maximum 2 reworks?\s*\n\s*C->>AR: Fix architecture/,
+    /maximum 2 reworks?\s*\n\s*C->>UD: Fix design/,
+  ];
+  const mdFiles = [];
+  (function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === '.git' || entry.name === 'node_modules') continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.md')) mdFiles.push(full);
+    }
+  })(root);
+  for (const file of mdFiles) {
+    const text = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+    for (const pattern of dangerPatterns) {
+      assert.doesNotMatch(text, pattern, `${path.relative(root, file).replace(/\\/g, '/')}: restates a 2-rework limit for architecture/design`);
+    }
+  }
+});

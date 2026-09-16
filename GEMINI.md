@@ -108,7 +108,7 @@ Report rules (canonical copy: `templates/agent-template.md`):
 | BLOCKED | Provide missing info, re-dispatch agent |
 | NEEDS_CONTEXT | Answer questions or ask user, re-dispatch |
 
-**Independent limits**: PRD/plan debate allows at most 3 creator-response/challenger-recheck cycles. Ordinary review — governed by the `review-contract` skill — allows at most 2 rework dispatches per artifact per gate, counted on open `must-fix-now` findings rather than on dispatches; `fix-in-slice` and `backlog` findings never consume this budget. If the same ordinary-review failure signature appears 3 times, change strategy once or escalate with the attempt history. Never loop.
+**Independent limits**: PRD/plan debate allows at most 3 creator-response/challenger-recheck cycles. Ordinary review — governed by the `review-contract` skill — allows at most 2 rework dispatches per artifact per gate, except the architecture and design-spec gates, which allow 1 (deliberately tighter), counted on open `must-fix-now` findings rather than on dispatches; `fix-in-slice` and `backlog` findings never consume this budget. If the same ordinary-review failure signature appears 3 times, change strategy once or escalate with the attempt history. Never loop.
 
 ## Inline Review Workflow
 
@@ -119,8 +119,8 @@ Ordinary reviews (code-reviewer, doc-reviewer) report findings as stable `RV-<sc
 | Artifact | Creator | Reviewer | On concerns |
 |----------|---------|----------|-------------|
 | PRD (+ use cases) | product-analyst | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks; the use-case catalogue rides the same dispatches |
-| Architecture | architect | doc-reviewer | Re-dispatch architect |
-| Design spec | ui-ux-designer | doc-reviewer | Re-dispatch ui-ux-designer |
+| Architecture | architect | doc-reviewer | Re-dispatch architect; max 1 rework |
+| Design spec | ui-ux-designer | doc-reviewer | Re-dispatch ui-ux-designer; max 1 rework |
 | Execution plan | planner | adversarial-reviewer, then doc-reviewer | Debate up to 3 cycles; ordinary review up to 2 reworks |
 | Local stack (compose, env, seed) | devops-engineer | code-reviewer | Re-dispatch devops-engineer |
 | Scaffold code | implementor | code-reviewer | Re-dispatch implementor |

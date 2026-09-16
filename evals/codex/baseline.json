@@ -1,13 +1,13 @@
 {
-  "commit": "875882fcccdd7fba346fa0a9141f08df3a9ee62f",
+  "commit": "uncommitted-worktree — re-anchor pending the debt-closure commit",
   "normalization": "CRLF to LF only",
   "shared": {
     "dev-team": "4599fe400bbd3ff90cc4cee76fe86176a3c986eaf9c14e12322af707be5b697d",
     "dev-team-node": "c9aeaeebfc13d1dfc3a9f985defc86e04e5a1133a8946b3cad5739c4098bb853",
     "dev-team-python": "93f6fe892dc641e7472027a819abb6a864a0085c51d4b5c938fa2317b817a00d",
-    "ask-architect": "28cc81ddf83a2f60eb2a979628a475a3c958e01d025ed26dc0dfe6ab96e5e246",
+    "ask-architect": "f89b052ff30f67fc644b3c9c60293e0b30dc199e77b3a2d0c105395fa9bea84a",
     "ask-backend": "577d941b1ed1dd2bb449bfa56fbbb41f75d8c77720f2d6d621db7b56337ba92f",
-    "ask-designer": "1a5bc580b514f54cc86817d91e9ec47f827e2b9eff146a4a49717cfedad3858c",
+    "ask-designer": "b8883e4d80795e9e7b306b4475f6f8c89bb675c70cc2b9f2731f74bcd3106dc7",
     "ask-devops": "facf869f6f5ebac21463075e2e5525ad808fa6fe91a1d0b2c7f2e8821ab55fa3",
     "ask-doc-reviewer": "4e9d6f5a825a3d4d406925415cf3320d221b482fc6b99a79d88993e3efb66259",
     "ask-frontend": "dd29b59cf6b7a25b620efbcc464d7bc7f76c0c0410d30aca426fe8059b311b93",
@@ -19,9 +19,10 @@
   },
   "preserved": {
     ".claude-plugin/plugin.json": "1846a8a98efc49dcf2808e8770566d9030689981648e6d20d95107c8eb398c35",
-    ".claude-plugin/marketplace.json": "cc3acff75b965d785b0a25925503c4822a6170c5f6c69e3e57d7e3ee36952e4d",
+    ".claude-plugin/marketplace.json": "b591fbbfc757ceeed9ca74e52a05f331af495e784ec68e5339b6852066b9568a",
     ".codex-plugin/plugin.json": "0b528b06ea50137bde7ba3bf75f655e8b63c8826e5f8af7373c7600498eace1f",
     ".copilot-plugin/plugin.json": "bb75a618734106deb29c13dcd7b6ff20e7e7cbfdef96dbd81da179710ab1f485",
+    ".copilot-plugin/marketplace.json": "cce883361d7eee2e823d02dbe1050d1fdaf40b25a132c7402698e470a170bf58",
     "agents/adversarial-reviewer.md": "476def31fea415de1e8b5540411354e572dc683a0f5bc8707359ea54c4c0da17",
     "agents/architect.md": "d1b874e0bdc445f4dced73c51d0fbad80eb56ab14f30c83f892f2a338bbf6e3a",
     "agents/backend-dev.md": "49caecd480aa1261180871a205c406bcb825b9e20d82e1406d40668152349ec1",

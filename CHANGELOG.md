@@ -110,6 +110,20 @@ field they were never told to produce.
 - `planner` and `product-analyst` gained the same Process Step 0 document inventory as
   `architect` and `ui-ux-designer`.
 
+### Fixed
+
+- **Architecture/design rework limit now stated consistently.** The coordinators'
+  "Maximum 1 rework (not 2)" for the architect and ui-ux-designer gates is the authoritative
+  rule (a deliberate anti-bureaucracy reduction from the generic 2-round budget). It was
+  contradicted by `specs/workflow.md`'s rework-limit table and its architecture/design recheck
+  loops, the "Independent limits" sentence and Inline Review Workflow table in `CLAUDE.md` /
+  `AGENTS.md` / `GEMINI.md`, and the `/ask-architect` and `/ask-designer` shortcuts (both cited
+  "the 2-round rework budget"). All now read 1 rework for these two gates; every other
+  ordinary-review gate keeps 2.
+- **Marketplace manifest versions aligned to `2.0.0`.** `.claude-plugin/marketplace.json`
+  (was `1.5.0`) and `.copilot-plugin/marketplace.json` (was `1.4.0`) now match `package.json`
+  and the three `plugin.json` manifests.
+
 ## [1.9.0] - 2026-09-05
 
 ### Breaking

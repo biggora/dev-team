@@ -117,5 +117,9 @@ This section tracks the review-contract change set (three report fields `Context
 
 ### Technical debt
 
-- `specs/workflow.md`'s rework-limit table (`specs/workflow.md:303-304`) gives Architecture and Design spec a rework limit of 2, while `skills/dev-team/SKILL.md` (and the Node/Python coordinators) states "Maximum 1 rework (not 2)" for those same two artifact types. This asymmetry pre-dates v2.0.0 and was not introduced by this change set; a decision is owed on which number governs.
-- `.claude-plugin/marketplace.json` carries `version: 1.5.0` and `.copilot-plugin/marketplace.json` carries `version: 1.4.0`, while every plugin manifest (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `.copilot-plugin/plugin.json`) and `package.json` now read `2.0.0`. Pre-existing drift; a decision is owed on whether marketplace-file versions track the plugin version at all.
+Closed — 2026-09-16 (prompt-contract and release-engineering pass, T1 of the v2.0.0 closeout):
+
+- **Architecture/design rework limit (previously open above).** Question asked: which number governs — the coordinators' "Maximum 1 rework (not 2)" or the 2 stated elsewhere? Decided: the coordinator is authoritative, because it is what the orchestrating model actually executes and its "(not 2)" is a deliberate anti-bureaucracy reduction, not an oversight. `specs/workflow.md`'s rework-limit table (`specs/workflow.md:303-304`) and its architecture/design recheck loops, the `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` "Independent limits" sentence and Inline Review Workflow table, and `skills/ask-architect/SKILL.md` + `skills/ask-designer/SKILL.md` all read 1 for these two gates now; every other ordinary-review gate keeps the generic 2-rework budget, which was not weakened.
+- **Marketplace version drift (previously open above).** Question asked: do marketplace-file versions track the plugin version? Decided: yes. `.claude-plugin/marketplace.json` (was `1.5.0`) and `.copilot-plugin/marketplace.json` (was `1.4.0`) now read `2.0.0`, matching `package.json` and the three `plugin.json` manifests.
+
+No open technical debt remains.

@@ -38,7 +38,7 @@ $ARGUMENTS
 
 3. **Present the result** — show the agent's structured report to the user
 
-4. **If a follow-up fix is requested**: findings and rework follow the `review-contract` skill — `RV-<scope>-NNN` IDs with class `must-fix-now` (blocks, consumes the 2-round rework budget), `fix-in-slice`, or `backlog`; re-dispatch with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
+4. **If a follow-up fix is requested**: findings and rework follow the `review-contract` skill — `RV-<scope>-NNN` IDs with class `must-fix-now` (blocks, consumes the 1-round rework budget for this gate — tighter than the generic 2), `fix-in-slice`, or `backlog`; re-dispatch with the complete finding list and require exactly one disposition per ID (`accepted_and_fixed`, `rejected_with_evidence` with citation, or `needs_decision`).
 
 ## Report Reminder (include in agent prompt)
 

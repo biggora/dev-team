@@ -300,8 +300,8 @@ flowchart LR
 | PRD, consensus path | product-analyst | doc-reviewer ordinary review | 2 |
 | PRD, unresolved after third recheck | product-analyst | doc-reviewer combined arbitration/full review; replaces ordinary review | 2 |
 | Use-case catalogue (part of the PRD gate) | product-analyst | doc-reviewer, in the PRD dispatch | 2 |
-| Architecture | architect | doc-reviewer | 2 |
-| Design spec | ui-ux-designer | doc-reviewer | 2 |
+| Architecture | architect | doc-reviewer | 1 (tighter by design — downstream agents surface remaining issues) |
+| Design spec | ui-ux-designer | doc-reviewer | 1 (tighter by design — downstream agents surface remaining issues) |
 | Execution plan, consensus path | planner | doc-reviewer ordinary review | 2 |
 | Execution plan, unresolved after third recheck | planner | doc-reviewer combined arbitration/full review; replaces ordinary review | 2 |
 | Scaffold code | implementor | code-reviewer | 2 |
@@ -405,7 +405,7 @@ sequenceDiagram
         AR-->>C: docs/architecture.md + Evidence
         C->>DR: Review architecture
         DR-->>C: DONE + Sweep (RV-ARCH-NNN + class), or DONE_WITH_CONCERNS
-        loop While open must-fix-now remains, maximum 2 reworks
+        loop While open must-fix-now remains, maximum 1 rework
             C->>AR: Fix architecture (complete RV-ID list, one disposition each)
             AR-->>C: docs/architecture.md updated + dispositions + Evidence
             C->>DR: Recheck architecture (carry every prior RV-ID forward)
@@ -416,7 +416,7 @@ sequenceDiagram
         UD-->>C: docs/design.md + Evidence
         C->>DR: Review design
         DR-->>C: DONE + Sweep (RV-DESIGN-NNN + class), or DONE_WITH_CONCERNS
-        loop While open must-fix-now remains, maximum 2 reworks
+        loop While open must-fix-now remains, maximum 1 rework
             C->>UD: Fix design (complete RV-ID list, one disposition each)
             UD-->>C: docs/design.md updated + dispositions + Evidence
             C->>DR: Recheck design (carry every prior RV-ID forward)
